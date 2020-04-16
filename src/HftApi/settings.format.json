@@ -3,6 +3,10 @@
   "Db": {
     "ConnectionString": "${Lykke-HftApi-DbConnectionString}"
   },
+  "Auth": {
+    "JwtSecret": "${Lykke-HftApi-JwtSecret}",
+    "LykkeAud": "${Lykke-HftApi-LykkeAud}"
+  },
   "Serilog": {
     "minimumLevel": {
       "default": "Debug",

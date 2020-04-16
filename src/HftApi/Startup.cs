@@ -14,6 +14,7 @@ namespace HftApi
         public Startup(IConfiguration configuration)
             : base(configuration)
         {
+            AddJwtAuth(Config.Auth.JwtSecret, Config.Auth.LykkeAud);
         }
 
         protected override void ConfigureServicesExt(IServiceCollection services)
@@ -21,6 +22,7 @@ namespace HftApi
             base.ConfigureServicesExt(services);
 
             services.AddPersistence(Config.Db.ConnectionString);
+            services.AddSingleton(Config.Auth);
         }
 
         protected override void RegisterEndpoints(IEndpointRouteBuilder endpoints)
