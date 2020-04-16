@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <AssemblyName>Swisschain.Lykke.HftApi.MessagingContract</AssemblyName>
+    <PackageId>Swisschain.Lykke.HftApi.MessagingContract</PackageId>
+    <RootNamespace>Swisschain.Lykke.HftApi.MessagingContract</RootNamespace>
+    <Authors>Swisschain</Authors>
+    <Product>Lykke</Product>
+  </PropertyGroup>
+
+</Project>

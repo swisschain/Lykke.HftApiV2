@@ -1,0 +1,15 @@
+{
+  "SeqUrl": "${SeqUrl}",
+  "Db": {
+    "ConnectionString": "${Lykke-HftApi-DbConnectionString}"
+  },
+  "Serilog": {
+    "minimumLevel": {
+      "default": "Debug",
+      "override": {
+        "Microsoft": "Warning",
+        "System": "Warning"
+      }
+    }
+  }
+}

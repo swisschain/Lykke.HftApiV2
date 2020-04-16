@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+option csharp_namespace = "Swisschain.Lykke.HftApi.ApiContract";
+
+package common;
+
+service Monitoring {
+	rpc IsAlive (IsAliveRequest) returns (IsAliveResponce);
+}
+
+message IsAliveRequest {
+}
+
+message IsAliveResponce {
+	string name = 1;
+	string version = 2;
+	string startedAt = 3;
+}

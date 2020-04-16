@@ -1,0 +1,5 @@
+{
+  "Db": {
+    "ConnectionString": "${Lykke-HftApi-DbConnectionString}"
+  }
+}
