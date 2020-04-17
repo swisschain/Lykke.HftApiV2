@@ -1,9 +1,8 @@
-Hftv2Service:
-  Db:
-    ConnectionString:
-      settings-key: Hftv2Service-Db-ConnectionString
-  Auth:
-    JwtSecret:
-      settings-key: Hftv2Service-Auth-JwtSecret
-    LykkeAud:
-      settings-key: Hftv2Service-Auth-LykkeAud
+Db:
+  ConnectionString:
+    settings-key: Hftv2Service-Db-ConnectionString
+Auth:
+  JwtSecret:
+    settings-key: Hftv2Service-Auth-JwtSecret
+  LykkeAud:
+    settings-key: Hftv2Service-Auth-LykkeAud
