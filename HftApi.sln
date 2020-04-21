@@ -5,7 +5,7 @@ VisualStudioVersion = 16.0.29503.13
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Contract", "Contract", "{655225E4-2F4C-4D07-82FB-7B4947EF5A7A}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{85EB7950-61F2-4B83-9F3E-F74ECCE0D3C8}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "0. Solution Items", "0. Solution Items", "{85EB7950-61F2-4B83-9F3E-F74ECCE0D3C8}"
 	ProjectSection(SolutionItems) = preProject
 		.dockerignore = .dockerignore
 		.editorconfig = .editorconfig
@@ -47,6 +47,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Documentation", "Documentat
 		README.md = README.md
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "1. Domain", "1. Domain", "{29A121B1-D8E3-41F2-8B14-CF83891C9F87}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lykke.HftApi.Domain", "src\Lykke.HftApi.Domain\Lykke.HftApi.Domain.csproj", "{6FFDAE86-D36E-41F9-BE55-6920488C247D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lykke.HftApi.Services", "src\Lykke.HftApi.Services\Lykke.HftApi.Services.csproj", "{8D8D09F7-A72D-461F-B07A-7B85DEF83993}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -85,6 +91,14 @@ Global
 		{64093FB1-0321-4BC3-8832-8B51CB1BA61A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{64093FB1-0321-4BC3-8832-8B51CB1BA61A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{64093FB1-0321-4BC3-8832-8B51CB1BA61A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6FFDAE86-D36E-41F9-BE55-6920488C247D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6FFDAE86-D36E-41F9-BE55-6920488C247D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6FFDAE86-D36E-41F9-BE55-6920488C247D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6FFDAE86-D36E-41F9-BE55-6920488C247D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8D8D09F7-A72D-461F-B07A-7B85DEF83993}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8D8D09F7-A72D-461F-B07A-7B85DEF83993}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8D8D09F7-A72D-461F-B07A-7B85DEF83993}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8D8D09F7-A72D-461F-B07A-7B85DEF83993}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -97,6 +111,8 @@ Global
 		{64093FB1-0321-4BC3-8832-8B51CB1BA61A} = {655225E4-2F4C-4D07-82FB-7B4947EF5A7A}
 		{54F26A6C-5B76-40E5-8E9C-2FA0551BC226} = {85EB7950-61F2-4B83-9F3E-F74ECCE0D3C8}
 		{DB08FC9E-A784-4D4D-932C-DA320E3C5091} = {85EB7950-61F2-4B83-9F3E-F74ECCE0D3C8}
+		{6FFDAE86-D36E-41F9-BE55-6920488C247D} = {29A121B1-D8E3-41F2-8B14-CF83891C9F87}
+		{8D8D09F7-A72D-461F-B07A-7B85DEF83993} = {29A121B1-D8E3-41F2-8B14-CF83891C9F87}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {196C39E2-2F2E-46AB-BA2A-0D2E7E171B5A}
