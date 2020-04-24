@@ -20,12 +20,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Swisschain.Sdk.Server" Version="5.0.0" />
+    <PackageReference Include="Swisschain.Sdk.Server" Version="5.2.1" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\HftApi.Common\HftApi.Common.csproj" />
     <ProjectReference Include="..\HftApi.ApiContract\HftApi.ApiContract.csproj" />
+    <ProjectReference Include="..\Lykke.HftApi.Services\Lykke.HftApi.Services.csproj" />
   </ItemGroup>
 
   <ItemGroup>

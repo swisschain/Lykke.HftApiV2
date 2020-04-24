@@ -6,3 +6,9 @@ Auth:
     settings-key: Hftv2Service-Auth-JwtSecret
   LykkeAud:
     settings-key: Hftv2Service-Auth-LykkeAud
+Services:
+  AssetsServiceUrl:
+    settings-key: AssetsServiceUrl
+ Cache:
+    AssetsCacheDuration:
+      settings-key: Hftv2Service-Cache-AssetsCacheDuration
