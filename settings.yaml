@@ -9,6 +9,6 @@ Auth:
 Services:
   AssetsServiceUrl:
     settings-key: AssetsServiceUrl
- Cache:
-    AssetsCacheDuration:
-      settings-key: Hftv2Service-Cache-AssetsCacheDuration
+Cache:
+  AssetsCacheDuration:
+    settings-key: Hftv2Service-Cache-AssetsCacheDuration
