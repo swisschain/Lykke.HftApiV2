@@ -6,5 +6,6 @@
         public AuthConfig Auth { get; set; }
         public ServicesConfig Services { get; set; }
         public CacheConfig Cache { get; set; }
+        public RedisConfig Redis { get; set; }
     }
 }
