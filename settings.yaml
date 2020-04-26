@@ -12,3 +12,10 @@ Services:
 Cache:
   AssetsCacheDuration:
     settings-key: Hftv2Service-Cache-AssetsCacheDuration
+Redis:
+  RedisConfiguration:
+    settings-key: HFT-RedisConfiguration
+  InstanceName:
+    settings-key: OrderBooks-CacheInstance
+  OrderBooksCacheKeyPattern:
+    settings-key: OrderBooks-CacheKeyPattern
