@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Autofac;
 using Lykke.HftApi.Domain;
 using Lykke.HftApi.Domain.Entities;
 using Lykke.HftApi.Domain.Exceptions;
@@ -9,7 +10,7 @@ using Lykke.HftApi.Domain.Services;
 
 namespace Lykke.HftApi.Services
 {
-    public class AssetsService : IAssetsService
+    public class AssetsService : IAssetsService, IStartable
     {
         private readonly ICacheService _cache;
         private readonly TimeSpan _cacheDuration;
@@ -63,9 +64,31 @@ namespace Lykke.HftApi.Services
             return _cache.GetOrAddAsync("Assets", async () => await _client.GetAllAssetsAsync(), _cacheDuration);
         }
 
-        private Task<IReadOnlyList<AssetPair>> GetAllAssetPairsFromCacheAsync()
+        private async Task<IReadOnlyList<AssetPair>> GetAllAssetPairsFromCacheAsync()
         {
-            return _cache.GetOrAddAsync("AssetPairs", async () => await _client.GetAllAssetPairsAsync(), _cacheDuration);
+            var assetsTask = GetAllAssetsAsync();
+            var assetPairsTask = _cache.GetOrAddAsync("AssetPairs", async () => await _client.GetAllAssetPairsAsync(), _cacheDuration);
+
+            await Task.WhenAll(assetsTask, assetPairsTask);
+
+            var assetPairs = assetPairsTask.Result.ToList();
+            var assets = assetsTask.Result;
+
+            foreach (var assetPair in assetPairs)
+            {
+                var baseAsset = assets.FirstOrDefault(x => x.AssetId == assetPair.BaseAssetId);
+                var quoteAsset = assets.FirstOrDefault(x => x.AssetId == assetPair.QuoteAssetId);
+
+                assetPair.BaseAssetAccuracy = baseAsset?.Accuracy ?? 0;
+                assetPair.QuoteAssetAccuracy = quoteAsset?.Accuracy ?? 0;
+            }
+
+            return assetPairs;
+        }
+
+        public void Start()
+        {
+            Task.WhenAll(GetAllAssetsAsync(), GetAllAssetPairsAsync()).GetAwaiter().GetResult();
         }
     }
 }

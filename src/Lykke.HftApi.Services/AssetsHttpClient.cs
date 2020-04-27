@@ -32,7 +32,7 @@ namespace Lykke.HftApi.Services
                 BlockchainId = x.BlockChainId,
                 Name = x.Name,
                 DisplayName = x.DisplayId,
-                Accuracy = x.Accuracy
+                Accuracy = x.DisplayAccuracy ?? x.Accuracy
             }).ToArray();
         }
 
@@ -52,8 +52,7 @@ namespace Lykke.HftApi.Services
                 BaseAssetId = x.BaseAssetId,
                 QuoteAssetId = x.QuotingAssetId,
                 Name = x.Name,
-                Accuracy = x.Accuracy,
-                InvertedAccuracy = x.InvertedAccuracy,
+                PriceAccuracy = x.Accuracy,
                 MinVolume = x.MinVolume,
                 MinInvertedVolume = x.MinInvertedVolume
             }).ToArray();
@@ -66,6 +65,7 @@ namespace Lykke.HftApi.Services
         public string Name { get; set; }
         public string DisplayId { get; set; }
         public string BlockChainId { get; set; }
+        public int? DisplayAccuracy { get; set; }
         public int Accuracy { get; set; }
     }
 
@@ -76,7 +76,6 @@ namespace Lykke.HftApi.Services
         public string QuotingAssetId { get; set; }
         public string Name { get; set; }
         public int Accuracy { get; set; }
-        public int InvertedAccuracy { get; set; }
         public decimal MinVolume { get; set; }
         public decimal MinInvertedVolume { get; set; }
         public bool IsDisabled { get; set; }

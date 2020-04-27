@@ -21,7 +21,9 @@ namespace HftApi
         {
             builder.RegisterType<AssetsService>()
                 .WithParameter(TypedParameter.From(_config.Cache.AssetsCacheDuration))
-                .As<IAssetsService>();
+                .As<IAssetsService>()
+                .As<IStartable>()
+                .AutoActivate();
 
             builder.RegisterType<OrderbooksService>()
                 .As<IOrderbooksService>()
