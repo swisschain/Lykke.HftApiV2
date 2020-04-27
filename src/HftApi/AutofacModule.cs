@@ -1,5 +1,6 @@
 using Autofac;
 using HftApi.Common.Configuration;
+using Lykke.Exchange.Api.MarketData.Contract;
 using Lykke.HftApi.Domain.Services;
 using Lykke.HftApi.Services;
 using Microsoft.Extensions.Caching.Distributed;
@@ -36,6 +37,9 @@ namespace HftApi
             builder.RegisterInstance(cache)
                 .As<IDistributedCache>()
                 .SingleInstance();
+
+            builder.RegisterMarketDataClient(new MarketDataServiceClientSettings{
+                GrpcServiceUrl = _config.Services.MarketDataGrpcServiceUrl});
         }
     }
 }
