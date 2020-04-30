@@ -36,3 +36,10 @@ ElasticsearchLogs:
     types: [JsonArray]
   IndexPrefixName:
     settings-key: ElasticSearch-IndexPrefixName
+Serilog:
+  minimumLevel:
+    default:
+      settings-key: Hftv2Service-Serilog-DefaultMinLevel
+    override:
+      settings-key: Hftv2Service-Serilog-Override
+      types: [Json]
