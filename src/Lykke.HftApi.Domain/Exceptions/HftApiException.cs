@@ -25,5 +25,11 @@ namespace Lykke.HftApi.Domain.Exceptions
             exception.Fields.Add(fieldName, message);
             return exception;
         }
+
+        public static HftApiException AddField(this HftApiException exception, string fieldName)
+        {
+            exception.Fields.Add(fieldName, exception.Message);
+            return exception;
+        }
     }
 }

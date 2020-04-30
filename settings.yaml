@@ -11,6 +11,10 @@ Services:
     settings-key: AssetsServiceUrl
   MarketDataGrpcServiceUrl:
     settings-key: MarketDataGrpcServiceUrl
+  HistoryServiceUrl:
+    settings-key: HistoryServiceUrl
+  BalancesServiceUrl:
+    settings-key: BalancesServiceUrl
 Cache:
   AssetsCacheDuration:
     settings-key: Hftv2Service-Cache-AssetsCacheDuration
@@ -21,3 +25,15 @@ Redis:
     settings-key: OrderBooks-CacheInstance
   OrderBooksCacheKeyPattern:
     settings-key: OrderBooks-CacheKeyPattern
+MatchingEngine:
+  Host:
+    settings-key: MatchingEngine-Host
+  Port:
+    settings-key: MatchingEngine-Port
+ElasticsearchLogs:
+  NodeUrls:
+    settings-key: ElasticSearch-NodeUrls
+    types: [JsonArray]
+    IndexPrefixName:
+      settings-key: ElasticSearch-IndexPrefixName
+

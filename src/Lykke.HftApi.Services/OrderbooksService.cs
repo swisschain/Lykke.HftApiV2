@@ -72,8 +72,8 @@ namespace Lykke.HftApi.Services
                 Timestamp = buyBook.Result.Timestamp > sellBook.Result.Timestamp
                     ? buyBook.Result.Timestamp
                     : sellBook.Result.Timestamp,
-                Bids = buyBook.Result.Prices.Select(x => new VolumePrice(x.Volume, x.Price)).ToList(),
-                Asks = sellBook.Result.Prices.Select(x => new VolumePrice(x.Volume, x.Price)).ToList()
+                Bids = buyBook.Result.Prices.Select(x => new VolumePrice(Math.Abs(x.Volume), x.Price)).ToList(),
+                Asks = sellBook.Result.Prices.Select(x => new VolumePrice(Math.Abs(x.Volume), x.Price)).ToList()
             };
         }
 

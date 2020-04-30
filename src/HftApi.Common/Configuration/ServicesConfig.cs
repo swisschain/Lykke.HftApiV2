@@ -4,5 +4,7 @@ namespace HftApi.Common.Configuration
     {
         public string AssetsServiceUrl { get; set; }
         public string MarketDataGrpcServiceUrl { get; set; }
+        public string HistoryServiceUrl { get; set; }
+        public string BalancesServiceUrl { get; set; }
     }
 }

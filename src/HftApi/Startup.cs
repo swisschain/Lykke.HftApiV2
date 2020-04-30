@@ -21,6 +21,7 @@ namespace HftApi
             : base(configuration)
         {
             AddJwtAuth(Config.Auth.JwtSecret, Config.Auth.LykkeAud);
+            AddExceptionHandlingMiddleware<UnhandledExceptionsMiddleware>();
         }
 
         protected override void ConfigureServicesExt(IServiceCollection services)
@@ -35,6 +36,16 @@ namespace HftApi
                 client.BaseAddress = new Uri(Config.Services.AssetsServiceUrl);
             });
 
+            services.AddHttpClient<HistoryHttpClient>(client =>
+            {
+                client.BaseAddress = new Uri(Config.Services.HistoryServiceUrl);
+            });
+
+            services.AddHttpClient<BalanceHttpClient>(client =>
+            {
+                client.BaseAddress = new Uri(Config.Services.BalancesServiceUrl);
+            });
+
             services.AddSingleton<ICacheService, CacheService>();
         }
 
@@ -43,11 +54,6 @@ namespace HftApi
             base.RegisterEndpoints(endpoints);
 
             endpoints.MapGrpcService<MonitoringService>();
-        }
-
-        protected override void ConfigureMiddleware(IApplicationBuilder app, IWebHostEnvironment env)
-        {
-            app.UseMiddleware<UnhandledExceptionsMiddleware>();
         }
 
         protected override void ConfigureContainerExt(ContainerBuilder builder)

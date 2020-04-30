@@ -7,5 +7,6 @@
         public ServicesConfig Services { get; set; }
         public CacheConfig Cache { get; set; }
         public RedisConfig Redis { get; set; }
+        public MeConfig MatchingEngine { get; set; }
     }
 }
