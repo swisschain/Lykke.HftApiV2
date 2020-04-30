@@ -34,6 +34,5 @@ ElasticsearchLogs:
   NodeUrls:
     settings-key: ElasticSearch-NodeUrls
     types: [JsonArray]
-    IndexPrefixName:
-      settings-key: ElasticSearch-IndexPrefixName
-
+  IndexPrefixName:
+    settings-key: ElasticSearch-IndexPrefixName
