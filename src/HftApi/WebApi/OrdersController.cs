@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Threading.Tasks;
 using HftApi.Extensions;
 using HftApi.WebApi.Models;
@@ -23,6 +24,7 @@ namespace HftApi.WebApi
     [Route("api/orders")]
     public class OrdersController : ControllerBase
     {
+        private const int MaxPageSize = 500;
         private readonly IAssetsService _assetsService;
         private readonly HistoryHttpClient _historyClient;
         private readonly IMatchingEngineClient _matchingEngineClient;
@@ -42,25 +44,31 @@ namespace HftApi.WebApi
         [ProducesResponseType(typeof(ResponseModel<LimitOrderResponse>), StatusCodes.Status200OK)]
         public async Task<IActionResult> PlaceLimitOrder(PlaceLimitOrderModel model)
         {
-            //TODO: validation
             #region Validation
+
             var assetPair = await _assetsService.GetAssetPairByIdAsync(model.AssetPairId);
 
             if (assetPair == null)
             {
-                throw HftApiException.Create(HftApiErrorCode.ItemNotFound, "Asset pair not found")
+                throw HftApiException.Create(HftApiErrorCode.ItemNotFound, HftApiErrorMessages.AssetPairNotFound)
                     .AddField(nameof(model.AssetPairId));
             }
 
             if (model.Price <= 0)
             {
-                throw HftApiException.Create(HftApiErrorCode.InvalidField, $"{nameof(model.Volume)} must be greater 0")
+                throw HftApiException.Create(HftApiErrorCode.InvalidField, HftApiErrorMessages.LessThanZero(nameof(model.Price)))
                     .AddField(nameof(model.Price));
+            }
+
+            if (model.Volume <= 0)
+            {
+                throw HftApiException.Create(HftApiErrorCode.InvalidField, HftApiErrorMessages.LessThanZero(nameof(model.Volume)))
+                    .AddField(nameof(model.Volume));
             }
 
             if (model.Volume < assetPair.MinVolume)
             {
-                throw HftApiException.Create(HftApiErrorCode.InvalidField, $"{nameof(model.Volume)} must be greater than {assetPair.MinVolume}")
+                throw HftApiException.Create(HftApiErrorCode.InvalidField, HftApiErrorMessages.MustBeGreaterThan(nameof(model.Volume), assetPair.MinVolume.ToString(CultureInfo.InvariantCulture)))
                     .AddField(nameof(model.Volume));
             }
 
@@ -96,19 +104,25 @@ namespace HftApi.WebApi
         [ProducesResponseType(typeof(ResponseModel<MarketOrderResponseModel>), StatusCodes.Status200OK)]
         public async Task<IActionResult> PlaceMarketOrder(PlaceMarketOrderModel model)
         {
-            //TODO: validation
             #region Validation
+
             var assetPair = await _assetsService.GetAssetPairByIdAsync(model.AssetPairId);
 
             if (assetPair == null)
             {
-                throw HftApiException.Create(HftApiErrorCode.ItemNotFound, "Asset pair not found")
+                throw HftApiException.Create(HftApiErrorCode.ItemNotFound, HftApiErrorMessages.AssetPairNotFound)
                     .AddField(nameof(model.AssetPairId));
+            }
+
+            if (model.Volume <= 0)
+            {
+                throw HftApiException.Create(HftApiErrorCode.InvalidField, HftApiErrorMessages.LessThanZero(nameof(model.Volume)))
+                    .AddField(nameof(model.Volume));
             }
 
             if (model.Volume < assetPair.MinVolume)
             {
-                throw HftApiException.Create(HftApiErrorCode.InvalidField, $"{nameof(model.Volume)} must be greater than {assetPair.MinVolume}")
+                throw HftApiException.Create(HftApiErrorCode.InvalidField, HftApiErrorMessages.MustBeGreaterThan(nameof(model.Volume), assetPair.MinVolume.ToString(CultureInfo.InvariantCulture)))
                     .AddField(nameof(model.Volume));
             }
 
@@ -121,7 +135,7 @@ namespace HftApi.WebApi
                 Id = Guid.NewGuid().ToString(),
                 AssetPairId = model.AssetPairId,
                 ClientId = walletId,
-                Volume = (double)Math.Abs(model.Volume),
+                Volume = (double)model.Volume,
                 OrderAction = model.Side,
                 Straight = true
             };
@@ -144,41 +158,96 @@ namespace HftApi.WebApi
         [HttpGet("active")]
         [ProducesResponseType(typeof(ResponseModel<IReadOnlyCollection<Order>>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetActiveOrders(
-            [FromQuery]string asetPairId = null,
+            [FromQuery]string assetPairId = null,
             [FromQuery]bool withTrades = false,
             [FromQuery]int? offset = 0,
             [FromQuery]int? take = 100
             )
         {
-            //TODO: validation
-            var orders = await _historyClient.GetOrdersByWalletAsync(User.GetWalletId(), asetPairId, new []
+            if (!string.IsNullOrEmpty(assetPairId))
+            {
+                var assetPair = await _assetsService.GetAssetPairByIdAsync(assetPairId);
+
+                if (assetPair == null)
+                {
+                    throw HftApiException.Create(HftApiErrorCode.ItemNotFound, HftApiErrorMessages.AssetPairNotFound)
+                        .AddField(nameof(assetPairId));
+                }
+            }
+
+            if (offset.HasValue && offset < 0)
+                throw HftApiException.Create(HftApiErrorCode.InvalidField, HftApiErrorMessages.LessThanZero(nameof(offset)))
+                    .AddField(nameof(offset));
+
+            if (take.HasValue && take < 0)
+                throw HftApiException.Create(HftApiErrorCode.InvalidField, HftApiErrorMessages.LessThanZero(nameof(take)))
+                    .AddField(nameof(take));
+
+            if (take.HasValue && take > MaxPageSize)
+                throw HftApiException.Create(HftApiErrorCode.InvalidField, HftApiErrorMessages.TooBig(nameof(take), take.Value.ToString(), MaxPageSize.ToString()))
+                    .AddField(nameof(take));
+
+            var orders = await _historyClient.GetOrdersByWalletAsync(User.GetWalletId(), assetPairId, new []
             {
                 OrderStatus.Placed,
                 OrderStatus.PartiallyMatched
             }, null, withTrades, offset, take );
+
             return Ok(ResponseModel<IReadOnlyCollection<Order>>.Ok(orders));
         }
 
         [HttpGet("closed")]
         [ProducesResponseType(typeof(ResponseModel<IReadOnlyCollection<Order>>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetCloasedOrders(
-            [FromQuery]string asetPairId = null,
+            [FromQuery]string assetPairId = null,
             [FromQuery]bool withTrades = false,
             [FromQuery]int? offset = 0,
             [FromQuery]int? take = 100
             )
         {
-            //TODO: validation
-            var orders = await _historyClient.GetOrdersByWalletAsync(User.GetWalletId(), asetPairId,
+            if (!string.IsNullOrEmpty(assetPairId))
+            {
+                var assetPair = await _assetsService.GetAssetPairByIdAsync(assetPairId);
+
+                if (assetPair == null)
+                {
+                    throw HftApiException.Create(HftApiErrorCode.ItemNotFound, HftApiErrorMessages.AssetPairNotFound)
+                        .AddField(nameof(assetPairId));
+                }
+            }
+
+            if (offset.HasValue && offset < 0)
+                throw HftApiException.Create(HftApiErrorCode.InvalidField, HftApiErrorMessages.LessThanZero(nameof(offset)))
+                    .AddField(nameof(offset));
+
+            if (take.HasValue && take < 0)
+                throw HftApiException.Create(HftApiErrorCode.InvalidField, HftApiErrorMessages.LessThanZero(nameof(take)))
+                    .AddField(nameof(take));
+
+            if (take.HasValue && take > MaxPageSize)
+                throw HftApiException.Create(HftApiErrorCode.InvalidField, HftApiErrorMessages.TooBig(nameof(take), take.Value.ToString(), MaxPageSize.ToString()))
+                    .AddField(nameof(take));
+
+            var orders = await _historyClient.GetOrdersByWalletAsync(User.GetWalletId(), assetPairId,
                 new [] { OrderStatus.Matched}, null, withTrades, offset, take );
+
             return Ok(ResponseModel<IReadOnlyCollection<Order>>.Ok(orders));
         }
 
         [HttpDelete]
         [ProducesResponseType(typeof(void), StatusCodes.Status200OK)]
-        public async Task<IActionResult> CancelAllOrder(string assetPairId = null, OrderAction? side = null)
+        public async Task<IActionResult> CancelAllOrders(string assetPairId = null, OrderAction? side = null)
         {
-            //TODO: validation
+            if (!string.IsNullOrEmpty(assetPairId))
+            {
+                var assetPair = await _assetsService.GetAssetPairByIdAsync(assetPairId);
+
+                if (assetPair == null)
+                {
+                    throw HftApiException.Create(HftApiErrorCode.ItemNotFound, HftApiErrorMessages.AssetPairNotFound)
+                        .AddField(nameof(assetPairId));
+                }
+            }
 
             bool? isBuy;
             switch (side)

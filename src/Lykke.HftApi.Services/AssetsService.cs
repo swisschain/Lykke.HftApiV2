@@ -35,8 +35,8 @@ namespace Lykke.HftApi.Services
             var asset = assets.FirstOrDefault(x => x.AssetId == assetId);
 
             if (asset == null)
-                throw new HftApiException(HftApiErrorCode.ItemNotFound, "Asset not found")
-                    .AddField(nameof(assetId), "Asset not found");
+                throw new HftApiException(HftApiErrorCode.ItemNotFound, HftApiErrorMessages.AssetNotFound)
+                    .AddField(nameof(assetId));
 
             return asset;
         }
@@ -53,8 +53,8 @@ namespace Lykke.HftApi.Services
             var assetPair = assetPairs.FirstOrDefault(x => x.AssetPairId == assetPairId);
 
             if (assetPair == null)
-                throw new HftApiException(HftApiErrorCode.ItemNotFound, "Asset pair not found")
-                    .AddField(nameof(assetPairId), "Asset pair not found");
+                throw new HftApiException(HftApiErrorCode.ItemNotFound, HftApiErrorMessages.AssetPairNotFound)
+                    .AddField(nameof(assetPairId));
 
             return assetPair;
         }
