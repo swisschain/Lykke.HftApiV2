@@ -5,7 +5,7 @@ namespace Lykke.HftApi.Domain.Entities
 {
     public class Orderbook
     {
-        public string AssetPair { get; set; }
+        public string AssetPairId { get; set; }
         public DateTime Timestamp { get; set; }
         public IReadOnlyCollection<VolumePrice> Bids { get; set; }
         public IReadOnlyCollection<VolumePrice> Asks { get; set; }

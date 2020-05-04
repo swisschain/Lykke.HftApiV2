@@ -9,6 +9,7 @@ using Lykke.HftApi.Domain;
 using Lykke.HftApi.Domain.Exceptions;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 
 namespace HftApi.Middleware
 {
@@ -57,7 +58,8 @@ namespace HftApi.Middleware
             ctx.Response.StatusCode = statusCode;
 
             var response = ResponseModel.Fail(code, message, fields ?? new Dictionary<string, string>());
-            return ctx.Response.WriteAsync(JsonConvert.SerializeObject(response));
+            return ctx.Response.WriteAsync(JsonConvert.SerializeObject(response,
+                new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver()}));
         }
     }
 }

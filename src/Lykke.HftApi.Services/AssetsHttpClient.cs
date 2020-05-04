@@ -29,9 +29,8 @@ namespace Lykke.HftApi.Services
             return data.Select(x => new Asset
             {
                 AssetId = x.Id,
-                BlockchainId = x.BlockChainId,
                 Name = x.Name,
-                DisplayName = x.DisplayId,
+                Symbol = x.DisplayId,
                 Accuracy = x.DisplayAccuracy ?? x.Accuracy
             }).ToArray();
         }
@@ -54,7 +53,7 @@ namespace Lykke.HftApi.Services
                 Name = x.Name,
                 PriceAccuracy = x.Accuracy,
                 MinVolume = x.MinVolume,
-                MinInvertedVolume = x.MinInvertedVolume
+                MinOppositeVolume = x.MinInvertedVolume
             }).ToArray();
         }
     }

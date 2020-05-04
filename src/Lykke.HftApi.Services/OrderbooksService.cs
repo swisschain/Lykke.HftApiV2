@@ -68,7 +68,7 @@ namespace Lykke.HftApi.Services
 
             return new Orderbook
             {
-                AssetPair = assetPairId,
+                AssetPairId = assetPairId,
                 Timestamp = buyBook.Result.Timestamp > sellBook.Result.Timestamp
                     ? buyBook.Result.Timestamp
                     : sellBook.Result.Timestamp,
