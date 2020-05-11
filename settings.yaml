@@ -1,6 +1,3 @@
-Db:
-  ConnectionString:
-    settings-key: Hftv2Service-Db-ConnectionString
 Auth:
   JwtSecret:
     settings-key: Hftv2Service-Auth-JwtSecret
