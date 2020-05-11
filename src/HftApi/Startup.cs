@@ -5,12 +5,10 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using HftApi.Common.Configuration;
-using HftApi.Common.Persistence;
 using HftApi.GrpcServices;
 using HftApi.Middleware;
 using Lykke.HftApi.Domain.Services;
 using Lykke.HftApi.Services;
-using Microsoft.AspNetCore.Hosting;
 using Swisschain.Sdk.Server.Common;
 
 namespace HftApi
@@ -28,7 +26,6 @@ namespace HftApi
         {
             base.ConfigureServicesExt(services);
 
-            services.AddPersistence(Config.Db.ConnectionString);
             services.AddSingleton(Config.Auth);
             services.AddMemoryCache();
             services.AddHttpClient<AssetsHttpClient>(client =>

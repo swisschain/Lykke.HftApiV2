@@ -18,7 +18,6 @@ namespace HftApi.Worker
             base.ConfigureServicesExt(services);
 
             services.AddHttpClient();
-            services.AddPersistence(Config.Db.ConnectionString);
         }
     }
 }
