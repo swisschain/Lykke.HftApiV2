@@ -68,6 +68,7 @@ namespace HftApi
             services.AddSwaggerGenNewtonsoftSupport();
 
             services.AddGrpc();
+            services.AddGrpcReflection();
 
             services.AddCors(options => options.AddDefaultPolicy(builder =>
             {
@@ -130,6 +131,7 @@ namespace HftApi
             {
                 endpoints.MapControllers();
                 endpoints.MapGrpcService<MonitoringService>();
+                endpoints.MapGrpcReflectionService();
             });
 
             app.UseSwagger(c => c.RouteTemplate = "api/{documentName}/swagger.json");

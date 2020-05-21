@@ -16,7 +16,7 @@ namespace HftApi.Extensions
             request.EnableBuffering();
             string body;
 
-            using (var reader = new StreamReader(request.BodyReader.AsStream(true), Encoding.UTF8, true, 1024, true))
+            using (var reader = new StreamReader(request.Body, Encoding.UTF8, true, 1024, true))
             {
                 body = await reader.ReadToEndAsync();
             }
