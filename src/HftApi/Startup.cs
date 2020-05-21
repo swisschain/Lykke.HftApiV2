@@ -1,7 +1,8 @@
 ﻿using System;
+using System.Globalization;
+using System.Text;
 using Autofac;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using HftApi.Common.Configuration;
@@ -9,23 +10,138 @@ using HftApi.GrpcServices;
 using HftApi.Middleware;
 using Lykke.HftApi.Domain.Services;
 using Lykke.HftApi.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Hosting;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Serialization;
 using Swisschain.Sdk.Server.Common;
+using Swisschain.Sdk.Server.Swagger;
 
 namespace HftApi
 {
-    public sealed class Startup : SwisschainStartup<AppConfig>
+    public sealed class Startup
     {
+        public IConfiguration ConfigRoot { get; }
+        public AppConfig Config { get; }
+
         public Startup(IConfiguration configuration)
-            : base(configuration)
         {
-            AddJwtAuth(Config.Auth.JwtSecret, Config.Auth.LykkeAud);
-            AddExceptionHandlingMiddleware<UnhandledExceptionsMiddleware>();
+            ConfigRoot = configuration;
+            Config = ConfigRoot.Get<AppConfig>();
         }
 
-        protected override void ConfigureServicesExt(IServiceCollection services)
+        public void ConfigureServices(IServiceCollection services)
         {
-            base.ConfigureServicesExt(services);
+            services
+                .AddControllers(options =>
+                {
+                    options.Filters.Add(new ProducesAttribute("application/json"));
+                })
+                .AddNewtonsoftJson(options =>
+                {
+                    var namingStrategy = new CamelCaseNamingStrategy();
 
+                    options.SerializerSettings.Converters.Add(new StringEnumConverter(namingStrategy));
+                    options.SerializerSettings.NullValueHandling = NullValueHandling.Include;
+                    options.SerializerSettings.DateFormatHandling = DateFormatHandling.IsoDateFormat;
+                    options.SerializerSettings.Culture = CultureInfo.InvariantCulture;
+                    options.SerializerSettings.DateTimeZoneHandling = DateTimeZoneHandling.Utc;
+                    options.SerializerSettings.MissingMemberHandling = MissingMemberHandling.Error;
+                    options.SerializerSettings.ContractResolver = new DefaultContractResolver
+                    {
+                        NamingStrategy = namingStrategy
+                    };
+                });
+
+            services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = ApplicationInformation.AppName, Version = "v1" });
+                c.EnableXmsEnumExtension();
+                c.MakeResponseValueTypesRequired();
+                c.AddJwtBearerAuthorization();
+            });
+            services.AddSwaggerGenNewtonsoftSupport();
+
+            services.AddGrpc();
+
+            services.AddCors(options => options.AddDefaultPolicy(builder =>
+            {
+                builder.AllowAnyHeader();
+                builder.AllowAnyMethod();
+                builder.AllowAnyOrigin();
+            }));
+
+            services.AddSingleton(Config);
+
+            services
+                .AddAuthentication(x =>
+                {
+                    x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                    x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                })
+                .AddJwtBearer(x =>
+                {
+                    x.RequireHttpsMetadata = false;
+                    x.SaveToken = true;
+                    x.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuerSigningKey = true,
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(Config.Auth.JwtSecret)),
+                        ValidateIssuer = false,
+                        ValidateAudience = true,
+                        ValidAudience = Config.Auth.LykkeAud,
+                        ValidateLifetime = true
+                    };
+                });
+
+            ConfigureServicesExt(services);
+        }
+
+        public void ConfigureContainer(ContainerBuilder builder)
+        {
+            builder.RegisterModule(new AutofacModule(Config));
+        }
+
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        {
+            if (env.IsDevelopment())
+            {
+                app.UseDeveloperExceptionPage();
+            }
+
+            app.UseMiddleware<UnhandledExceptionsMiddleware>();
+
+            app.UseRouting();
+
+            app.UseCors();
+
+            app.UseAuthentication();
+
+            app.UseAuthorization();
+
+            app.UseMiddleware<KeyCheckMiddleware>();
+
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapControllers();
+                endpoints.MapGrpcService<MonitoringService>();
+            });
+
+            app.UseSwagger(c => c.RouteTemplate = "api/{documentName}/swagger.json");
+            app.UseSwaggerUI(c =>
+            {
+                c.SwaggerEndpoint("../../api/v1/swagger.json", "API V1");
+                c.RoutePrefix = "swagger/ui";
+            });
+        }
+
+        private void ConfigureServicesExt(IServiceCollection services)
+        {
             services.AddSingleton(Config.Auth);
             services.AddMemoryCache();
             services.AddHttpClient<AssetsHttpClient>(client =>
@@ -44,18 +160,6 @@ namespace HftApi
             });
 
             services.AddSingleton<ICacheService, CacheService>();
-        }
-
-        protected override void RegisterEndpoints(IEndpointRouteBuilder endpoints)
-        {
-            base.RegisterEndpoints(endpoints);
-
-            endpoints.MapGrpcService<MonitoringService>();
-        }
-
-        protected override void ConfigureContainerExt(ContainerBuilder builder)
-        {
-            builder.RegisterModule(new AutofacModule(Config));
         }
     }
 }

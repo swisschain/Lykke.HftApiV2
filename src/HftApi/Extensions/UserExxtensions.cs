@@ -22,5 +22,14 @@ namespace HftApi.Extensions
                 .Select(x => x.Value)
                 .SingleOrDefault();
         }
+
+        public static string GetKeyId(this ClaimsPrincipal user)
+        {
+            return user.Identities
+                .SelectMany(x => x.Claims)
+                .Where(c => c.Type == "key-id")
+                .Select(x => x.Value)
+                .SingleOrDefault();
+        }
     }
 }

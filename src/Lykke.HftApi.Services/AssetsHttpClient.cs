@@ -63,7 +63,6 @@ namespace Lykke.HftApi.Services
         public string Id { get; set; }
         public string Name { get; set; }
         public string DisplayId { get; set; }
-        public string BlockChainId { get; set; }
         public int? DisplayAccuracy { get; set; }
         public int Accuracy { get; set; }
     }

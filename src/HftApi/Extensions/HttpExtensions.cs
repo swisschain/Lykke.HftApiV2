@@ -30,8 +30,10 @@ namespace HftApi.Extensions
         {
             var clientId = context.User.GetClientId();
             var walletId = context.User.GetWalletId();
+            var keyId = context.User.GetKeyId();
 
             var logger = Log
+                .ForContext("KeyId", keyId)
                 .ForContext("ClientId", clientId)
                 .ForContext("WalletId", walletId);
 

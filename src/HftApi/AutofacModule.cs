@@ -1,13 +1,14 @@
 using Autofac;
 using HftApi.Common.Configuration;
+using HftApi.RabbitSubscribers;
 using Lykke.Common.Log;
 using Lykke.Exchange.Api.MarketData.Contract;
 using Lykke.HftApi.Domain.Services;
 using Lykke.HftApi.Services;
+using Lykke.Service.HftInternalService.Client;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.Redis;
 using Microsoft.Extensions.Logging;
-using Serilog;
 using Swisschain.LykkeLog.Adapter;
 
 namespace HftApi
@@ -54,6 +55,19 @@ namespace HftApi
             }).As<ILogFactory>();
 
             builder.RegisterMeClient(_config.MatchingEngine.GetIpEndPoint());
+
+            builder.RegisterType<KeyUpdateSubscriber>()
+                .As<IStartable>()
+                .AutoActivate()
+                .WithParameter("connectionString", _config.RabbitMq.ConnectionString)
+                .WithParameter("exchangeName", _config.RabbitMq.ExchangeName)
+                .SingleInstance();
+
+            builder.RegisterHftInternalClient(_config.Services.HftInternalServiceUrl);
+
+            builder.RegisterType<TokenService>()
+                .As<ITokenService>()
+                .SingleInstance();
         }
     }
 }
