@@ -12,6 +12,8 @@ Services:
     settings-key: HistoryServiceUrl
   BalancesServiceUrl:
     settings-key: BalancesServiceUrl
+  HftInternalServiceUrl:
+    settings-key: HftInternalServiceUrl
 Cache:
   AssetsCacheDuration:
     settings-key: Hftv2Service-Cache-AssetsCacheDuration
@@ -27,6 +29,12 @@ MatchingEngine:
     settings-key: MatchingEngine-Host
   Port:
     settings-key: MatchingEngine-Port
+RabbitMq:
+  ConnectionString:
+    settings-key: SagasRabbitMqConnStr
+    types: [RabbitMq]
+  ExchangeName:
+    settings-key: Hftv2Service-RabbitMq-HftInternalExchangeName
 ElasticsearchLogs:
   NodeUrls:
     settings-key: ElasticSearch-NodeUrls

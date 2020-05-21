@@ -36,8 +36,9 @@ namespace HftApi.RabbitSubscribers
             _tokenService.InitAsync().GetAwaiter().GetResult();
 
             var settings = RabbitMqSubscriptionSettings
-                .ForSubscriber(_connectionString, _exchangeName, $"{nameof(KeyUpdateSubscriber)}")
-                .MakeDurable();
+                .ForSubscriber(_connectionString, _exchangeName, $"{nameof(KeyUpdateSubscriber)}-{Environment.MachineName}");
+
+            settings.DeadLetterExchangeName = null;
 
             _subscriber = new RabbitMqSubscriber<KeyUpdatedEvent>(_logFactory,
                     settings,
