@@ -10,7 +10,7 @@ namespace HftApi.Extensions
     {
         public static async Task<string> GetBodyAsync(this HttpRequest request)
         {
-            if (request.Method != "POST")
+            if (request.Method != "POST" || request.Protocol == "HTTP/2")
                 return null;
 
             request.EnableBuffering();
