@@ -32,13 +32,7 @@ namespace Lykke.HftApi.Services
         {
             var assets = await GetAllAssetsFromCacheAsync();
 
-            var asset = assets.FirstOrDefault(x => x.AssetId == assetId);
-
-            if (asset == null)
-                throw new HftApiException(HftApiErrorCode.ItemNotFound, HftApiErrorMessages.AssetNotFound)
-                    .AddField(nameof(assetId));
-
-            return asset;
+            return assets.FirstOrDefault(x => x.AssetId == assetId);
         }
 
         public Task<IReadOnlyList<AssetPair>> GetAllAssetPairsAsync()
@@ -50,13 +44,7 @@ namespace Lykke.HftApi.Services
         {
             var assetPairs = await GetAllAssetPairsFromCacheAsync();
 
-            var assetPair = assetPairs.FirstOrDefault(x => x.AssetPairId == assetPairId);
-
-            if (assetPair == null)
-                throw new HftApiException(HftApiErrorCode.ItemNotFound, HftApiErrorMessages.AssetPairNotFound)
-                    .AddField(nameof(assetPairId));
-
-            return assetPair;
+            return assetPairs.FirstOrDefault(x => x.AssetPairId == assetPairId);
         }
 
         private Task<IReadOnlyList<Asset>> GetAllAssetsFromCacheAsync()

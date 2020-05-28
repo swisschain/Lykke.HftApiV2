@@ -1,7 +1,7 @@
 ﻿using System.Threading.Tasks;
 using Grpc.Core;
+using Lykke.HftApi.ApiContract;
 using Swisschain.Sdk.Server.Common;
-using Swisschain.Lykke.HftApi.ApiContract;
 
 namespace HftApi.GrpcServices
 {
@@ -13,7 +13,9 @@ namespace HftApi.GrpcServices
             {
                 Name = ApplicationInformation.AppName,
                 Version = ApplicationInformation.AppVersion,
-                StartedAt = ApplicationInformation.StartedAt.ToString("yyyy-MM-dd HH:mm:ss")
+                StartedAt = ApplicationInformation.StartedAt.ToString("yyyy-MM-dd HH:mm:ss"),
+                Env = ApplicationEnvironment.Environment,
+                Hostname = ApplicationEnvironment.HostName
             };
 
             return Task.FromResult(result);

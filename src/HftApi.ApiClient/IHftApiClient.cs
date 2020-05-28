@@ -1,9 +1,11 @@
-﻿using Swisschain.Lykke.HftApi.ApiContract;
+﻿using Lykke.HftApi.ApiContract;
 
-namespace Swisschain.Lykke.HftApi.ApiClient
+namespace Lykke.HftApi.ApiClient
 {
     public interface IHftApiClient
     {
         Monitoring.MonitoringClient Monitoring { get; }
+        PrivateService.PrivateServiceClient PrivateService { get; }
+        PublicService.PublicServiceClient PublicService { get; }
     }
 }

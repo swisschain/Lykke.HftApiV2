@@ -3,15 +3,22 @@ using HftApi.Common.Configuration;
 using HftApi.RabbitSubscribers;
 using Lykke.Common.Log;
 using Lykke.Exchange.Api.MarketData.Contract;
+using Lykke.HftApi.ApiContract;
+using Lykke.HftApi.Domain.Entities;
 using Lykke.HftApi.Domain.Services;
 using Lykke.HftApi.Services;
 using Lykke.Service.HftInternalService.Client;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.Redis;
 using Microsoft.Extensions.Logging;
+using MyNoSqlServer.Abstractions;
+using MyNoSqlServer.DataReader;
 using Swisschain.LykkeLog.Adapter;
+using Swisschain.Sdk.Server.Common;
+using ApplicationEnvironment = Swisschain.Sdk.Server.Common.ApplicationEnvironment;
+using Ticker = Lykke.HftApi.Domain.Entities.Ticker;
 
-namespace HftApi
+namespace HftApi.Modules
 {
     public class AutofacModule : Module
     {
@@ -68,6 +75,33 @@ namespace HftApi
             builder.RegisterType<TokenService>()
                 .As<ITokenService>()
                 .SingleInstance();
+
+            builder.RegisterType<BalanceService>()
+                .As<IBalanceService>()
+                .SingleInstance();
+
+            builder.RegisterType<ValidationService>()
+                .AsSelf()
+                .SingleInstance();
+
+            builder.Register(ctx =>
+            {
+                var client = new MyNoSqlTcpClient(() => _config.MyNoSqlServer.ServiceUrl, $"{ApplicationInformation.AppName}-{ApplicationEnvironment.HostName}");
+                client.Start();
+                return client;
+            }).AsSelf().SingleInstance();
+
+            builder.Register(ctx =>
+                new MyNoSqlReadRepository<Ticker>(ctx.Resolve<MyNoSqlTcpClient>(), _config.MyNoSqlServer.TickersTableName)
+            ).As<IMyNoSqlServerDataReader<Ticker>>().SingleInstance();
+
+            builder.Register(ctx =>
+                new MyNoSqlReadRepository<Price>(ctx.Resolve<MyNoSqlTcpClient>(), _config.MyNoSqlServer.PricesTableName)
+            ).As<IMyNoSqlServerDataReader<Price>>().SingleInstance();
+
+            builder.RegisterType<StreamService<PriceUpdate>>().As<IStreamService<PriceUpdate>>().SingleInstance();
+            builder.RegisterType<StreamService<TickerUpdate>>().As<IStreamService<TickerUpdate>>().SingleInstance();
+            builder.RegisterType<ApplicationManager>().AsSelf().SingleInstance();
         }
     }
 }

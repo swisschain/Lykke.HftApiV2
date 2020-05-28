@@ -10,6 +10,7 @@
 
     <ItemGroup>
       <PackageReference Include="Autofac" Version="5.2.0" />
+      <PackageReference Include="Grpc.AspNetCore" Version="2.29.0" />
       <PackageReference Include="Lykke.MatchingEngineConnector" Version="8.6.0" />
       <PackageReference Include="Lykke.Service.HftInternalService.Client" Version="2.1.1" />
       <PackageReference Include="Lykke.Service.History.Contracts" Version="1.0.3" />

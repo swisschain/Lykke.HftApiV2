@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+option csharp_namespace = "Lykke.HftApi.ApiContract";
+
+package hft.common;
+
+message Error {
+    int32 code = 1;
+    string message = 2;
+    map<string, string> fields = 3;
+}

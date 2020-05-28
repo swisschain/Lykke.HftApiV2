@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
-    <AssemblyName>Swisschain.Lykke.HftApi.Common</AssemblyName>
+    <AssemblyName>Lykke.HftApi.Common</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>

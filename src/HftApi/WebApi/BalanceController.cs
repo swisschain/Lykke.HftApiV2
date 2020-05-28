@@ -1,13 +1,9 @@
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
-using Common;
 using HftApi.Extensions;
 using HftApi.WebApi.Models;
 using Lykke.HftApi.Domain.Entities;
 using Lykke.HftApi.Domain.Services;
-using Lykke.HftApi.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -19,16 +15,13 @@ namespace HftApi.WebApi
     [Route("api/balance")]
     public class BalanceController : ControllerBase
     {
-        private readonly IAssetsService _assetsService;
-        private readonly BalanceHttpClient _balanceClient;
+        private readonly IBalanceService _balanceService;
 
         public BalanceController(
-            IAssetsService assetsService,
-            BalanceHttpClient balanceClient
+            IBalanceService balanceService
             )
         {
-            _assetsService = assetsService;
-            _balanceClient = balanceClient;
+            _balanceService = balanceService;
         }
 
         [HttpGet]
@@ -36,24 +29,7 @@ namespace HftApi.WebApi
         public async Task<IActionResult> GetBalances()
         {
             var walletId = User.GetWalletId();
-            var balances = await _balanceClient.GetBalanceAsync(walletId);
-
-            var assetIds = balances.Select(x => x.AssetId).Distinct().ToList();
-
-            var assets = (await _assetsService.GetAllAssetsAsync())
-                .Where(x => assetIds.Contains(x.AssetId, StringComparer.InvariantCultureIgnoreCase))
-                .ToList();
-
-            foreach (var wallet in balances)
-            {
-                var asset = assets.FirstOrDefault(x => x.AssetId == wallet.AssetId);
-
-                if (asset == null)
-                    continue;
-
-                wallet.Available = wallet.Available.TruncateDecimalPlaces(asset.Accuracy);
-                wallet.Reserved = wallet.Reserved.TruncateDecimalPlaces(asset.Accuracy);
-            }
+            var balances = await _balanceService.GetBalancesAsync(walletId);
 
             return Ok(ResponseModel<IReadOnlyCollection<Balance>>.Ok(balances));
         }

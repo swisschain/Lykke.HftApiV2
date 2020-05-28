@@ -30,7 +30,7 @@ namespace Lykke.HftApi.Services
             {
                 AssetId = x.Id,
                 Name = x.Name,
-                Symbol = x.DisplayId,
+                Symbol = x.DisplayId ?? x.Id,
                 Accuracy = x.DisplayAccuracy ?? x.Accuracy
             }).ToArray();
         }

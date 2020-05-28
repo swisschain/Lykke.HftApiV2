@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option csharp_namespace = "Swisschain.Lykke.HftApi.ApiContract";
+option csharp_namespace = "Lykke.HftApi.ApiContract";
 
 package common;
 
@@ -15,4 +15,6 @@ message IsAliveResponce {
 	string name = 1;
 	string version = 2;
 	string startedAt = 3;
+	string env = 4;
+	string hostname = 5;
 }

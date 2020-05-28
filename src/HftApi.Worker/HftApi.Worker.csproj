@@ -3,13 +3,13 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
-    <AssemblyName>Swisschain.Lykke.HftApi.Worker</AssemblyName>
+    <AssemblyName>Lykke.HftApi.Worker</AssemblyName>
     <RootNamespace>HftApi.Worker</RootNamespace>
     <UserSecretsId>c4f624e8-ea89-4001-8bf2-c8e4f72fb6a4</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Swisschain.Sdk.Server" Version="6.2.0" />
+    <PackageReference Include="Swisschain.Sdk.Server" Version="6.3.0" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,0 +1,131 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+import "common.proto";
+
+option csharp_namespace = "Lykke.HftApi.ApiContract";
+
+package hft;
+
+service PrivateService {
+	rpc GetBalances (google.protobuf.Empty) returns (BalancesResponse);
+	rpc PlaceLimitOrder (LimitOrderRequest) returns (LimitOrderResponse);
+	rpc PlaceMarketOrder (MarketOrderRequest) returns (MarketOrderResponse);
+	rpc GetActiveOrders (OrdersRequest) returns (OrdersResponse);
+	rpc GetClosedOrders (OrdersRequest) returns (OrdersResponse);
+	rpc CancelAllOrders (CancelOrdersRequest) returns (CancelOrderResponse);
+	rpc CancelOrder (CancelOrderRequest) returns (CancelOrderResponse);
+}
+
+message LimitOrderRequest {
+    string assetPairId = 1;
+    Side side = 2;
+    string volume = 3;
+    string price = 4;
+}
+
+enum Side {
+    buy = 0;
+    sell = 1;
+}
+
+message MarketOrderRequest {
+    string assetPairId = 1;
+    Side side = 2;
+    string volume = 3;
+}
+
+message OrdersRequest {
+    string assetPairId = 1;
+    bool withTrades = 2;
+    string volume = 3;
+    int32 offset = 4;
+    int32 take = 5;
+}
+
+message CancelOrdersRequest {
+    string assetPairId = 1;
+    Side side = 2;
+}
+
+message CancelOrderRequest {
+    string orderId = 1;
+}
+
+message BalancesResponse {
+    repeated Balance payload = 1;
+    hft.common.Error error = 2;
+}
+
+message LimitOrderResponse {
+    LimitOrderPayload payload = 1;
+    hft.common.Error error = 2;
+
+    message LimitOrderPayload {
+        string orderId = 1;
+    }
+}
+
+message MarketOrderResponse {
+    MarketOrderPayload payload = 1;
+    hft.common.Error error = 2;
+
+    message MarketOrderPayload {
+        string orderId = 1;
+        string price = 2;
+    }
+}
+
+message OrdersResponse {
+    repeated Order payload = 1;
+    hft.common.Error error = 2;
+}
+
+message CancelOrderResponse {
+    bool payload = 1;
+    hft.common.Error error = 2;
+}
+
+message Balance {
+    string AssetId = 1;
+    string Available = 2;
+    string Reserved = 3;
+    google.protobuf.Timestamp Timestamp = 4;
+}
+
+message Order {
+    string id = 1;
+    google.protobuf.Timestamp timestamp = 2;
+    google.protobuf.Timestamp lastTradeTimestamp = 3;
+    string status = 4;
+    string assetPairId = 5;
+    string type = 6;
+    Side side = 7;
+    string price = 8;
+    string volume = 9;
+    string filledVolume = 10;//> Volume - RemainingVolume;
+    string remainingVolume = 11;
+    string cost = 12;// FilledVolume * Price;
+    repeated Trade Trades = 13;
+}
+
+message Trade {
+    string id = 1;
+    int32 index = 2;
+    google.protobuf.Timestamp Timestamp = 3;
+    string assetPairId = 4;
+    string orderId = 5;
+    string role = 6;
+    string price = 7;
+    string baseVolume = 8;
+    string quoteVolume = 9;
+    string baseAssetId = 10;
+    string quoteAssetId = 11;
+    TradeFee Fee = 12;
+}
+
+message TradeFee {
+    string size = 1;
+    string assetId = 2;
+}

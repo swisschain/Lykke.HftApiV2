@@ -1,9 +1,9 @@
 ﻿using System;
-using System.Diagnostics;
-using System.Threading;
 using System.Threading.Tasks;
-using Swisschain.Lykke.HftApi.ApiClient;
-using Swisschain.Lykke.HftApi.ApiContract;
+using Google.Protobuf.WellKnownTypes;
+using Grpc.Core;
+using Lykke.HftApi.ApiClient;
+using Newtonsoft.Json;
 
 namespace TestClient
 {
@@ -11,27 +11,53 @@ namespace TestClient
     {
         static async Task Main(string[] args)
         {
-            Console.WriteLine("Press enter to start");
-            Console.ReadLine();
             var client = new HftApiClient("http://localhost:5001");
+            const string token = "";
 
-            while (true)
-            {
-                try
-                {
-                    var sw = new Stopwatch();
-                    sw.Start();
-                    var result = await client.Monitoring.IsAliveAsync(new IsAliveRequest());
-                    sw.Stop();
-                    Console.WriteLine($"{result.Name}  {sw.ElapsedMilliseconds} ms");
-                }
-                catch(Exception ex)
-                {
-                    Console.WriteLine(ex.Message);
-                }
+            var headers = new Metadata {{"Authorization", $"Bearer {token}"}};
 
-                Thread.Sleep(1000);
-            }
+            // var res = client.PrivateService.GetBalances(new Empty(),
+            //     headers);
+            //
+            // Console.WriteLine(JsonConvert.SerializeObject(res.Payload));
+            //
+            // var orders = client.PrivateService.GetActiveOrders(new OrdersRequest {Take = 1}, headers);
+            // Console.WriteLine(JsonConvert.SerializeObject(orders.Payload));
+
+            // while (true)
+            // {
+            //     try
+            //     {
+            //         using var updates = client.PublicService.GetTickerUpdates(new Empty());
+            //
+            //         await foreach (var item in updates.ResponseStream.ReadAllAsync())
+            //         {
+            //             Console.WriteLine($"{JsonConvert.SerializeObject(item)}");
+            //         }
+            //
+            //         Console.WriteLine("End of stream");
+            //     }
+            //     catch (RpcException ex) when (ex.StatusCode == StatusCode.Cancelled)
+            //     {
+            //         Console.WriteLine("Stream cancelled.");
+            //     }
+            //     catch (RpcException ex) when (ex.StatusCode == StatusCode.Internal)
+            //     {
+            //         Console.WriteLine($"Internal error: {ex.StatusCode}; {ex.Message}");
+            //     }
+            //     catch (RpcException ex)
+            //     {
+            //         Console.WriteLine($"RpcException. {ex.Status}; {ex.StatusCode}");
+            //         Console.WriteLine(ex.ToString());
+            //     }
+            //     catch (Exception ex)
+            //     {
+            //         Console.WriteLine($"exception: {ex.GetType().Name}");
+            //         Console.WriteLine(ex.ToString());
+            //     }
+            //
+            //     await Task.Delay(5000);
+            // }
         }
     }
 }

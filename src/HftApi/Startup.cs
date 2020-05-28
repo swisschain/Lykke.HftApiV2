@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using HftApi.Common.Configuration;
 using HftApi.GrpcServices;
 using HftApi.Middleware;
+using HftApi.Modules;
 using Lykke.HftApi.Domain.Services;
 using Lykke.HftApi.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -21,6 +22,8 @@ using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 using Swisschain.Sdk.Server.Common;
 using Swisschain.Sdk.Server.Swagger;
+using PrivateService = HftApi.GrpcServices.PrivateService;
+using PublicService = HftApi.GrpcServices.PublicService;
 
 namespace HftApi
 {
@@ -106,10 +109,19 @@ namespace HftApi
         public void ConfigureContainer(ContainerBuilder builder)
         {
             builder.RegisterModule(new AutofacModule(Config));
+            builder.RegisterModule(new AutoMapperModule());
         }
 
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IHostApplicationLifetime applicationLifetime)
         {
+            applicationLifetime.ApplicationStarted.Register(() =>
+                app.ApplicationServices.GetService<ApplicationManager>().Start()
+            );
+
+            applicationLifetime.ApplicationStopping.Register(() =>
+                app.ApplicationServices.GetService<ApplicationManager>().Stop()
+            );
+
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
@@ -131,6 +143,8 @@ namespace HftApi
             {
                 endpoints.MapControllers();
                 endpoints.MapGrpcService<MonitoringService>();
+                endpoints.MapGrpcService<PrivateService>();
+                endpoints.MapGrpcService<PublicService>();
                 endpoints.MapGrpcReflectionService();
             });
 

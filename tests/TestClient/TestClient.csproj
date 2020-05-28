@@ -11,4 +11,8 @@
     <ProjectReference Include="..\..\src\HftApi.ApiContract\HftApi.ApiContract.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+  </ItemGroup>
+
 </Project>

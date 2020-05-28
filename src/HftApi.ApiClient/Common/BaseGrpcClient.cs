@@ -1,7 +1,7 @@
 ﻿using System;
 using Grpc.Net.Client;
 
-namespace Swisschain.Lykke.HftApi.ApiClient.Common
+namespace Lykke.HftApi.ApiClient.Common
 {
     public class BaseGrpcClient : IDisposable
     {

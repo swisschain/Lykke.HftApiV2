@@ -22,7 +22,7 @@ namespace HftApi
             var remoteSettingsConfig = ApplicationEnvironment.Config.Get<RemoteSettingsConfig>();
 
             using var loggerFactory = LogConfigurator.Configure("Lykke", remoteSettingsConfig.RemoteSettingsUrls ?? Array.Empty<string>());
-            
+
             var logger = loggerFactory.CreateLogger<Program>();
 
             try

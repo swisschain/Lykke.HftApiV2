@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Threading.Tasks;
 using HftApi.Extensions;
 using HftApi.WebApi.Models;
@@ -24,19 +23,21 @@ namespace HftApi.WebApi
     [Route("api/orders")]
     public class OrdersController : ControllerBase
     {
-        private const int MaxPageSize = 500;
         private readonly IAssetsService _assetsService;
         private readonly HistoryHttpClient _historyClient;
+        private readonly ValidationService _validationService;
         private readonly IMatchingEngineClient _matchingEngineClient;
 
         public OrdersController(
             IAssetsService assetsService,
             HistoryHttpClient historyClient,
+            ValidationService validationService,
             IMatchingEngineClient matchingEngineClient
             )
         {
             _assetsService = assetsService;
             _historyClient = historyClient;
+            _validationService = validationService;
             _matchingEngineClient = matchingEngineClient;
         }
 
@@ -54,23 +55,10 @@ namespace HftApi.WebApi
                     .AddField(nameof(model.AssetPairId));
             }
 
-            if (model.Price <= 0)
-            {
-                throw HftApiException.Create(HftApiErrorCode.InvalidField, HftApiErrorMessages.LessThanZero(nameof(model.Price)))
-                    .AddField(nameof(model.Price));
-            }
+            var result = _validationService.ValidateLimitOrder(model.Price, model.Volume, assetPair.MinVolume);
 
-            if (model.Volume <= 0)
-            {
-                throw HftApiException.Create(HftApiErrorCode.InvalidField, HftApiErrorMessages.LessThanZero(nameof(model.Volume)))
-                    .AddField(nameof(model.Volume));
-            }
-
-            if (model.Volume < assetPair.MinVolume)
-            {
-                throw HftApiException.Create(HftApiErrorCode.InvalidField, HftApiErrorMessages.MustBeGreaterThan(nameof(model.Volume), assetPair.MinVolume.ToString(CultureInfo.InvariantCulture)))
-                    .AddField(nameof(model.Volume));
-            }
+            if (result != null)
+                throw HftApiException.Create(result.Code, result.Message).AddField(result.FieldName);
 
             #endregion
 
@@ -109,22 +97,13 @@ namespace HftApi.WebApi
             var assetPair = await _assetsService.GetAssetPairByIdAsync(model.AssetPairId);
 
             if (assetPair == null)
-            {
                 throw HftApiException.Create(HftApiErrorCode.ItemNotFound, HftApiErrorMessages.AssetPairNotFound)
                     .AddField(nameof(model.AssetPairId));
-            }
 
-            if (model.Volume <= 0)
-            {
-                throw HftApiException.Create(HftApiErrorCode.InvalidField, HftApiErrorMessages.LessThanZero(nameof(model.Volume)))
-                    .AddField(nameof(model.Volume));
-            }
+            var result = _validationService.ValidateMarketOrder(model.Volume, assetPair.MinVolume);
 
-            if (model.Volume < assetPair.MinVolume)
-            {
-                throw HftApiException.Create(HftApiErrorCode.InvalidField, HftApiErrorMessages.MustBeGreaterThan(nameof(model.Volume), assetPair.MinVolume.ToString(CultureInfo.InvariantCulture)))
-                    .AddField(nameof(model.Volume));
-            }
+            if (result != null)
+                throw HftApiException.Create(result.Code, result.Message).AddField(result.FieldName);
 
             #endregion
 
@@ -175,17 +154,10 @@ namespace HftApi.WebApi
                 }
             }
 
-            if (offset.HasValue && offset < 0)
-                throw HftApiException.Create(HftApiErrorCode.InvalidField, HftApiErrorMessages.LessThanZero(nameof(offset)))
-                    .AddField(nameof(offset));
+            var result = _validationService.ValidateOrdersRequest(offset, take);
 
-            if (take.HasValue && take < 0)
-                throw HftApiException.Create(HftApiErrorCode.InvalidField, HftApiErrorMessages.LessThanZero(nameof(take)))
-                    .AddField(nameof(take));
-
-            if (take.HasValue && take > MaxPageSize)
-                throw HftApiException.Create(HftApiErrorCode.InvalidField, HftApiErrorMessages.TooBig(nameof(take), take.Value.ToString(), MaxPageSize.ToString()))
-                    .AddField(nameof(take));
+            if (result != null)
+                throw HftApiException.Create(result.Code, result.Message).AddField(result.FieldName);
 
             var orders = await _historyClient.GetOrdersByWalletAsync(User.GetWalletId(), assetPairId, new []
             {
@@ -216,17 +188,10 @@ namespace HftApi.WebApi
                 }
             }
 
-            if (offset.HasValue && offset < 0)
-                throw HftApiException.Create(HftApiErrorCode.InvalidField, HftApiErrorMessages.LessThanZero(nameof(offset)))
-                    .AddField(nameof(offset));
+            var result = _validationService.ValidateOrdersRequest(offset, take);
 
-            if (take.HasValue && take < 0)
-                throw HftApiException.Create(HftApiErrorCode.InvalidField, HftApiErrorMessages.LessThanZero(nameof(take)))
-                    .AddField(nameof(take));
-
-            if (take.HasValue && take > MaxPageSize)
-                throw HftApiException.Create(HftApiErrorCode.InvalidField, HftApiErrorMessages.TooBig(nameof(take), take.Value.ToString(), MaxPageSize.ToString()))
-                    .AddField(nameof(take));
+            if (result != null)
+                throw HftApiException.Create(result.Code, result.Message).AddField(result.FieldName);
 
             var orders = await _historyClient.GetOrdersByWalletAsync(User.GetWalletId(), assetPairId,
                 new [] { OrderStatus.Matched}, null, withTrades, offset, take );
