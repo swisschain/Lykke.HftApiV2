@@ -37,7 +37,7 @@ RabbitMq:
     settings-key: Hftv2Service-RabbitMq-HftInternalExchangeName
 MyNoSqlServer:
   ServiceUrl:
-    settings-key: MyNoSqlServerUrl
+    settings-key: MyNoSqlServerReaderUrl
   TickersTableName:
     settings-key: MarketDataService-MyNoSqlServer-TickersTableName
   PricesTableName:
