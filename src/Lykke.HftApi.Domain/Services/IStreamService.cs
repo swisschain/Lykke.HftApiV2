@@ -6,8 +6,8 @@ namespace Lykke.HftApi.Domain.Services
 {
     public interface IStreamService<T> : IDisposable
     {
-        void WriteToStream(T data);
-        Task RegisterStream(IServerStreamWriter<T> stream);
+        void WriteToStream(T data, string key = null);
+        Task RegisterStream(IServerStreamWriter<T> stream, string key = null);
         void Stop();
     }
 }

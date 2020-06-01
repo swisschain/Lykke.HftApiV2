@@ -1,3 +1,4 @@
+using System;
 using Autofac;
 using HftApi.Common.Configuration;
 using HftApi.RabbitSubscribers;
@@ -15,8 +16,6 @@ using MyNoSqlServer.Abstractions;
 using MyNoSqlServer.DataReader;
 using Swisschain.LykkeLog.Adapter;
 using Swisschain.Sdk.Server.Common;
-using ApplicationEnvironment = Swisschain.Sdk.Server.Common.ApplicationEnvironment;
-using Ticker = Lykke.HftApi.Domain.Entities.Ticker;
 
 namespace HftApi.Modules
 {
@@ -70,6 +69,13 @@ namespace HftApi.Modules
                 .WithParameter("exchangeName", _config.RabbitMq.ExchangeName)
                 .SingleInstance();
 
+            builder.RegisterType<OrderbooksSubscriber>()
+                .As<IStartable>()
+                .AutoActivate()
+                .WithParameter("connectionString", _config.RabbitMq.MeConnectionString)
+                .WithParameter("exchangeName", _config.RabbitMq.OrderbooksExchangeName)
+                .SingleInstance();
+
             builder.RegisterHftInternalClient(_config.Services.HftInternalServiceUrl);
 
             builder.RegisterType<TokenService>()
@@ -86,22 +92,35 @@ namespace HftApi.Modules
 
             builder.Register(ctx =>
             {
-                var client = new MyNoSqlTcpClient(() => _config.MyNoSqlServer.ServiceUrl, $"{ApplicationInformation.AppName}-{ApplicationEnvironment.HostName}");
+                var client = new MyNoSqlTcpClient(() => _config.MyNoSqlServer.ReaderServiceUrl, $"{ApplicationInformation.AppName}-{Environment.MachineName}");
                 client.Start();
                 return client;
             }).AsSelf().SingleInstance();
 
             builder.Register(ctx =>
-                new MyNoSqlReadRepository<Ticker>(ctx.Resolve<MyNoSqlTcpClient>(), _config.MyNoSqlServer.TickersTableName)
-            ).As<IMyNoSqlServerDataReader<Ticker>>().SingleInstance();
+                new MyNoSqlReadRepository<TickerEntity>(ctx.Resolve<MyNoSqlTcpClient>(), _config.MyNoSqlServer.TickersTableName)
+            ).As<IMyNoSqlServerDataReader<TickerEntity>>().SingleInstance();
 
             builder.Register(ctx =>
-                new MyNoSqlReadRepository<Price>(ctx.Resolve<MyNoSqlTcpClient>(), _config.MyNoSqlServer.PricesTableName)
-            ).As<IMyNoSqlServerDataReader<Price>>().SingleInstance();
+                new MyNoSqlReadRepository<PriceEntity>(ctx.Resolve<MyNoSqlTcpClient>(), _config.MyNoSqlServer.PricesTableName)
+            ).As<IMyNoSqlServerDataReader<PriceEntity>>().SingleInstance();
+
+            builder.Register(ctx =>
+                new MyNoSqlReadRepository<OrderbookEntity>(ctx.Resolve<MyNoSqlTcpClient>(), _config.MyNoSqlServer.OrderbooksTableName)
+            ).As<IMyNoSqlServerDataReader<OrderbookEntity>>().SingleInstance();
+
+            builder.Register(ctx =>
+            {
+                return new MyNoSqlServer.DataWriter.MyNoSqlServerDataWriter<OrderbookEntity>(() =>
+                        _config.MyNoSqlServer.WriterServiceUrl,
+                    _config.MyNoSqlServer.OrderbooksTableName);
+            }).As<IMyNoSqlServerDataWriter<OrderbookEntity>>().SingleInstance();
 
             builder.RegisterType<StreamService<PriceUpdate>>().As<IStreamService<PriceUpdate>>().SingleInstance();
             builder.RegisterType<StreamService<TickerUpdate>>().As<IStreamService<TickerUpdate>>().SingleInstance();
+            builder.RegisterType<StreamService<Lykke.HftApi.ApiContract.Orderbook>>().As<IStreamService<Lykke.HftApi.ApiContract.Orderbook>>().SingleInstance();
             builder.RegisterType<ApplicationManager>().AsSelf().SingleInstance();
         }
     }
 }
+

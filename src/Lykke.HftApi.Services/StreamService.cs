@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Grpc.Core;
 using Lykke.HftApi.Domain.Services;
@@ -8,15 +9,19 @@ namespace Lykke.HftApi.Services
 {
     public class StreamService<T>: IStreamService<T>
     {
-        private readonly List<(TaskCompletionSource<int>, IServerStreamWriter<T>)> _streamList = new List<(TaskCompletionSource<int>, IServerStreamWriter<T>)>();
+        private readonly List<(TaskCompletionSource<int>, string key, IServerStreamWriter<T>)> _streamList = new List<(TaskCompletionSource<int>, string, IServerStreamWriter<T>)>();
 
-        public void WriteToStream(T data)
+        public void WriteToStream(T data, string key = null)
         {
-            foreach (var pair in _streamList.ToArray())
+            var items = string.IsNullOrEmpty(key)
+                ? _streamList.ToArray()
+                : _streamList.Where(x => x.key == key).ToArray();
+
+            foreach (var pair in items)
             {
                 try
                 {
-                    pair.Item2.WriteAsync(data);
+                    pair.Item3.WriteAsync(data);
                 }
                 catch (InvalidOperationException ex) when (ex.Message == "Cannot write message after request is complete.")
                 {
@@ -34,11 +39,12 @@ namespace Lykke.HftApi.Services
             }
         }
 
-        public Task RegisterStream(IServerStreamWriter<T> stream)
+        public Task RegisterStream(IServerStreamWriter<T> stream, string key = null)
         {
-            (TaskCompletionSource<int>, IServerStreamWriter<T>) record;
+            (TaskCompletionSource<int>, string, IServerStreamWriter<T>) record;
             record.Item1 = new TaskCompletionSource<int>();
-            record.Item2 = stream;
+            record.Item2 = key;
+            record.Item3 = stream;
 
             _streamList.Add(record);
 

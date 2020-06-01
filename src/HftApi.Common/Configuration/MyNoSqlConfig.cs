@@ -2,8 +2,10 @@ namespace HftApi.Common.Configuration
 {
     public class MyNoSqlConfig
     {
-        public string ServiceUrl { get; set; }
+        public string WriterServiceUrl { get; set; }
+        public string ReaderServiceUrl { get; set; }
         public string TickersTableName { get; set; }
         public string PricesTableName { get; set; }
+        public string OrderbooksTableName { get; set; }
     }
 }

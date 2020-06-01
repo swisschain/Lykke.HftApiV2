@@ -46,7 +46,7 @@ namespace HftApi.Profiles
             CreateMap<Lykke.HftApi.Domain.Entities.TradeFee, Lykke.HftApi.ApiContract.TradeFee>(MemberList.Destination)
                 .ForMember(d => d.Size, o => o.MapFrom(x => x.Size.ToString(CultureInfo.InvariantCulture)));
 
-            CreateMap<Lykke.HftApi.Domain.Entities.Ticker, Lykke.HftApi.ApiContract.TickerUpdate>(MemberList.Destination)
+            CreateMap<Lykke.HftApi.Domain.Entities.TickerEntity, Lykke.HftApi.ApiContract.TickerUpdate>(MemberList.Destination)
                 .ForMember(d => d.VolumeBase, o => o.MapFrom(x => x.VolumeBase.ToString(CultureInfo.InvariantCulture)))
                 .ForMember(d => d.VolumeQuote, o => o.MapFrom(x => x.VolumeQuote.ToString(CultureInfo.InvariantCulture)))
                 .ForMember(d => d.PriceChange, o => o.MapFrom(x => x.PriceChange.ToString(CultureInfo.InvariantCulture)))
@@ -55,9 +55,12 @@ namespace HftApi.Profiles
                 .ForMember(d => d.Low, o => o.MapFrom(x => x.Low.ToString(CultureInfo.InvariantCulture)))
                 .ForMember(d => d.Timestamp, o => o.MapFrom(x => Timestamp.FromDateTime(x.TimeStamp.ToUniversalTime())));
 
-            CreateMap<Lykke.HftApi.Domain.Entities.Price, Lykke.HftApi.ApiContract.PriceUpdate>(MemberList.Destination)
+            CreateMap<Lykke.HftApi.Domain.Entities.PriceEntity, Lykke.HftApi.ApiContract.PriceUpdate>(MemberList.Destination)
                 .ForMember(d => d.Ask, o => o.MapFrom(x => x.Ask.ToString(CultureInfo.InvariantCulture)))
                 .ForMember(d => d.Bid, o => o.MapFrom(x => x.Bid.ToString(CultureInfo.InvariantCulture)))
+                .ForMember(d => d.Timestamp, o => o.MapFrom(x => Timestamp.FromDateTime(x.TimeStamp.ToUniversalTime())));
+
+            CreateMap<Lykke.HftApi.Domain.Entities.OrderbookEntity, Lykke.HftApi.ApiContract.Orderbook>(MemberList.Destination)
                 .ForMember(d => d.Timestamp, o => o.MapFrom(x => Timestamp.FromDateTime(x.TimeStamp.ToUniversalTime())));
         }
     }

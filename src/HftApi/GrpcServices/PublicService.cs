@@ -20,6 +20,7 @@ namespace HftApi.GrpcServices
         private readonly MarketDataService.MarketDataServiceClient _marketDataClient;
         private readonly IStreamService<PriceUpdate> _priceStreamService;
         private readonly IStreamService<TickerUpdate> _tickerUpdateService;
+        private readonly IStreamService<Orderbook> _orderbookUpdateService;
         private readonly IMapper _mapper;
 
         public PublicService(
@@ -28,6 +29,7 @@ namespace HftApi.GrpcServices
             MarketDataService.MarketDataServiceClient marketDataClient,
             IStreamService<PriceUpdate> priceStreamService,
             IStreamService<TickerUpdate> tickerUpdateService,
+            IStreamService<Orderbook> orderbookUpdateService,
             IMapper mapper
             )
         {
@@ -36,6 +38,7 @@ namespace HftApi.GrpcServices
             _marketDataClient = marketDataClient;
             _priceStreamService = priceStreamService;
             _tickerUpdateService = tickerUpdateService;
+            _orderbookUpdateService = orderbookUpdateService;
             _mapper = mapper;
         }
 
@@ -125,6 +128,14 @@ namespace HftApi.GrpcServices
         {
             Console.WriteLine($"New ticker stream connect. peer:{context.Peer}");
             return _tickerUpdateService.RegisterStream(responseStream);
+        }
+
+        public override Task GetOrderbookUpdates(OrderbookUpdatesRequest request,
+            IServerStreamWriter<Orderbook> responseStream,
+            ServerCallContext context)
+        {
+            Console.WriteLine($"New orderbook stream connect. peer:{context.Peer}");
+            return _orderbookUpdateService.RegisterStream(responseStream, request.AssetPairId);
         }
     }
 }

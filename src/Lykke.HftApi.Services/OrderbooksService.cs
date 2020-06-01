@@ -44,7 +44,7 @@ namespace Lykke.HftApi.Services
                 orderbooks.Add(orderbook);
             }
 
-            if (depth.HasValue)
+            if (depth.HasValue && depth.Value > 0)
             {
                 foreach (var orderbook in orderbooks)
                 {

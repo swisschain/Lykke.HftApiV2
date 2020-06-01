@@ -20,6 +20,7 @@ service PublicService {
 
     rpc GetPriceUpdates (google.protobuf.Empty) returns (stream PriceUpdate);
     rpc GetTickerUpdates (google.protobuf.Empty) returns (stream TickerUpdate);
+    rpc GetOrderbookUpdates (OrderbookUpdatesRequest) returns (stream Orderbook);
 }
 
 message AssetPairRequest {
@@ -37,6 +38,10 @@ message OrderbookRequest {
 
 message TickersRequest {
     repeated string assetPairIds = 1;
+}
+
+message OrderbookUpdatesRequest {
+    string assetPairId = 1;
 }
 
 message AssetPairResponse {

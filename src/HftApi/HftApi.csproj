@@ -23,10 +23,11 @@
     <PackageReference Include="AutoMapper" Version="9.0.0" />
     <PackageReference Include="Grpc.AspNetCore.Server.Reflection" Version="2.29.0" />
     <PackageReference Include="Lykke.Common.ApiLibrary" Version="3.1.1" />
-    <PackageReference Include="Lykke.Exchange.Api.MarketData.Contract" Version="1.1.0" />
+    <PackageReference Include="Lykke.Exchange.Api.MarketData.Contract" Version="1.1.2" />
     <PackageReference Include="Lykke.MatchingEngineConnector" Version="8.6.0" />
     <PackageReference Include="Lykke.Service.HftInternalService.Client" Version="2.1.1" />
     <PackageReference Include="MyNoSqlServer.DataReader" Version="1.0.1" />
+    <PackageReference Include="MyNoSqlServer.DataWriter" Version="1.0.1" />
     <PackageReference Include="Swisschain.LykkeLog.Adapter" Version="1.1.0" />
     <PackageReference Include="Swisschain.RabbitMqBroker" Version="8.2.0" />
     <PackageReference Include="Swisschain.Sdk.Server" Version="6.3.0" />

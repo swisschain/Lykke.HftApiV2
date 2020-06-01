@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using Lykke.HftApi.ApiClient;
+using Lykke.HftApi.ApiContract;
 using Newtonsoft.Json;
 
 namespace TestClient
@@ -28,7 +29,7 @@ namespace TestClient
             // {
             //     try
             //     {
-            //         using var updates = client.PublicService.GetTickerUpdates(new Empty());
+            //         using var updates = client.PublicService.GetOrderbookUpdates(new OrderbookUpdatesRequest{AssetPairId = "ETHUSD"});
             //
             //         await foreach (var item in updates.ResponseStream.ReadAllAsync())
             //         {

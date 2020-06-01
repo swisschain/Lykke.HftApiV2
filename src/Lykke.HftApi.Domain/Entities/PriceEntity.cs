@@ -3,7 +3,7 @@ using MyNoSqlServer.Abstractions;
 
 namespace Lykke.HftApi.Domain.Entities
 {
-    public class Price : IMyNoSqlEntity
+    public class PriceEntity : IMyNoSqlEntity
     {
         public string AssetPairId { get; set; }
         public decimal Bid { get; set; }

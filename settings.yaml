@@ -33,15 +33,24 @@ RabbitMq:
   ConnectionString:
     settings-key: SagasRabbitMqConnStr
     types: [RabbitMq]
+  MeConnectionString:
+    settings-key: MatchingEngine-OrderBookRabbit
+    types: [RabbitMq]
   ExchangeName:
     settings-key: Hftv2Service-RabbitMq-HftInternalExchangeName
+  OrderbooksExchangeName:
+    settings-key: Hftv2Service-RabbitMq-OrderbooksExchangeName
 MyNoSqlServer:
-  ServiceUrl:
+  ReaderServiceUrl:
     settings-key: MyNoSqlServerReaderUrl
+  WriterServiceUrl:
+    settings-key: MyNoSqlServerWriterUrl
   TickersTableName:
     settings-key: MarketDataService-MyNoSqlServer-TickersTableName
   PricesTableName:
     settings-key: MarketDataService-MyNoSqlServer-PricesTableName
+  OrderbooksTableName:
+    settings-key: MarketDataService-MyNoSqlServer-OrderbooksTableName
 ElasticsearchLogs:
   NodeUrls:
     settings-key: ElasticSearch-NodeUrls
