@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -10,6 +11,8 @@ namespace HftApi
 {
     public class Program
     {
+        //TODO: fix ApplicationInformation.AppName in SDK
+        public static string AppName = Assembly.GetEntryAssembly()?.GetName().Name;
         private sealed class RemoteSettingsConfig
         {
             public IReadOnlyCollection<string> RemoteSettingsUrls { get; set; }

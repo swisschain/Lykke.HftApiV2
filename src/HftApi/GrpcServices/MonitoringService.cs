@@ -11,7 +11,7 @@ namespace HftApi.GrpcServices
         {
             var result = new IsAliveResponce
             {
-                Name = ApplicationInformation.AppName,
+                Name = Program.AppName,
                 Version = ApplicationInformation.AppVersion,
                 StartedAt = ApplicationInformation.StartedAt.ToString("yyyy-MM-dd HH:mm:ss"),
                 Env = ApplicationEnvironment.Environment,

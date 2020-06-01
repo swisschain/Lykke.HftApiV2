@@ -63,7 +63,7 @@ namespace HftApi
 
             services.AddSwaggerGen(c =>
             {
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = ApplicationInformation.AppName, Version = "v1" });
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = Program.AppName, Version = "v1" });
                 c.EnableXmsEnumExtension();
                 c.MakeResponseValueTypesRequired();
                 c.AddJwtBearerAuthorization();

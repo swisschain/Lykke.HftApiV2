@@ -99,7 +99,7 @@ namespace HftApi.Modules
 
             builder.Register(ctx =>
             {
-                var client = new MyNoSqlTcpClient(() => _config.MyNoSqlServer.ReaderServiceUrl, $"{ApplicationInformation.AppName}-{Environment.MachineName}");
+                var client = new MyNoSqlTcpClient(() => _config.MyNoSqlServer.ReaderServiceUrl, $"{Program.AppName}-{Environment.MachineName}");
                 client.Start();
                 return client;
             }).AsSelf().SingleInstance();

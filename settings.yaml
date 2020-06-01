@@ -40,6 +40,8 @@ RabbitMq:
     settings-key: Hftv2Service-RabbitMq-HftInternalExchangeName
   OrderbooksExchangeName:
     settings-key: Hftv2Service-RabbitMq-OrderbooksExchangeName
+  BalancesExchangeName:
+    settings-key: Hftv2Service-RabbitMq-BalancesExchangeName
 MyNoSqlServer:
   ReaderServiceUrl:
     settings-key: MyNoSqlServerReaderUrl
@@ -51,6 +53,8 @@ MyNoSqlServer:
     settings-key: MarketDataService-MyNoSqlServer-PricesTableName
   OrderbooksTableName:
     settings-key: MarketDataService-MyNoSqlServer-OrderbooksTableName
+  BalancesTableName:
+    settings-key: MarketDataService-MyNoSqlServer-BalancesTableName
 ElasticsearchLogs:
   NodeUrls:
     settings-key: ElasticSearch-NodeUrls

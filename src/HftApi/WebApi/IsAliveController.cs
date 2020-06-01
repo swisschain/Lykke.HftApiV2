@@ -16,7 +16,7 @@ namespace HftApi.WebApi
         {
             var response = new IsAliveResponse
             {
-                Name = ApplicationInformation.AppName,
+                Name = Program.AppName,
                 Version = ApplicationInformation.AppVersion,
                 StartedAt = ApplicationInformation.StartedAt,
                 Env = ApplicationEnvironment.Environment,
