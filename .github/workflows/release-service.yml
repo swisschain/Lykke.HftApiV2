@@ -21,12 +21,8 @@ jobs:
       run: dotnet test --no-build --configuration Release
     - name: Publish API
       run: dotnet publish --no-build ./src/HftApi/HftApi.csproj --output ./publish-api --configuration Release /p:AssemblyVersion=${GITHUB_REF#refs/tags/service-}
-    - name: Publish worker
-      run: dotnet publish --no-build ./src/HftApi.Worker/HftApi.Worker.csproj --output ./publish-worker --configuration Release /p:AssemblyVersion=${GITHUB_REF#refs/tags/service-}
     - name: Check API dir
       run: ls ./publish-api
-    - name: Check worker dir
-      run: ls ./publish-worker
     - name: Publish API to Registry
       uses: swisschain/Publish-Docker-Github-Action@master
       with:
@@ -35,15 +31,5 @@ jobs:
         password: ${{ secrets.DOCKER_PASSWORD }}
         workdir: ./publish-api
         # snapshot: true # use snapshot to push an additional image, which is tagged with {YEAR}{MONTH}{DAY}{HOUR}{MINUTE}{SECOND}{first 6 digits of the git sha}
-        tag_names: true  
-        tag_name_skip: service-    
-    - name: Publish worker to Registry
-      uses: swisschain/Publish-Docker-Github-Action@master
-      with:
-        name: swisschains/lykke-hftapi-worker
-        username: ${{ secrets.DOCKER_USERNAME }}
-        password: ${{ secrets.DOCKER_PASSWORD }}
-        workdir: ./publish-worker
-        # snapshot: true # use snapshot to push an additional image, which is tagged with {YEAR}{MONTH}{DAY}{HOUR}{MINUTE}{SECOND}{first 6 digits of the git sha}
-        tag_names: true  
+        tag_names: true
         tag_name_skip: service-

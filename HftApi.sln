@@ -27,13 +27,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HftApiTests", "tests\HftApi
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HftApi.Common", "src\HftApi.Common\HftApi.Common.csproj", "{2BFF98C7-1714-4000-A468-DBD9C24E7B02}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HftApi.MessagingContract", "src\HftApi.MessagingContract\HftApi.MessagingContract.csproj", "{64093FB1-0321-4BC3-8832-8B51CB1BA61A}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Github workflow", "Github workflow", "{54F26A6C-5B76-40E5-8E9C-2FA0551BC226}"
 	ProjectSection(SolutionItems) = preProject
 		.github\workflows\ci.yml = .github\workflows\ci.yml
 		.github\workflows\release-api-client.yml = .github\workflows\release-api-client.yml
-		.github\workflows\release-messaging-contract.yml = .github\workflows\release-messaging-contract.yml
 		.github\workflows\release-service.yml = .github\workflows\release-service.yml
 		.github\workflows\validate-commit.yml = .github\workflows\validate-commit.yml
 	EndProjectSection
@@ -77,10 +74,6 @@ Global
 		{2BFF98C7-1714-4000-A468-DBD9C24E7B02}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2BFF98C7-1714-4000-A468-DBD9C24E7B02}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2BFF98C7-1714-4000-A468-DBD9C24E7B02}.Release|Any CPU.Build.0 = Release|Any CPU
-		{64093FB1-0321-4BC3-8832-8B51CB1BA61A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{64093FB1-0321-4BC3-8832-8B51CB1BA61A}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{64093FB1-0321-4BC3-8832-8B51CB1BA61A}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{64093FB1-0321-4BC3-8832-8B51CB1BA61A}.Release|Any CPU.Build.0 = Release|Any CPU
 		{6FFDAE86-D36E-41F9-BE55-6920488C247D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{6FFDAE86-D36E-41F9-BE55-6920488C247D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6FFDAE86-D36E-41F9-BE55-6920488C247D}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -101,7 +94,6 @@ Global
 		{9B71FE5F-2279-411C-9920-4159E3635E36} = {655225E4-2F4C-4D07-82FB-7B4947EF5A7A}
 		{48E5261D-8A27-4496-88F1-EF76BE4279DE} = {655225E4-2F4C-4D07-82FB-7B4947EF5A7A}
 		{4C51C936-D545-49A9-816A-4F2C357B56DF} = {7F3DBAA2-139B-401D-A33F-1409A9BB4DE8}
-		{64093FB1-0321-4BC3-8832-8B51CB1BA61A} = {655225E4-2F4C-4D07-82FB-7B4947EF5A7A}
 		{54F26A6C-5B76-40E5-8E9C-2FA0551BC226} = {85EB7950-61F2-4B83-9F3E-F74ECCE0D3C8}
 		{DB08FC9E-A784-4D4D-932C-DA320E3C5091} = {85EB7950-61F2-4B83-9F3E-F74ECCE0D3C8}
 		{6FFDAE86-D36E-41F9-BE55-6920488C247D} = {29A121B1-D8E3-41F2-8B14-CF83891C9F87}
