@@ -19,5 +19,5 @@ Awailable options:
 Run example:
 
 ```
-dotnet Lykke.HftApi.Tools.GrpcStreamReader.dll -u http://hft-api.lykke-service.svc.cluster.local:5001 -n Orderbooks -k ETHUSD
+dotnet Lykke.HftApi.Tools.GrpcStreamReader.dll -u https://hft-api-grpc-dev.lykkex.net -n Orderbooks -k ETHUSD
 ```
