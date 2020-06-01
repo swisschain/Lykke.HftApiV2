@@ -19,24 +19,16 @@ namespace Lykke.HftApi.Services
 
             foreach (var pair in items)
             {
-                try
-                {
-                    pair.Item3.WriteAsync(data);
-                }
-                catch (InvalidOperationException ex) when (ex.Message == "Cannot write message after request is complete.")
-                {
-                    pair.Item1.TrySetResult(1);
-                    _streamList.Remove(pair);
-                    Console.WriteLine("Remove stream connect");
-                }
-                catch(Exception ex)
-                {
-                    Console.WriteLine(ex.ToString());
-                    pair.Item1.TrySetResult(1);
-                    _streamList.Remove(pair);
-                    Console.WriteLine("Remove stream connect");
-                }
+                pair.Item3.WriteAsync(data)
+                    .ContinueWith(t => HandleError(pair), TaskContinuationOptions.OnlyOnFaulted);
             }
+        }
+
+        private void HandleError((TaskCompletionSource<int>, string key, IServerStreamWriter<T>) pair)
+        {
+            pair.Item1.TrySetResult(1);
+            _streamList.Remove(pair);
+            Console.WriteLine("Remove stream connect");
         }
 
         public Task RegisterStream(IServerStreamWriter<T> stream, string key = null)
