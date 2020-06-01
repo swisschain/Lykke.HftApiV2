@@ -52,9 +52,9 @@ MyNoSqlServer:
   PricesTableName:
     settings-key: MarketDataService-MyNoSqlServer-PricesTableName
   OrderbooksTableName:
-    settings-key: MarketDataService-MyNoSqlServer-OrderbooksTableName
+    settings-key: Hftv2Service-MyNoSqlServer-OrderbooksTableName
   BalancesTableName:
-    settings-key: MarketDataService-MyNoSqlServer-BalancesTableName
+    settings-key: Hftv2Service-MyNoSqlServer-BalancesTableName
 ElasticsearchLogs:
   NodeUrls:
     settings-key: ElasticSearch-NodeUrls
