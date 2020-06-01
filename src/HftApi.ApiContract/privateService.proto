@@ -16,6 +16,8 @@ service PrivateService {
 	rpc GetClosedOrders (OrdersRequest) returns (OrdersResponse);
 	rpc CancelAllOrders (CancelOrdersRequest) returns (CancelOrderResponse);
 	rpc CancelOrder (CancelOrderRequest) returns (CancelOrderResponse);
+
+    rpc GetBalanceUpdates (google.protobuf.Empty) returns (stream Balance);
 }
 
 message LimitOrderRequest {

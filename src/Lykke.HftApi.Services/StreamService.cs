@@ -31,8 +31,19 @@ namespace Lykke.HftApi.Services
             Console.WriteLine("Remove stream connect");
         }
 
-        public Task RegisterStream(IServerStreamWriter<T> stream, string key = null)
+        public Task RegisterStream(IServerStreamWriter<T> stream, string key = null, bool reuseStream = false)
         {
+            if (!string.IsNullOrEmpty(key) && reuseStream)
+            {
+                var item = _streamList.FirstOrDefault(x => x.key == key);
+
+                if (item.Item1 != null)
+                {
+                    item.Item1.TrySetResult(1);
+                    _streamList.Remove(item);
+                }
+            }
+
             (TaskCompletionSource<int>, string, IServerStreamWriter<T>) record;
             record.Item1 = new TaskCompletionSource<int>();
             record.Item2 = key;

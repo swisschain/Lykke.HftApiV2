@@ -76,6 +76,13 @@ namespace HftApi.Modules
                 .WithParameter("exchangeName", _config.RabbitMq.OrderbooksExchangeName)
                 .SingleInstance();
 
+            builder.RegisterType<BalancesSubscriber>()
+                .As<IStartable>()
+                .AutoActivate()
+                .WithParameter("connectionString", _config.RabbitMq.MeConnectionString)
+                .WithParameter("exchangeName", _config.RabbitMq.BalancesExchangeName)
+                .SingleInstance();
+
             builder.RegisterHftInternalClient(_config.Services.HftInternalServiceUrl);
 
             builder.RegisterType<TokenService>()
@@ -110,15 +117,27 @@ namespace HftApi.Modules
             ).As<IMyNoSqlServerDataReader<OrderbookEntity>>().SingleInstance();
 
             builder.Register(ctx =>
+                new MyNoSqlReadRepository<BalanceEntity>(ctx.Resolve<MyNoSqlTcpClient>(), _config.MyNoSqlServer.BalancesTableName)
+            ).As<IMyNoSqlServerDataReader<BalanceEntity>>().SingleInstance();
+
+            builder.Register(ctx =>
             {
                 return new MyNoSqlServer.DataWriter.MyNoSqlServerDataWriter<OrderbookEntity>(() =>
                         _config.MyNoSqlServer.WriterServiceUrl,
                     _config.MyNoSqlServer.OrderbooksTableName);
             }).As<IMyNoSqlServerDataWriter<OrderbookEntity>>().SingleInstance();
 
+            builder.Register(ctx =>
+            {
+                return new MyNoSqlServer.DataWriter.MyNoSqlServerDataWriter<BalanceEntity>(() =>
+                        _config.MyNoSqlServer.WriterServiceUrl,
+                    _config.MyNoSqlServer.BalancesTableName, DataSynchronizationPeriod.Immediately);
+            }).As<IMyNoSqlServerDataWriter<BalanceEntity>>().SingleInstance();
+
             builder.RegisterType<StreamService<PriceUpdate>>().As<IStreamService<PriceUpdate>>().SingleInstance();
             builder.RegisterType<StreamService<TickerUpdate>>().As<IStreamService<TickerUpdate>>().SingleInstance();
             builder.RegisterType<StreamService<Lykke.HftApi.ApiContract.Orderbook>>().As<IStreamService<Lykke.HftApi.ApiContract.Orderbook>>().SingleInstance();
+            builder.RegisterType<StreamService<Lykke.HftApi.ApiContract.Balance>>().As<IStreamService<Lykke.HftApi.ApiContract.Balance>>().SingleInstance();
             builder.RegisterType<ApplicationManager>().AsSelf().SingleInstance();
         }
     }

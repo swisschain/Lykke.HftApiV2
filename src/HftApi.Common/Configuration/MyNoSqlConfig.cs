@@ -7,5 +7,6 @@ namespace HftApi.Common.Configuration
         public string TickersTableName { get; set; }
         public string PricesTableName { get; set; }
         public string OrderbooksTableName { get; set; }
+        public string BalancesTableName { get; set; }
     }
 }

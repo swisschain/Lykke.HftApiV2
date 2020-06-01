@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
 using AutoMapper;
+using Common;
 using Lykke.HftApi.ApiContract;
 using Lykke.HftApi.Domain.Entities;
 using Lykke.HftApi.Domain.Services;
 using MyNoSqlServer.Abstractions;
 using MyNoSqlServer.DataReader;
+using Balance = Lykke.HftApi.ApiContract.Balance;
 using Orderbook = Lykke.HftApi.ApiContract.Orderbook;
 
 namespace HftApi
@@ -16,9 +18,11 @@ namespace HftApi
         private readonly IMyNoSqlServerDataReader<PriceEntity> _pricesReader;
         private readonly IMyNoSqlServerDataReader<TickerEntity> _tickerReader;
         private readonly IMyNoSqlServerDataReader<OrderbookEntity> _orderbookReader;
+        private readonly IMyNoSqlServerDataReader<BalanceEntity> _balanceReader;
         private readonly IStreamService<PriceUpdate> _priceStraem;
         private readonly IStreamService<TickerUpdate> _tickerStream;
         private readonly IStreamService<Orderbook> _orderbookStream;
+        private readonly IStreamService<Balance> _balanceStream;
         private readonly IMapper _mapper;
 
         public ApplicationManager(
@@ -26,9 +30,11 @@ namespace HftApi
             IMyNoSqlServerDataReader<PriceEntity> pricesReader,
             IMyNoSqlServerDataReader<TickerEntity> tickerReader,
             IMyNoSqlServerDataReader<OrderbookEntity> orderbookReader,
+            IMyNoSqlServerDataReader<BalanceEntity> balanceReader,
             IStreamService<PriceUpdate> priceStraem,
             IStreamService<TickerUpdate> tickerStream,
             IStreamService<Orderbook>  orderbookStream,
+            IStreamService<Balance>  balanceStream,
             IMapper mapper
             )
         {
@@ -36,9 +42,11 @@ namespace HftApi
             _pricesReader = pricesReader;
             _tickerReader = tickerReader;
             _orderbookReader = orderbookReader;
+            _balanceReader = balanceReader;
             _priceStraem = priceStraem;
             _tickerStream = tickerStream;
             _orderbookStream = orderbookStream;
+            _balanceStream = balanceStream;
             _mapper = mapper;
         }
 
@@ -68,6 +76,15 @@ namespace HftApi
                     item.Asks.AddRange(_mapper.Map<List<Orderbook.Types.PriceVolume>>(orderbook.Asks));
                     item.Bids.AddRange(_mapper.Map<List<Orderbook.Types.PriceVolume>>(orderbook.Bids));
                     _orderbookStream.WriteToStream(item, orderbook.AssetPairId);
+                }
+            });
+
+            _balanceReader.SubscribeToChanges(balances =>
+            {
+                foreach (var balance in balances)
+                {
+                    var item = _mapper.Map<Balance>(balance);
+                    _balanceStream.WriteToStream(item, balance.WalletId);
                 }
             });
 

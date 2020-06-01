@@ -28,12 +28,19 @@ namespace GrpcStreamReader
                 return;
             }
 
+            if (appArguments.StreamName == StreamName.Balances && string.IsNullOrEmpty(appArguments.Token))
+            {
+                Console.WriteLine($"Token is required for balances stream");
+                return;
+            }
+
             var client = new HftApiClient(appArguments.GrpcUrl);
 
+            var headers = new Metadata();
 
             if (!string.IsNullOrEmpty(appArguments.Token))
             {
-                var headers = new Metadata {{"Authorization", $"Bearer {appArguments.Token}"}};
+                headers.Add("Authorization", $"Bearer {appArguments.Token}");
             }
 
             while (true)
@@ -68,6 +75,19 @@ namespace GrpcStreamReader
                             {
                                 Console.WriteLine($"Get orderbook updates for asset pair: {appArguments.StreamKey}");
                                 using var orderbooks = client.PublicService.GetOrderbookUpdates(new OrderbookUpdatesRequest{AssetPairId = appArguments.StreamKey});
+
+                                await foreach (var item in orderbooks.ResponseStream.ReadAllAsync())
+                                {
+                                    Console.WriteLine($"{JsonConvert.SerializeObject(item)}");
+                                }
+
+                                Console.WriteLine("test");
+                            }
+                            break;
+                        case StreamName.Balances:
+                            {
+                                Console.WriteLine($"Get balance updates....");
+                                using var orderbooks = client.PrivateService.GetBalanceUpdates(new Empty(), headers);
 
                                 await foreach (var item in orderbooks.ResponseStream.ReadAllAsync())
                                 {

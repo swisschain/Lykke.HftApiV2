@@ -12,6 +12,7 @@ namespace GrpcStreamReader
     {
         Prices,
         Tickers,
-        Orderbooks
+        Orderbooks,
+        Balances
     }
 }

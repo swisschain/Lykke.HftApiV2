@@ -62,6 +62,11 @@ namespace HftApi.Profiles
 
             CreateMap<Lykke.HftApi.Domain.Entities.OrderbookEntity, Lykke.HftApi.ApiContract.Orderbook>(MemberList.Destination)
                 .ForMember(d => d.Timestamp, o => o.MapFrom(x => Timestamp.FromDateTime(x.TimeStamp.ToUniversalTime())));
+
+            CreateMap<Lykke.HftApi.Domain.Entities.BalanceEntity, Lykke.HftApi.ApiContract.Balance>(MemberList.Destination)
+                .ForMember(d => d.Timestamp, o => o.MapFrom(x => Timestamp.FromDateTime(x.TimeStamp.ToUniversalTime())))
+                .ForMember(d => d.Available, o => o.MapFrom(x => x.Balance.ToString(CultureInfo.InvariantCulture)))
+                .ForMember(d => d.Reserved, o => o.MapFrom(x => x.Reserved.ToString(CultureInfo.InvariantCulture)));
         }
     }
 }

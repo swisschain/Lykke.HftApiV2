@@ -30,6 +30,7 @@ namespace HftApi.GrpcServices
         private readonly IBalanceService _balanceService;
         private readonly ValidationService _validationService;
         private readonly IMatchingEngineClient _matchingEngineClient;
+        private readonly IStreamService<Balance> _balanceUpdateService;
         private readonly IMapper _mapper;
 
         public PrivateService(
@@ -38,6 +39,7 @@ namespace HftApi.GrpcServices
             IBalanceService balanceService,
             ValidationService validationService,
             IMatchingEngineClient matchingEngineClient,
+            IStreamService<Balance> balanceUpdateService,
             IMapper mapper
             )
         {
@@ -46,6 +48,7 @@ namespace HftApi.GrpcServices
             _balanceService = balanceService;
             _validationService = validationService;
             _matchingEngineClient = matchingEngineClient;
+            _balanceUpdateService = balanceUpdateService;
             _mapper = mapper;
         }
 
@@ -408,6 +411,13 @@ namespace HftApi.GrpcServices
                     Message = message
                 }
             };
+        }
+
+        public override Task GetBalanceUpdates(Empty request, IServerStreamWriter<Balance> responseStream, ServerCallContext context)
+        {
+            Console.WriteLine($"New balance stream connect. peer:{context.Peer}");
+
+            return _balanceUpdateService.RegisterStream(responseStream, context.GetHttpContext().User.GetWalletId(), true);
         }
     }
 }
