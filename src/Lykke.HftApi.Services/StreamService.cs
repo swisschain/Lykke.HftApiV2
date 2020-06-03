@@ -1,75 +1,111 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
-using Grpc.Core;
+using Common;
+using Lykke.Common.Log;
+using Lykke.HftApi.Domain;
 using Lykke.HftApi.Domain.Services;
 
 namespace Lykke.HftApi.Services
 {
     public class StreamService<T>: IStreamService<T>
     {
-        private readonly List<(TaskCompletionSource<int>, string key, IServerStreamWriter<T>)> _streamList = new List<(TaskCompletionSource<int>, string, IServerStreamWriter<T>)>();
+        private readonly List<StreamData<T>> _streamList = new List<StreamData<T>>();
+        private readonly TimerTrigger _timerTrigger;
+
+        public StreamService(ILogFactory logFactory, bool needPing = false)
+        {
+            if (needPing)
+            {
+                _timerTrigger = new TimerTrigger(nameof(StreamService<T>), TimeSpan.FromSeconds(10), logFactory);
+                _timerTrigger.Triggered += Ping;
+                _timerTrigger.Start();
+            }
+        }
 
         public void WriteToStream(T data, string key = null)
         {
             var items = string.IsNullOrEmpty(key)
                 ? _streamList.ToArray()
-                : _streamList.Where(x => x.key == key).ToArray();
+                : _streamList.Where(x => x.Key == key).ToArray();
 
-            foreach (var pair in items)
+            foreach (var streamData in items)
             {
-                pair.Item3.WriteAsync(data)
-                    .ContinueWith(t => HandleError(pair), TaskContinuationOptions.OnlyOnFaulted);
+                streamData.Stream.WriteAsync(data)
+                    .ContinueWith(t => RegisterStream(streamData), TaskContinuationOptions.OnlyOnFaulted);
             }
         }
 
-        private void HandleError((TaskCompletionSource<int>, string key, IServerStreamWriter<T>) pair)
+        public Task RegisterStream(StreamInfo<T> streamInfo)
         {
-            pair.Item1.TrySetResult(1);
-            _streamList.Remove(pair);
-            Console.WriteLine("Remove stream connect");
-        }
+            var data = StreamData<T>.Create(streamInfo);
 
-        public Task RegisterStream(IServerStreamWriter<T> stream, string key = null, bool reuseStream = false)
-        {
-            if (!string.IsNullOrEmpty(key) && reuseStream)
-            {
-                var item = _streamList.FirstOrDefault(x => x.key == key);
+            _streamList.Add(data);
 
-                if (item.Item1 != null)
-                {
-                    item.Item1.TrySetResult(1);
-                    _streamList.Remove(item);
-                }
-            }
-
-            (TaskCompletionSource<int>, string, IServerStreamWriter<T>) record;
-            record.Item1 = new TaskCompletionSource<int>();
-            record.Item2 = key;
-            record.Item3 = stream;
-
-            _streamList.Add(record);
-
-            return record.Item1.Task;
+            return data.CompletionTask.Task;
         }
 
         public void Dispose()
         {
-            foreach (var pair in _streamList)
+            foreach (var streamInfo in _streamList)
             {
-                pair.Item1.TrySetResult(1);
-                Console.WriteLine("Remove stream connect");
+                streamInfo.CompletionTask.TrySetResult(1);
+                Console.WriteLine($"Remove stream connect (peer: {streamInfo.Peer}");
             }
+
+            _timerTrigger.Stop();
+            _timerTrigger.Dispose();
         }
 
         public void Stop()
         {
-            foreach (var pair in _streamList)
+            foreach (var streamInfo in _streamList)
             {
-                pair.Item1.TrySetResult(1);
-                Console.WriteLine("Remove stream connect");
+                streamInfo.CompletionTask.TrySetResult(1);
+                Console.WriteLine($"Remove stream connect (peer: {streamInfo.Peer}");
             }
+
+            _timerTrigger.Stop();
+        }
+
+        private void RemoveStream(StreamData<T> streamData)
+        {
+            streamData.CompletionTask.TrySetResult(1);
+            _streamList.Remove(streamData);
+            Console.WriteLine($"Remove stream connect (peer: {streamData.Peer}");
+        }
+
+        private Task Ping(ITimerTrigger timer, TimerTriggeredHandlerArgs args, CancellationToken cancellationtoken)
+        {
+            var streamsToRemove = _streamList
+                .Where(x => x.CancelationToken.HasValue && x.CancelationToken.Value.IsCancellationRequested)
+                .ToList();
+
+            foreach (var streamData in streamsToRemove)
+            {
+                RemoveStream(streamData);
+            }
+
+            return Task.CompletedTask;
+        }
+    }
+
+    internal class StreamData<T> : StreamInfo<T>
+    {
+        public TaskCompletionSource<int> CompletionTask { get; set; }
+
+        public static StreamData<T> Create(StreamInfo<T> streamInfo)
+        {
+            return new StreamData<T>
+            {
+                CompletionTask = new TaskCompletionSource<int>(),
+                CancelationToken = streamInfo.CancelationToken,
+                Stream = streamInfo.Stream,
+                Key = streamInfo.Key,
+                Peer = streamInfo.Peer
+            };
         }
     }
 }

@@ -8,6 +8,7 @@ using Grpc.Core;
 using JetBrains.Annotations;
 using Lykke.Exchange.Api.MarketData;
 using Lykke.HftApi.ApiContract;
+using Lykke.HftApi.Domain;
 using Lykke.HftApi.Domain.Services;
 
 namespace HftApi.GrpcServices
@@ -121,13 +122,27 @@ namespace HftApi.GrpcServices
         public override Task GetPriceUpdates(Empty request, IServerStreamWriter<PriceUpdate> responseStream, ServerCallContext context)
         {
             Console.WriteLine($"New price stream connect. peer:{context.Peer}");
-            return _priceStreamService.RegisterStream(responseStream);
+
+            var streamInfo = new StreamInfo<PriceUpdate>
+            {
+                Stream = responseStream,
+                Peer = context.Peer
+            };
+
+            return _priceStreamService.RegisterStream(streamInfo);
         }
 
         public override Task GetTickerUpdates(Empty request, IServerStreamWriter<TickerUpdate> responseStream, ServerCallContext context)
         {
             Console.WriteLine($"New ticker stream connect. peer:{context.Peer}");
-            return _tickerUpdateService.RegisterStream(responseStream);
+
+            var streamInfo = new StreamInfo<TickerUpdate>
+            {
+                Stream = responseStream,
+                Peer = context.Peer
+            };
+
+            return _tickerUpdateService.RegisterStream(streamInfo);
         }
 
         public override Task GetOrderbookUpdates(OrderbookUpdatesRequest request,
@@ -135,7 +150,15 @@ namespace HftApi.GrpcServices
             ServerCallContext context)
         {
             Console.WriteLine($"New orderbook stream connect. peer:{context.Peer}");
-            return _orderbookUpdateService.RegisterStream(responseStream, request.AssetPairId);
+
+            var streamInfo = new StreamInfo<Orderbook>
+            {
+                Stream = responseStream,
+                Key = request.AssetPairId,
+                Peer = context.Peer
+            };
+
+            return _orderbookUpdateService.RegisterStream(streamInfo);
         }
     }
 }

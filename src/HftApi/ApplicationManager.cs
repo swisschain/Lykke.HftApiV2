@@ -1,10 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using AutoMapper;
-using Common;
 using HftApi.Common.Domain.MyNoSqlEntities;
 using Lykke.HftApi.ApiContract;
-using Lykke.HftApi.Domain.Entities;
 using Lykke.HftApi.Domain.Services;
 using MyNoSqlServer.Abstractions;
 using MyNoSqlServer.DataReader;
@@ -23,7 +22,7 @@ namespace HftApi
         private readonly IStreamService<PriceUpdate> _priceStraem;
         private readonly IStreamService<TickerUpdate> _tickerStream;
         private readonly IStreamService<Orderbook> _orderbookStream;
-        private readonly IStreamService<Balance> _balanceStream;
+        private readonly IStreamService<BalanceUpdate> _balanceStream;
         private readonly IMapper _mapper;
 
         public ApplicationManager(
@@ -35,7 +34,7 @@ namespace HftApi
             IStreamService<PriceUpdate> priceStraem,
             IStreamService<TickerUpdate> tickerStream,
             IStreamService<Orderbook>  orderbookStream,
-            IStreamService<Balance>  balanceStream,
+            IStreamService<BalanceUpdate>  balanceStream,
             IMapper mapper
             )
         {
@@ -82,10 +81,13 @@ namespace HftApi
 
             _balanceReader.SubscribeToChanges(balances =>
             {
-                foreach (var balance in balances)
+                var balancesByWallet = balances.GroupBy(x => x.WalletId);
+
+                foreach (var walletBalanes in balancesByWallet)
                 {
-                    var item = _mapper.Map<Balance>(balance);
-                    _balanceStream.WriteToStream(item, balance.WalletId);
+                    var balanceUpdate = new BalanceUpdate();
+                    balanceUpdate.Balances.AddRange( _mapper.Map<List<Balance>>(walletBalanes.ToList()));
+                    _balanceStream.WriteToStream(balanceUpdate, walletBalanes.Key);
                 }
             });
 

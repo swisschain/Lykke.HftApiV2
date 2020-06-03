@@ -91,7 +91,7 @@ namespace GrpcStreamReader
 
                                 await foreach (var item in orderbooks.ResponseStream.ReadAllAsync())
                                 {
-                                    Console.WriteLine($"{JsonConvert.SerializeObject(item)}");
+                                    Console.WriteLine($"{JsonConvert.SerializeObject(item.Balances)}");
                                 }
                             }
                             break;

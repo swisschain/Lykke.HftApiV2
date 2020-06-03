@@ -17,7 +17,7 @@ service PrivateService {
 	rpc CancelAllOrders (CancelOrdersRequest) returns (CancelOrderResponse);
 	rpc CancelOrder (CancelOrderRequest) returns (CancelOrderResponse);
 
-    rpc GetBalanceUpdates (google.protobuf.Empty) returns (stream Balance);
+    rpc GetBalanceUpdates (google.protobuf.Empty) returns (stream BalanceUpdate);
 }
 
 message LimitOrderRequest {
@@ -130,4 +130,8 @@ message Trade {
 message TradeFee {
     string size = 1;
     string assetId = 2;
+}
+
+message BalanceUpdate {
+    repeated Balance balances = 1;
 }

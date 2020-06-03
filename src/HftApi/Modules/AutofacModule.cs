@@ -109,7 +109,10 @@ namespace HftApi.Modules
             builder.RegisterType<StreamService<PriceUpdate>>().As<IStreamService<PriceUpdate>>().SingleInstance();
             builder.RegisterType<StreamService<TickerUpdate>>().As<IStreamService<TickerUpdate>>().SingleInstance();
             builder.RegisterType<StreamService<Orderbook>>().As<IStreamService<Orderbook>>().SingleInstance();
-            builder.RegisterType<StreamService<Balance>>().As<IStreamService<Balance>>().SingleInstance();
+            builder.RegisterType<StreamService<BalanceUpdate>>()
+                .WithParameter(TypedParameter.From(true))
+                .As<IStreamService<BalanceUpdate>>()
+                .SingleInstance();
             builder.RegisterType<ApplicationManager>().AsSelf().SingleInstance();
         }
     }

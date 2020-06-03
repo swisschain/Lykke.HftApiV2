@@ -54,17 +54,15 @@ namespace HftApi.Worker.RabbitSubscribers
             if (!message.Balances.Any())
                 return;
 
-            foreach (var balance in message.Balances)
-            {
-                var entity = new BalanceEntity(balance.Id, balance.Asset)
+            var entities = message.Balances.Select(balance => new BalanceEntity(balance.Id, balance.Asset)
                 {
                     TimeStamp = message.Timestamp,
                     Balance = balance.NewBalance,
                     Reserved = balance.NewReserved ?? 0
-                };
+                })
+                .ToList();
 
-                await _writer.InsertOrReplaceAsync(entity);
-            }
+            await _writer.BulkInsertOrReplaceAsync(entities);
         }
 
         public void Dispose()
