@@ -13,6 +13,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "0. Solution Items", "0. Sol
 		.gitignore = .gitignore
 		LICENSE = LICENSE
 		settings.yaml = settings.yaml
+		settings-worker.yaml = settings-worker.yaml
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{7F3DBAA2-139B-401D-A33F-1409A9BB4DE8}"
@@ -47,6 +48,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lykke.HftApi.Services", "src\Lykke.HftApi.Services\Lykke.HftApi.Services.csproj", "{8D8D09F7-A72D-461F-B07A-7B85DEF83993}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GrpcStreamReader", "tools\GrpcStreamReader\GrpcStreamReader.csproj", "{F1F3C1EB-6C19-4315-A03F-4F84910142C4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HftApi.Worker", "src\HftApi.Worker\HftApi.Worker.csproj", "{5F77379F-0D4E-4BB9-93DF-EA65EEE25652}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -86,6 +89,10 @@ Global
 		{F1F3C1EB-6C19-4315-A03F-4F84910142C4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F1F3C1EB-6C19-4315-A03F-4F84910142C4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F1F3C1EB-6C19-4315-A03F-4F84910142C4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5F77379F-0D4E-4BB9-93DF-EA65EEE25652}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5F77379F-0D4E-4BB9-93DF-EA65EEE25652}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5F77379F-0D4E-4BB9-93DF-EA65EEE25652}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5F77379F-0D4E-4BB9-93DF-EA65EEE25652}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

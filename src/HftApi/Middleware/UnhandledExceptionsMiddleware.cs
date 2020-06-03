@@ -48,6 +48,7 @@ namespace HftApi.Middleware
             }
 
             sw.Stop();
+
             context.GetEnrichLogger(body).Information(MessageTemplate,  context.Request.Method, $"{context.Request.Path}{context.Request.QueryString}", context.Response.StatusCode, sw.Elapsed.TotalMilliseconds);
         }
 

@@ -1,7 +1,7 @@
 using System;
 using MyNoSqlServer.Abstractions;
 
-namespace Lykke.HftApi.Domain.Entities
+namespace HftApi.Common.Domain.MyNoSqlEntities
 {
     public class PriceEntity : IMyNoSqlEntity
     {

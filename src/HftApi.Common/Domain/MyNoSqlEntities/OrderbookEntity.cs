@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using MyNoSqlServer.Abstractions;
 
-namespace Lykke.HftApi.Domain.Entities
+namespace HftApi.Common.Domain.MyNoSqlEntities
 {
     public class OrderbookEntity : IMyNoSqlEntity
     {
@@ -19,12 +19,24 @@ namespace Lykke.HftApi.Domain.Entities
             AssetPairId = assetPairId;
         }
         public string AssetPairId { get; set; }
-        public List<VolumePrice> Bids { get; set; } = new List<VolumePrice>();
-        public List<VolumePrice> Asks { get; set; } = new List<VolumePrice>();
+        public List<VolumePriceEntity> Bids { get; set; } = new List<VolumePriceEntity>();
+        public List<VolumePriceEntity> Asks { get; set; } = new List<VolumePriceEntity>();
         public string PartitionKey { get; set; }
         public string RowKey { get; set; }
         public DateTime TimeStamp { get; set; }
         public DateTime? Expires { get; set; }
         public static string GetPk() => "Orderbook";
+    }
+
+    public class VolumePriceEntity
+    {
+        public decimal Volume { get; set; }
+        public decimal Price { get; set; }
+
+        public VolumePriceEntity(decimal volume, decimal price)
+        {
+            Volume = volume;
+            Price = price;
+        }
     }
 }

@@ -1,15 +1,15 @@
 using System;
 using System.Threading.Tasks;
 using Autofac;
-using HftApi.RabbitSubscribers.Messages;
+using HftApi.Common.Domain.MyNoSqlEntities;
+using HftApi.Worker.RabbitSubscribers.Messages;
 using JetBrains.Annotations;
 using Lykke.Common.Log;
-using Lykke.HftApi.Domain.Entities;
 using Lykke.RabbitMqBroker;
 using Lykke.RabbitMqBroker.Subscriber;
 using MyNoSqlServer.Abstractions;
 
-namespace HftApi.RabbitSubscribers
+namespace HftApi.Worker.RabbitSubscribers
 {
     [UsedImplicitly]
     public class OrderbooksSubscriber : IStartable, IDisposable
@@ -61,7 +61,7 @@ namespace HftApi.RabbitSubscribers
 
             foreach (var price in orderbookMessage.Prices)
             {
-                prices.Add(new VolumePrice((decimal)price.Volume, (decimal)price.Price));
+                prices.Add(new VolumePriceEntity((decimal)price.Volume, (decimal)price.Price));
             }
 
             await _orderbookWriter.InsertOrReplaceAsync(entity);

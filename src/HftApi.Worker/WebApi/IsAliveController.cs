@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using HftApi.WebApi.Models.IsAlive;
+using HftApi.Worker.WebApi.Models.IsAlive;
 using Swisschain.Sdk.Server.Common;
 
-namespace HftApi.WebApi
+namespace HftApi.Worker.WebApi
 {
     [ApiController]
     [Route("api/isalive")]

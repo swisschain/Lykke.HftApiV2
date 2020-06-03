@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Reflection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Swisschain.Sdk.Server.Common;
 using Swisschain.Sdk.Server.Logging;
 
-namespace HftApi
+namespace HftApi.Worker
 {
     public class Program
     {
@@ -18,12 +17,12 @@ namespace HftApi
 
         public static void Main(string[] args)
         {
-            Console.Title = "Lykke HftApi";
+            Console.Title = "Lykke HftApi Worker";
 
             var remoteSettingsConfig = ApplicationEnvironment.Config.Get<RemoteSettingsConfig>();
 
             using var loggerFactory = LogConfigurator.Configure("Lykke", remoteSettingsConfig.RemoteSettingsUrls ?? Array.Empty<string>());
-
+            
             var logger = loggerFactory.CreateLogger<Program>();
 
             try

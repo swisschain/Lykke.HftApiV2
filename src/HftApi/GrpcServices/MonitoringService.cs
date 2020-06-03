@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Grpc.Core;
 using Lykke.HftApi.ApiContract;
 using Swisschain.Sdk.Server.Common;
@@ -11,11 +12,11 @@ namespace HftApi.GrpcServices
         {
             var result = new IsAliveResponce
             {
-                Name = Program.AppName,
+                Name = ApplicationInformation.AppName,
                 Version = ApplicationInformation.AppVersion,
                 StartedAt = ApplicationInformation.StartedAt.ToString("yyyy-MM-dd HH:mm:ss"),
                 Env = ApplicationEnvironment.Environment,
-                Hostname = ApplicationEnvironment.HostName
+                Hostname = Environment.MachineName
             };
 
             return Task.FromResult(result);

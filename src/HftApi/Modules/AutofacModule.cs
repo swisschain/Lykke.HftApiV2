@@ -1,11 +1,11 @@
 using System;
 using Autofac;
 using HftApi.Common.Configuration;
+using HftApi.Common.Domain.MyNoSqlEntities;
 using HftApi.RabbitSubscribers;
 using Lykke.Common.Log;
 using Lykke.Exchange.Api.MarketData.Contract;
 using Lykke.HftApi.ApiContract;
-using Lykke.HftApi.Domain.Entities;
 using Lykke.HftApi.Domain.Services;
 using Lykke.HftApi.Services;
 using Lykke.Service.HftInternalService.Client;
@@ -69,20 +69,6 @@ namespace HftApi.Modules
                 .WithParameter("exchangeName", _config.RabbitMq.ExchangeName)
                 .SingleInstance();
 
-            builder.RegisterType<OrderbooksSubscriber>()
-                .As<IStartable>()
-                .AutoActivate()
-                .WithParameter("connectionString", _config.RabbitMq.MeConnectionString)
-                .WithParameter("exchangeName", _config.RabbitMq.OrderbooksExchangeName)
-                .SingleInstance();
-
-            builder.RegisterType<BalancesSubscriber>()
-                .As<IStartable>()
-                .AutoActivate()
-                .WithParameter("connectionString", _config.RabbitMq.MeConnectionString)
-                .WithParameter("exchangeName", _config.RabbitMq.BalancesExchangeName)
-                .SingleInstance();
-
             builder.RegisterHftInternalClient(_config.Services.HftInternalServiceUrl);
 
             builder.RegisterType<TokenService>()
@@ -99,7 +85,7 @@ namespace HftApi.Modules
 
             builder.Register(ctx =>
             {
-                var client = new MyNoSqlTcpClient(() => _config.MyNoSqlServer.ReaderServiceUrl, $"{Program.AppName}-{Environment.MachineName}");
+                var client = new MyNoSqlTcpClient(() => _config.MyNoSqlServer.ReaderServiceUrl, $"{ApplicationInformation.AppName}-{Environment.MachineName}");
                 client.Start();
                 return client;
             }).AsSelf().SingleInstance();
@@ -120,24 +106,10 @@ namespace HftApi.Modules
                 new MyNoSqlReadRepository<BalanceEntity>(ctx.Resolve<MyNoSqlTcpClient>(), _config.MyNoSqlServer.BalancesTableName)
             ).As<IMyNoSqlServerDataReader<BalanceEntity>>().SingleInstance();
 
-            builder.Register(ctx =>
-            {
-                return new MyNoSqlServer.DataWriter.MyNoSqlServerDataWriter<OrderbookEntity>(() =>
-                        _config.MyNoSqlServer.WriterServiceUrl,
-                    _config.MyNoSqlServer.OrderbooksTableName);
-            }).As<IMyNoSqlServerDataWriter<OrderbookEntity>>().SingleInstance();
-
-            builder.Register(ctx =>
-            {
-                return new MyNoSqlServer.DataWriter.MyNoSqlServerDataWriter<BalanceEntity>(() =>
-                        _config.MyNoSqlServer.WriterServiceUrl,
-                    _config.MyNoSqlServer.BalancesTableName, DataSynchronizationPeriod.Immediately);
-            }).As<IMyNoSqlServerDataWriter<BalanceEntity>>().SingleInstance();
-
             builder.RegisterType<StreamService<PriceUpdate>>().As<IStreamService<PriceUpdate>>().SingleInstance();
             builder.RegisterType<StreamService<TickerUpdate>>().As<IStreamService<TickerUpdate>>().SingleInstance();
-            builder.RegisterType<StreamService<Lykke.HftApi.ApiContract.Orderbook>>().As<IStreamService<Lykke.HftApi.ApiContract.Orderbook>>().SingleInstance();
-            builder.RegisterType<StreamService<Lykke.HftApi.ApiContract.Balance>>().As<IStreamService<Lykke.HftApi.ApiContract.Balance>>().SingleInstance();
+            builder.RegisterType<StreamService<Orderbook>>().As<IStreamService<Orderbook>>().SingleInstance();
+            builder.RegisterType<StreamService<Balance>>().As<IStreamService<Balance>>().SingleInstance();
             builder.RegisterType<ApplicationManager>().AsSelf().SingleInstance();
         }
     }

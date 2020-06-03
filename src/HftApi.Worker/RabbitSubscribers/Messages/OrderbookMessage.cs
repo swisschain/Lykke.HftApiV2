@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace HftApi.RabbitSubscribers.Messages
+namespace HftApi.Worker.RabbitSubscribers.Messages
 {
     public class OrderbookMessage
     {

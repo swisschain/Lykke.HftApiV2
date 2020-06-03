@@ -2,15 +2,15 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Autofac;
-using HftApi.RabbitSubscribers.Messages;
+using HftApi.Common.Domain.MyNoSqlEntities;
+using HftApi.Worker.RabbitSubscribers.Messages;
 using JetBrains.Annotations;
 using Lykke.Common.Log;
-using Lykke.HftApi.Domain.Entities;
 using Lykke.RabbitMqBroker;
 using Lykke.RabbitMqBroker.Subscriber;
 using MyNoSqlServer.Abstractions;
 
-namespace HftApi.RabbitSubscribers
+namespace HftApi.Worker.RabbitSubscribers
 {
     [UsedImplicitly]
     public class BalancesSubscriber : IStartable, IDisposable

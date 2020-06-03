@@ -1,34 +1,3 @@
-Auth:
-  JwtSecret:
-    settings-key: Hftv2Service-Auth-JwtSecret
-  LykkeAud:
-    settings-key: Hftv2Service-Auth-LykkeAud
-Services:
-  AssetsServiceUrl:
-    settings-key: AssetsServiceUrl
-  MarketDataGrpcServiceUrl:
-    settings-key: MarketDataGrpcServiceUrl
-  HistoryServiceUrl:
-    settings-key: HistoryServiceUrl
-  BalancesServiceUrl:
-    settings-key: BalancesServiceUrl
-  HftInternalServiceUrl:
-    settings-key: HftInternalServiceUrl
-Cache:
-  AssetsCacheDuration:
-    settings-key: Hftv2Service-Cache-AssetsCacheDuration
-Redis:
-  RedisConfiguration:
-    settings-key: HFT-RedisConfiguration
-  InstanceName:
-    settings-key: OrderBooks-CacheInstance
-  OrderBooksCacheKeyPattern:
-    settings-key: OrderBooks-CacheKeyPattern
-MatchingEngine:
-  Host:
-    settings-key: MatchingEngine-Host
-  Port:
-    settings-key: MatchingEngine-Port
 RabbitMq:
   ConnectionString:
     settings-key: SagasRabbitMqConnStr
@@ -64,7 +33,7 @@ ElasticsearchLogs:
 Serilog:
   minimumLevel:
     default:
-      settings-key: Hftv2Service-Serilog-DefaultMinLevel
+      settings-key: Hftv2Worker-Serilog-DefaultMinLevel
     override:
-      settings-key: Hftv2Service-Serilog-Override
+      settings-key: Hftv2Worker-Serilog-Override
       types: [Json]

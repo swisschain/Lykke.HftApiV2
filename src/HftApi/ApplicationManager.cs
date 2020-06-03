@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using AutoMapper;
 using Common;
+using HftApi.Common.Domain.MyNoSqlEntities;
 using Lykke.HftApi.ApiContract;
 using Lykke.HftApi.Domain.Entities;
 using Lykke.HftApi.Domain.Services;
