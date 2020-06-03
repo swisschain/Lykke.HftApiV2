@@ -7,5 +7,6 @@ namespace HftApi.Common.Configuration
         public string ExchangeName { get; set; }
         public string OrderbooksExchangeName { get; set; }
         public string BalancesExchangeName { get; set; }
+        public string LimitOrdersExchangeName { get; set; }
     }
 }

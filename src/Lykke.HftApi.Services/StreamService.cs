@@ -34,7 +34,7 @@ namespace Lykke.HftApi.Services
             foreach (var streamData in items)
             {
                 streamData.Stream.WriteAsync(data)
-                    .ContinueWith(t => RegisterStream(streamData), TaskContinuationOptions.OnlyOnFaulted);
+                    .ContinueWith(t => RemoveStream(streamData), TaskContinuationOptions.OnlyOnFaulted);
             }
         }
 

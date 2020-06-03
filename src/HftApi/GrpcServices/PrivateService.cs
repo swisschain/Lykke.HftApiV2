@@ -31,6 +31,7 @@ namespace HftApi.GrpcServices
         private readonly ValidationService _validationService;
         private readonly IMatchingEngineClient _matchingEngineClient;
         private readonly IStreamService<BalanceUpdate> _balanceUpdateService;
+        private readonly IStreamService<OrderUpdate> _orderUpdateService;
         private readonly IMapper _mapper;
 
         public PrivateService(
@@ -40,6 +41,7 @@ namespace HftApi.GrpcServices
             ValidationService validationService,
             IMatchingEngineClient matchingEngineClient,
             IStreamService<BalanceUpdate> balanceUpdateService,
+            IStreamService<OrderUpdate> orderUpdateService,
             IMapper mapper
             )
         {
@@ -49,6 +51,7 @@ namespace HftApi.GrpcServices
             _validationService = validationService;
             _matchingEngineClient = matchingEngineClient;
             _balanceUpdateService = balanceUpdateService;
+            _orderUpdateService = orderUpdateService;
             _mapper = mapper;
         }
 
@@ -426,6 +429,21 @@ namespace HftApi.GrpcServices
             };
 
             return _balanceUpdateService.RegisterStream(streamInfo);
+        }
+
+        public override Task GetOrderUpdates(Empty request, IServerStreamWriter<OrderUpdate> responseStream, ServerCallContext context)
+        {
+            Console.WriteLine($"New order stream connect. peer:{context.Peer}");
+
+            var streamInfo = new StreamInfo<OrderUpdate>
+            {
+                Stream = responseStream,
+                CancelationToken = context.CancellationToken,
+                Key = context.GetHttpContext().User.GetWalletId(),
+                Peer = context.Peer
+            };
+
+            return _orderUpdateService.RegisterStream(streamInfo);
         }
     }
 }

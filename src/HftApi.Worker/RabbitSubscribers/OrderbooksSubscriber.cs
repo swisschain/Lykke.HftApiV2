@@ -35,7 +35,7 @@ namespace HftApi.Worker.RabbitSubscribers
         public void Start()
         {
             var settings = RabbitMqSubscriptionSettings
-                .ForSubscriber(_connectionString, _exchangeName, $"{nameof(OrderbooksSubscriber)}-{Environment.MachineName}");
+                .ForSubscriber(_connectionString, _exchangeName, $"hft-{nameof(OrderbooksSubscriber)}-{Environment.MachineName}");
 
             settings.DeadLetterExchangeName = null;
 
@@ -53,9 +53,10 @@ namespace HftApi.Worker.RabbitSubscribers
             var entity = await _orderbookWriter.GetAsync(OrderbookEntity.GetPk(), orderbookMessage.AssetPair)
                           ?? new OrderbookEntity(orderbookMessage.AssetPair)
                           {
-                              TimeStamp = orderbookMessage.Timestamp,
+                              CreatedAt = orderbookMessage.Timestamp,
                           };
 
+            entity.CreatedAt = orderbookMessage.Timestamp;
             var prices = orderbookMessage.IsBuy ? entity.Bids : entity.Asks;
             prices.Clear();
 

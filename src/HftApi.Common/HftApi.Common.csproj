@@ -18,4 +18,8 @@
     <PackageReference Include="MyNoSqlServer.Abstractions" Version="1.0.4" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Lykke.HftApi.Domain\Lykke.HftApi.Domain.csproj" />
+  </ItemGroup>
+
 </Project>

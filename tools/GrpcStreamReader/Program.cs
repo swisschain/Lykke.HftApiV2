@@ -7,7 +7,6 @@ using Grpc.Core;
 using Lykke.HftApi.ApiClient;
 using Lykke.HftApi.ApiContract;
 using Newtonsoft.Json;
-using Enum = System.Enum;
 
 namespace GrpcStreamReader
 {
@@ -28,9 +27,9 @@ namespace GrpcStreamReader
                 return;
             }
 
-            if (appArguments.StreamName == StreamName.Balances && string.IsNullOrEmpty(appArguments.Token))
+            if (appArguments.StreamName.OneOf(StreamName.Balances, StreamName.Orders) && string.IsNullOrEmpty(appArguments.Token))
             {
-                Console.WriteLine($"Token is required for balances stream");
+                Console.WriteLine($"Token is required for {appArguments.StreamName.ToString()} stream");
                 return;
             }
 
@@ -95,6 +94,17 @@ namespace GrpcStreamReader
                                 }
                             }
                             break;
+                        case StreamName.Orders:
+                            {
+                                Console.WriteLine($"Get order updates....");
+                                using var orders = client.PrivateService.GetOrderUpdates(new Empty(), headers);
+
+                                await foreach (var item in orders.ResponseStream.ReadAllAsync())
+                                {
+                                    Console.WriteLine($"{JsonConvert.SerializeObject(item.Orders)}");
+                                }
+                            }
+                            break;
                         default:
                             throw new ArgumentOutOfRangeException();
                     }
@@ -139,7 +149,7 @@ namespace GrpcStreamReader
             parser.Setup(x => x.StreamName)
                 .As('n', "name")
                 .Required()
-                .WithDescription($"-n <stream name>. GRPC stream name. Required. Available values: { string.Join(", ", Enum.GetValues(typeof(StreamName)).Cast<StreamName>())}");
+                .WithDescription($"-n <stream name>. GRPC stream name. Required. Available values: { string.Join(", ", System.Enum.GetValues(typeof(StreamName)).Cast<StreamName>())}");
 
             parser.Setup(x => x.StreamKey)
                 .As('k', "key")

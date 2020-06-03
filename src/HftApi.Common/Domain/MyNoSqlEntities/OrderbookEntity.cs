@@ -21,6 +21,7 @@ namespace HftApi.Common.Domain.MyNoSqlEntities
         public string AssetPairId { get; set; }
         public List<VolumePriceEntity> Bids { get; set; } = new List<VolumePriceEntity>();
         public List<VolumePriceEntity> Asks { get; set; } = new List<VolumePriceEntity>();
+        public DateTime CreatedAt { get; set; }
         public string PartitionKey { get; set; }
         public string RowKey { get; set; }
         public DateTime TimeStamp { get; set; }

@@ -36,7 +36,7 @@ namespace HftApi.Worker.RabbitSubscribers
         public void Start()
         {
             var settings = RabbitMqSubscriptionSettings
-                .ForSubscriber(_connectionString, _exchangeName, $"{nameof(BalancesSubscriber)}-{Environment.MachineName}");
+                .ForSubscriber(_connectionString, _exchangeName, $"hft-{nameof(BalancesSubscriber)}-{Environment.MachineName}");
 
             settings.DeadLetterExchangeName = null;
 
@@ -56,7 +56,7 @@ namespace HftApi.Worker.RabbitSubscribers
 
             var entities = message.Balances.Select(balance => new BalanceEntity(balance.Id, balance.Asset)
                 {
-                    TimeStamp = message.Timestamp,
+                    CreatedAt = message.Timestamp,
                     Balance = balance.NewBalance,
                     Reserved = balance.NewReserved ?? 0
                 })

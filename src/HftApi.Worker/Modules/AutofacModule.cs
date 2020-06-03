@@ -40,6 +40,13 @@ namespace HftApi.Worker.Modules
                 .WithParameter("exchangeName", _config.RabbitMq.BalancesExchangeName)
                 .SingleInstance();
 
+            builder.RegisterType<LimitOrdersSubscriber>()
+                .As<IStartable>()
+                .AutoActivate()
+                .WithParameter("connectionString", _config.RabbitMq.MeConnectionString)
+                .WithParameter("exchangeName", _config.RabbitMq.LimitOrdersExchangeName)
+                .SingleInstance();
+
             builder.Register(ctx =>
             {
                 return new MyNoSqlServer.DataWriter.MyNoSqlServerDataWriter<OrderbookEntity>(() =>
@@ -53,6 +60,13 @@ namespace HftApi.Worker.Modules
                         _config.MyNoSqlServer.WriterServiceUrl,
                     _config.MyNoSqlServer.BalancesTableName, DataSynchronizationPeriod.Immediately);
             }).As<IMyNoSqlServerDataWriter<BalanceEntity>>().SingleInstance();
+
+            builder.Register(ctx =>
+            {
+                return new MyNoSqlServer.DataWriter.MyNoSqlServerDataWriter<LimitOrderEntity>(() =>
+                        _config.MyNoSqlServer.WriterServiceUrl,
+                    _config.MyNoSqlServer.LimitOrdersTableName);
+            }).As<IMyNoSqlServerDataWriter<LimitOrderEntity>>().SingleInstance();
         }
     }
 }

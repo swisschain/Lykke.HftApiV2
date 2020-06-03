@@ -13,7 +13,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "0. Solution Items", "0. Sol
 		.gitignore = .gitignore
 		LICENSE = LICENSE
 		settings.yaml = settings.yaml
-		settings-worker.yaml = settings-worker.yaml
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{7F3DBAA2-139B-401D-A33F-1409A9BB4DE8}"

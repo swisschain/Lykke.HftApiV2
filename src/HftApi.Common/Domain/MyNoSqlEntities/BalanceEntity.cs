@@ -19,6 +19,7 @@ namespace HftApi.Common.Domain.MyNoSqlEntities
         public string AssetId { get; set; }
         public decimal Balance { get; set; }
         public decimal Reserved { get; set; }
+        public DateTime CreatedAt { get; set; }
 
         public string PartitionKey { get; set; }
         public string RowKey { get; set; }

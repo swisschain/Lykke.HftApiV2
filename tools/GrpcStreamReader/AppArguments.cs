@@ -1,3 +1,5 @@
+using System.Linq;
+
 namespace GrpcStreamReader
 {
     internal class AppArguments
@@ -13,6 +15,15 @@ namespace GrpcStreamReader
         Prices,
         Tickers,
         Orderbooks,
-        Balances
+        Balances,
+        Orders
+    }
+
+    internal static class Extensions
+    {
+        internal static bool OneOf(this StreamName stream, params StreamName[] names)
+        {
+            return names.Contains(stream);
+        }
     }
 }
