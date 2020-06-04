@@ -5,7 +5,7 @@ using MyNoSqlServer.Abstractions;
 
 namespace HftApi.Common.Domain.MyNoSqlEntities
 {
-    public class LimitOrderEntity : IMyNoSqlEntity
+    public class OrderEntity : IMyNoSqlEntity
     {
         public string Id { get; set; }
         public string WalletId { get; set; }

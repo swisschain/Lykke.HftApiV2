@@ -12,6 +12,7 @@ namespace HftApi.Common.Domain.MyNoSqlEntities
         public decimal LastPrice { get; set; }
         public decimal High { get; set; }
         public decimal Low { get; set; }
+        public DateTime UpdatedDt { get; set; }
 
         public string PartitionKey { get; set; }
         public string RowKey { get; set; }

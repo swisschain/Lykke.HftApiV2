@@ -9,7 +9,7 @@ namespace HftApi.Worker.Profiles
     {
         public WorkerProfile()
         {
-            CreateMap<Lykke.MatchingEngine.Connector.Models.Events.Order, LimitOrderEntity>(MemberList.Destination)
+            CreateMap<Lykke.MatchingEngine.Connector.Models.Events.Order, OrderEntity>(MemberList.Destination)
                 .ForMember(d => d.PartitionKey, o => o.MapFrom(x => x.WalletId))
                 .ForMember(d => d.RowKey, o => o.MapFrom(x => x.Id))
                 .ForMember(d => d.TimeStamp, o => o.Ignore())

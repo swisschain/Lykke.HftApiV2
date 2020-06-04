@@ -107,8 +107,8 @@ namespace HftApi.Modules
             ).As<IMyNoSqlServerDataReader<BalanceEntity>>().SingleInstance();
 
             builder.Register(ctx =>
-                new MyNoSqlReadRepository<LimitOrderEntity>(ctx.Resolve<MyNoSqlTcpClient>(), _config.MyNoSqlServer.LimitOrdersTableName)
-            ).As<IMyNoSqlServerDataReader<LimitOrderEntity>>().SingleInstance();
+                new MyNoSqlReadRepository<OrderEntity>(ctx.Resolve<MyNoSqlTcpClient>(), _config.MyNoSqlServer.OrdersTableName)
+            ).As<IMyNoSqlServerDataReader<OrderEntity>>().SingleInstance();
 
             builder.RegisterType<StreamService<PriceUpdate>>().As<IStreamService<PriceUpdate>>().SingleInstance();
             builder.RegisterType<StreamService<TickerUpdate>>().As<IStreamService<TickerUpdate>>().SingleInstance();

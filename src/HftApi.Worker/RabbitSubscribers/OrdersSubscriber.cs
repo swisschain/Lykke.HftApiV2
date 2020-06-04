@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Autofac;
 using AutoMapper;
-using Common;
 using HftApi.Common.Domain.MyNoSqlEntities;
 using JetBrains.Annotations;
 using Lykke.Common.Log;
@@ -15,19 +14,19 @@ using MyNoSqlServer.Abstractions;
 namespace HftApi.Worker.RabbitSubscribers
 {
     [UsedImplicitly]
-    public class LimitOrdersSubscriber : IStartable, IDisposable
+    public class OrdersSubscriber : IStartable, IDisposable
     {
         private readonly string _connectionString;
         private readonly string _exchangeName;
-        private readonly IMyNoSqlServerDataWriter<LimitOrderEntity> _writer;
+        private readonly IMyNoSqlServerDataWriter<OrderEntity> _writer;
         private readonly IMapper _mapper;
         private readonly ILogFactory _logFactory;
         private RabbitMqSubscriber<ExecutionEvent> _subscriber;
 
-        public LimitOrdersSubscriber(
+        public OrdersSubscriber(
             string connectionString,
             string exchangeName,
-            IMyNoSqlServerDataWriter<LimitOrderEntity> writer,
+            IMyNoSqlServerDataWriter<OrderEntity> writer,
             IMapper mapper,
             ILogFactory logFactory)
         {
@@ -41,7 +40,7 @@ namespace HftApi.Worker.RabbitSubscribers
         public void Start()
         {
             var settings = RabbitMqSubscriptionSettings
-                .ForSubscriber(_connectionString, _exchangeName, $"hft-{nameof(LimitOrdersSubscriber)}")
+                .ForSubscriber(_connectionString, _exchangeName, $"hft-{nameof(OrdersSubscriber)}")
                 .MakeDurable()
                 .UseRoutingKey(((int) Lykke.MatchingEngine.Connector.Models.Events.Common.MessageType.Order).ToString());
 
@@ -58,7 +57,7 @@ namespace HftApi.Worker.RabbitSubscribers
 
         private async Task ProcessMessageAsync(ExecutionEvent message)
         {
-            var orders = _mapper.Map<List<LimitOrderEntity>>(message.Orders);
+            var orders = _mapper.Map<List<OrderEntity>>(message.Orders);
 
             foreach (var order in orders)
             {

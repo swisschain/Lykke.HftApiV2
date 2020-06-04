@@ -19,7 +19,7 @@ namespace HftApi
         private readonly IMyNoSqlServerDataReader<TickerEntity> _tickerReader;
         private readonly IMyNoSqlServerDataReader<OrderbookEntity> _orderbookReader;
         private readonly IMyNoSqlServerDataReader<BalanceEntity> _balanceReader;
-        private readonly IMyNoSqlServerDataReader<LimitOrderEntity> _orderReader;
+        private readonly IMyNoSqlServerDataReader<OrderEntity> _orderReader;
         private readonly IStreamService<PriceUpdate> _priceStraem;
         private readonly IStreamService<TickerUpdate> _tickerStream;
         private readonly IStreamService<Orderbook> _orderbookStream;
@@ -33,7 +33,7 @@ namespace HftApi
             IMyNoSqlServerDataReader<TickerEntity> tickerReader,
             IMyNoSqlServerDataReader<OrderbookEntity> orderbookReader,
             IMyNoSqlServerDataReader<BalanceEntity> balanceReader,
-            IMyNoSqlServerDataReader<LimitOrderEntity> orderReader,
+            IMyNoSqlServerDataReader<OrderEntity> orderReader,
             IStreamService<PriceUpdate> priceStraem,
             IStreamService<TickerUpdate> tickerStream,
             IStreamService<Orderbook>  orderbookStream,

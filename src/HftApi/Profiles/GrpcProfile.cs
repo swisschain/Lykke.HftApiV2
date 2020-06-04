@@ -41,10 +41,10 @@ namespace HftApi.Profiles
             CreateMap<Lykke.HftApi.Domain.Entities.TradeFee, Lykke.HftApi.ApiContract.TradeFee>(MemberList.Destination);
 
             CreateMap<TickerEntity, Lykke.HftApi.ApiContract.TickerUpdate>(MemberList.Destination)
-                .ForMember(d => d.Timestamp, o => o.MapFrom(x => x.TimeStamp));
+                .ForMember(d => d.Timestamp, o => o.MapFrom(x => x.UpdatedDt));
 
             CreateMap<PriceEntity, Lykke.HftApi.ApiContract.PriceUpdate>(MemberList.Destination)
-                .ForMember(d => d.Timestamp, o => o.MapFrom(x => x.TimeStamp));
+                .ForMember(d => d.Timestamp, o => o.MapFrom(x => x.UpdatedDt));
 
             CreateMap<OrderbookEntity, Lykke.HftApi.ApiContract.Orderbook>(MemberList.Destination)
                 .ForMember(d => d.Timestamp, o => o.MapFrom(x => x.CreatedAt));
@@ -58,7 +58,7 @@ namespace HftApi.Profiles
                 .ForMember(d => d.Available, o => o.MapFrom(x => x.Balance))
                 .ForMember(d => d.Reserved, o => o.MapFrom(x => x.Reserved));
 
-            CreateMap<LimitOrderEntity, Lykke.HftApi.ApiContract.Order>(MemberList.Destination)
+            CreateMap<OrderEntity, Lykke.HftApi.ApiContract.Order>(MemberList.Destination)
                 .ForMember(d => d.Timestamp, o => o.MapFrom(x => x.CreatedAt))
                 .ForMember(d => d.Volume, o => o.MapFrom(x => Math.Abs(x.Volume)))
                 .ForMember(d => d.RemainingVolume, o => o.MapFrom(x => Math.Abs(x.Volume)))

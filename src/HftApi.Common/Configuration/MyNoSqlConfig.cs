@@ -8,6 +8,6 @@ namespace HftApi.Common.Configuration
         public string PricesTableName { get; set; }
         public string OrderbooksTableName { get; set; }
         public string BalancesTableName { get; set; }
-        public string LimitOrdersTableName { get; set; }
+        public string OrdersTableName { get; set; }
     }
 }

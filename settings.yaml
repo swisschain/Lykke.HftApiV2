@@ -42,8 +42,8 @@ RabbitMq:
     settings-key: Hftv2Service-RabbitMq-OrderbooksExchangeName
   BalancesExchangeName:
     settings-key: Hftv2Service-RabbitMq-BalancesExchangeName
-  LimitOrdersExchangeName:
-    settings-key: Hftv2Service-RabbitMq-LimitOrdersExchangeName
+  OrdersExchangeName:
+    settings-key: Hftv2Service-RabbitMq-OrdersExchangeName
 MyNoSqlServer:
   ReaderServiceUrl:
     settings-key: MyNoSqlServer-ReaderUrl
@@ -57,8 +57,8 @@ MyNoSqlServer:
     settings-key: MyNoSqlServer-OrderbooksTableName
   BalancesTableName:
     settings-key: MyNoSqlServer-BalancesTableName
-  LimitOrdersTableName:
-    settings-key: MyNoSqlServer-LimitOrdersTableName
+  OrdersTableName:
+    settings-key: MyNoSqlServer-OrdersTableName
 ElasticsearchLogs:
   NodeUrls:
     settings-key: ElasticSearch-NodeUrls
