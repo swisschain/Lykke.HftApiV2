@@ -64,6 +64,9 @@ namespace HftApi.Profiles
                 .ForMember(d => d.RemainingVolume, o => o.MapFrom(x => Math.Abs(x.Volume)))
                 .ForMember(d => d.FilledVolume, o => o.MapFrom(x => x.Volume - x.RemainingVolume))
                 .ForMember(d => d.Cost, o => o.MapFrom(x => x.FilledVolume * x.Price));
+
+            CreateMap<TradeEntity, Lykke.HftApi.ApiContract.Trade>(MemberList.Destination)
+                .ForMember(d => d.Timestamp, o => o.MapFrom(x => x.CreatedAt));
         }
     }
 }

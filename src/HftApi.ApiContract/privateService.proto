@@ -18,6 +18,7 @@ service PrivateService {
 
     rpc GetBalanceUpdates (google.protobuf.Empty) returns (stream BalanceUpdate);
     rpc GetOrderUpdates (google.protobuf.Empty) returns (stream OrderUpdate);
+    rpc GetTradeUpdates (google.protobuf.Empty) returns (stream TradeUpdate);
 }
 
 message LimitOrderRequest {
@@ -114,17 +115,19 @@ message Order {
 
 message Trade {
     string id = 1;
-    int32 index = 2;
-    string Timestamp = 3;
-    string assetPairId = 4;
-    string orderId = 5;
-    string role = 6;
-    string price = 7;
-    string baseVolume = 8;
-    string quoteVolume = 9;
-    string baseAssetId = 10;
-    string quoteAssetId = 11;
-    TradeFee Fee = 12;
+    string walletId = 2;
+    int32 index = 3;
+    string Timestamp = 4;
+    string assetPairId = 5;
+    string orderId = 6;
+    string oppositeOrderId = 7;
+    string role = 8;
+    string price = 9;
+    string baseVolume = 10;
+    string quoteVolume = 11;
+    string baseAssetId = 12;
+    string quoteAssetId = 13;
+    TradeFee Fee = 14;
 }
 
 message TradeFee {
@@ -138,4 +141,8 @@ message BalanceUpdate {
 
 message OrderUpdate {
     repeated Order orders = 1;
+}
+
+message TradeUpdate {
+    repeated Trade trades = 1;
 }

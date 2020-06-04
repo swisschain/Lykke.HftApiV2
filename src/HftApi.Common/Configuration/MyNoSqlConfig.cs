@@ -9,5 +9,6 @@ namespace HftApi.Common.Configuration
         public string OrderbooksTableName { get; set; }
         public string BalancesTableName { get; set; }
         public string OrdersTableName { get; set; }
+        public string TradesTableName { get; set; }
     }
 }

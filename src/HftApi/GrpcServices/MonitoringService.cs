@@ -15,7 +15,7 @@ namespace HftApi.GrpcServices
                 Name = ApplicationInformation.AppName,
                 Version = ApplicationInformation.AppVersion,
                 StartedAt = ApplicationInformation.StartedAt.ToString("yyyy-MM-dd HH:mm:ss"),
-                Env = ApplicationEnvironment.Environment,
+                Env = ApplicationEnvironment.Environment ?? string.Empty,
                 Hostname = Environment.MachineName
             };
 

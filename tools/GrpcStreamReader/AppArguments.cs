@@ -16,7 +16,8 @@ namespace GrpcStreamReader
         Tickers,
         Orderbooks,
         Balances,
-        Orders
+        Orders,
+        Trades
     }
 
     internal static class Extensions

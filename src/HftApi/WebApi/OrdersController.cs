@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using AutoMapper;
 using HftApi.Extensions;
 using HftApi.WebApi.Models;
 using Lykke.HftApi.Domain;
-using Lykke.HftApi.Domain.Entities;
 using Lykke.HftApi.Domain.Exceptions;
 using Lykke.HftApi.Domain.Services;
 using Lykke.HftApi.Services;
@@ -27,18 +27,21 @@ namespace HftApi.WebApi
         private readonly HistoryHttpClient _historyClient;
         private readonly ValidationService _validationService;
         private readonly IMatchingEngineClient _matchingEngineClient;
+        private readonly IMapper _mapper;
 
         public OrdersController(
             IAssetsService assetsService,
             HistoryHttpClient historyClient,
             ValidationService validationService,
-            IMatchingEngineClient matchingEngineClient
+            IMatchingEngineClient matchingEngineClient,
+            IMapper mapper
             )
         {
             _assetsService = assetsService;
             _historyClient = historyClient;
             _validationService = validationService;
             _matchingEngineClient = matchingEngineClient;
+            _mapper = mapper;
         }
 
         [HttpPost("limit")]
@@ -135,7 +138,7 @@ namespace HftApi.WebApi
         }
 
         [HttpGet("active")]
-        [ProducesResponseType(typeof(ResponseModel<IReadOnlyCollection<Order>>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ResponseModel<IReadOnlyCollection<OrderModel>>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetActiveOrders(
             [FromQuery]string assetPairId = null,
             [FromQuery]bool withTrades = false,
@@ -165,11 +168,11 @@ namespace HftApi.WebApi
                 OrderStatus.PartiallyMatched
             }, null, withTrades, offset, take );
 
-            return Ok(ResponseModel<IReadOnlyCollection<Order>>.Ok(orders));
+            return Ok(ResponseModel<IReadOnlyCollection<OrderModel>>.Ok(_mapper.Map<IReadOnlyCollection<OrderModel>>(orders)));
         }
 
         [HttpGet("closed")]
-        [ProducesResponseType(typeof(ResponseModel<IReadOnlyCollection<Order>>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ResponseModel<IReadOnlyCollection<OrderModel>>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetCloasedOrders(
             [FromQuery]string assetPairId = null,
             [FromQuery]bool withTrades = false,
@@ -196,7 +199,7 @@ namespace HftApi.WebApi
             var orders = await _historyClient.GetOrdersByWalletAsync(User.GetWalletId(), assetPairId,
                 new [] { OrderStatus.Matched}, null, withTrades, offset, take );
 
-            return Ok(ResponseModel<IReadOnlyCollection<Order>>.Ok(orders));
+            return Ok(ResponseModel<IReadOnlyCollection<OrderModel>>.Ok(_mapper.Map<IReadOnlyCollection<OrderModel>>(orders)));
         }
 
         [HttpDelete]

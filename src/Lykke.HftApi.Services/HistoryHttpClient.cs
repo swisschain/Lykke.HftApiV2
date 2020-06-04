@@ -142,7 +142,6 @@ namespace Lykke.HftApi.Services
         }
     }
 
-
     public static class Converter
     {
         public static Trade ToDomain(this TradeModel trade)

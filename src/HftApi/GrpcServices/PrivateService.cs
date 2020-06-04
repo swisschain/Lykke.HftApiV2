@@ -32,6 +32,7 @@ namespace HftApi.GrpcServices
         private readonly IMatchingEngineClient _matchingEngineClient;
         private readonly IStreamService<BalanceUpdate> _balanceUpdateService;
         private readonly IStreamService<OrderUpdate> _orderUpdateService;
+        private readonly IStreamService<TradeUpdate> _tradeUpdateService;
         private readonly IMapper _mapper;
 
         public PrivateService(
@@ -42,6 +43,7 @@ namespace HftApi.GrpcServices
             IMatchingEngineClient matchingEngineClient,
             IStreamService<BalanceUpdate> balanceUpdateService,
             IStreamService<OrderUpdate> orderUpdateService,
+            IStreamService<TradeUpdate> tradeUpdateService,
             IMapper mapper
             )
         {
@@ -52,6 +54,7 @@ namespace HftApi.GrpcServices
             _matchingEngineClient = matchingEngineClient;
             _balanceUpdateService = balanceUpdateService;
             _orderUpdateService = orderUpdateService;
+            _tradeUpdateService = tradeUpdateService;
             _mapper = mapper;
         }
 
@@ -444,6 +447,21 @@ namespace HftApi.GrpcServices
             };
 
             return _orderUpdateService.RegisterStream(streamInfo);
+        }
+
+        public override Task GetTradeUpdates(Empty request, IServerStreamWriter<TradeUpdate> responseStream, ServerCallContext context)
+        {
+            Console.WriteLine($"New trade stream connect. peer:{context.Peer}");
+
+            var streamInfo = new StreamInfo<TradeUpdate>
+            {
+                Stream = responseStream,
+                CancelationToken = context.CancellationToken,
+                Key = context.GetHttpContext().User.GetWalletId(),
+                Peer = context.Peer
+            };
+
+            return _tradeUpdateService.RegisterStream(streamInfo);
         }
     }
 }

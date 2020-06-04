@@ -27,7 +27,7 @@ namespace GrpcStreamReader
                 return;
             }
 
-            if (appArguments.StreamName.OneOf(StreamName.Balances, StreamName.Orders) && string.IsNullOrEmpty(appArguments.Token))
+            if (appArguments.StreamName.OneOf(StreamName.Balances, StreamName.Orders, StreamName.Trades) && string.IsNullOrEmpty(appArguments.Token))
             {
                 Console.WriteLine($"Token is required for {appArguments.StreamName.ToString()} stream");
                 return;
@@ -102,6 +102,17 @@ namespace GrpcStreamReader
                                 await foreach (var item in orders.ResponseStream.ReadAllAsync())
                                 {
                                     Console.WriteLine($"{JsonConvert.SerializeObject(item.Orders)}");
+                                }
+                            }
+                            break;
+                        case StreamName.Trades:
+                            {
+                                Console.WriteLine($"Get trade updates....");
+                                using var orders = client.PrivateService.GetTradeUpdates(new Empty(), headers);
+
+                                await foreach (var item in orders.ResponseStream.ReadAllAsync())
+                                {
+                                    Console.WriteLine($"{JsonConvert.SerializeObject(item.Trades)}");
                                 }
                             }
                             break;

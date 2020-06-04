@@ -36,7 +36,6 @@ namespace HftApi.WebApi
                     .ToList();
             }
 
-
             return Ok(ResponseModel<IReadOnlyCollection<MarketSlice>>.Ok(result));
         }
     }

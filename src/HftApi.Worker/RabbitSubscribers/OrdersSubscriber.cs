@@ -18,7 +18,8 @@ namespace HftApi.Worker.RabbitSubscribers
     {
         private readonly string _connectionString;
         private readonly string _exchangeName;
-        private readonly IMyNoSqlServerDataWriter<OrderEntity> _writer;
+        private readonly IMyNoSqlServerDataWriter<OrderEntity> _orderWriter;
+        private readonly IMyNoSqlServerDataWriter<TradeEntity> _tradeWriter;
         private readonly IMapper _mapper;
         private readonly ILogFactory _logFactory;
         private RabbitMqSubscriber<ExecutionEvent> _subscriber;
@@ -26,13 +27,15 @@ namespace HftApi.Worker.RabbitSubscribers
         public OrdersSubscriber(
             string connectionString,
             string exchangeName,
-            IMyNoSqlServerDataWriter<OrderEntity> writer,
+            IMyNoSqlServerDataWriter<OrderEntity> orderWriter,
+            IMyNoSqlServerDataWriter<TradeEntity> tradeWriter,
             IMapper mapper,
             ILogFactory logFactory)
         {
             _connectionString = connectionString;
             _exchangeName = exchangeName;
-            _writer = writer;
+            _orderWriter = orderWriter;
+            _tradeWriter = tradeWriter;
             _mapper = mapper;
             _logFactory = logFactory;
         }
@@ -40,8 +43,7 @@ namespace HftApi.Worker.RabbitSubscribers
         public void Start()
         {
             var settings = RabbitMqSubscriptionSettings
-                .ForSubscriber(_connectionString, _exchangeName, $"hft-{nameof(OrdersSubscriber)}")
-                .MakeDurable()
+                .ForSubscriber(_connectionString, _exchangeName, $"hft-{nameof(OrdersSubscriber)}-{Environment.MachineName}")
                 .UseRoutingKey(((int) Lykke.MatchingEngine.Connector.Models.Events.Common.MessageType.Order).ToString());
 
             settings.DeadLetterExchangeName = null;
@@ -59,16 +61,27 @@ namespace HftApi.Worker.RabbitSubscribers
         {
             var orders = _mapper.Map<List<OrderEntity>>(message.Orders);
 
+            var trades = new List<TradeEntity>();
+
             foreach (var order in orders)
             {
                 foreach (var trade in order.Trades)
                 {
                     trade.AssetPairId = order.AssetPairId;
                     trade.OrderId = order.Id;
+                    trade.WalletId = order.WalletId;
+
+                    var tradeEntity = _mapper.Map<TradeEntity>(trade);
+                    tradeEntity.AssetPairId = order.AssetPairId;
+                    tradeEntity.OrderId = order.Id;
+                    tradeEntity.WalletId = order.WalletId;
+
+                    trades.Add(tradeEntity);
                 }
             }
 
-            await _writer.BulkInsertOrReplaceAsync(orders);
+            await _orderWriter.BulkInsertOrReplaceAsync(orders);
+            await _tradeWriter.BulkInsertOrReplaceAsync(trades);
         }
 
         public void Dispose()

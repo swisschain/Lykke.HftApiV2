@@ -110,6 +110,10 @@ namespace HftApi.Modules
                 new MyNoSqlReadRepository<OrderEntity>(ctx.Resolve<MyNoSqlTcpClient>(), _config.MyNoSqlServer.OrdersTableName)
             ).As<IMyNoSqlServerDataReader<OrderEntity>>().SingleInstance();
 
+            builder.Register(ctx =>
+                new MyNoSqlReadRepository<TradeEntity>(ctx.Resolve<MyNoSqlTcpClient>(), _config.MyNoSqlServer.TradesTableName)
+            ).As<IMyNoSqlServerDataReader<TradeEntity>>().SingleInstance();
+
             builder.RegisterType<StreamService<PriceUpdate>>().As<IStreamService<PriceUpdate>>().SingleInstance();
             builder.RegisterType<StreamService<TickerUpdate>>().As<IStreamService<TickerUpdate>>().SingleInstance();
             builder.RegisterType<StreamService<Orderbook>>().As<IStreamService<Orderbook>>().SingleInstance();
@@ -120,6 +124,10 @@ namespace HftApi.Modules
             builder.RegisterType<StreamService<OrderUpdate>>()
                 .WithParameter(TypedParameter.From(true))
                 .As<IStreamService<OrderUpdate>>()
+                .SingleInstance();
+            builder.RegisterType<StreamService<TradeUpdate>>()
+                .WithParameter(TypedParameter.From(true))
+                .As<IStreamService<TradeUpdate>>()
                 .SingleInstance();
             builder.RegisterType<ApplicationManager>().AsSelf().SingleInstance();
         }

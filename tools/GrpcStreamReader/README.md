@@ -12,7 +12,7 @@ Awailable options:
 
 ```
 -u <uri>. Hft api grpc url. Required
--n <stream name>. GRPC stream name. Required. Available values: Prices, Tickers, Orderbooks, Balances, Orders
+-n <stream name>. GRPC stream name. Required. Available values: Prices, Tickers, Orderbooks, Balances, Orders, Trades
 -k <Stream key>. GRPC stream key parameter (for example asset pair id for orderbooks stream).
 ```
 

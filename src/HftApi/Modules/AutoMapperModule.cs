@@ -12,6 +12,7 @@ namespace HftApi.Modules
         protected override void Load(ContainerBuilder builder)
         {
             builder.RegisterType<GrpcProfile>().As<Profile>();
+            builder.RegisterType<WebProfile>().As<Profile>();
 
             builder.Register(c =>
             {

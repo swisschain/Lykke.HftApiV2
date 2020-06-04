@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using AutoMapper;
 using HftApi.Extensions;
 using HftApi.WebApi.Models;
 using Lykke.HftApi.Domain;
-using Lykke.HftApi.Domain.Entities;
 using Lykke.HftApi.Domain.Exceptions;
 using Lykke.HftApi.Domain.Services;
 using Lykke.HftApi.Services;
@@ -22,18 +22,22 @@ namespace HftApi.WebApi
     {
         private readonly IAssetsService _assetsService;
         private readonly HistoryHttpClient _historyClient;
+        private readonly IMapper _mapper;
         private const int MaxPageSize = 500;
 
         public TradesController(
             IAssetsService assetsService,
-            HistoryHttpClient historyClient)
+            HistoryHttpClient historyClient,
+            IMapper mapper
+            )
         {
             _assetsService = assetsService;
             _historyClient = historyClient;
+            _mapper = mapper;
         }
 
         [HttpGet]
-        [ProducesResponseType(typeof(ResponseModel<IReadOnlyCollection<Trade>>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ResponseModel<IReadOnlyCollection<TradeModel>>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetTrades(
             [FromQuery]string assetPairId = null,
             [FromQuery]OrderAction? side = null,
@@ -68,15 +72,15 @@ namespace HftApi.WebApi
 
             var trades = await _historyClient.GetTradersAsync(User.GetWalletId(), assetPairId, offset, take, side, from, to);
 
-            return Ok(ResponseModel<IReadOnlyCollection<Trade>>.Ok(trades));
+            return Ok(ResponseModel<IReadOnlyCollection<TradeModel>>.Ok(_mapper.Map<IReadOnlyCollection<TradeModel>>(trades)));
         }
 
         [HttpGet("order/{orderId}")]
-        [ProducesResponseType(typeof(ResponseModel<IReadOnlyCollection<Trade>>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ResponseModel<IReadOnlyCollection<TradeModel>>), StatusCodes.Status200OK)]
         public async Task<IActionResult> OrderTrades(string orderId)
         {
             var trades = await _historyClient.GetOrderTradesAsync(User.GetWalletId(), orderId);
-            return Ok(ResponseModel<IReadOnlyCollection<Trade>>.Ok(trades));
+            return Ok(ResponseModel<IReadOnlyCollection<TradeModel>>.Ok(_mapper.Map<IReadOnlyCollection<TradeModel>>(trades)));
         }
     }
 }
