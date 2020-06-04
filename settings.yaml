@@ -59,6 +59,8 @@ MyNoSqlServer:
     settings-key: MyNoSqlServer-BalancesTableName
   OrdersTableName:
     settings-key: MyNoSqlServer-OrdersTableName
+  TradesTableName:
+    settings-key: MyNoSqlServer-TradesTableName
 ElasticsearchLogs:
   NodeUrls:
     settings-key: ElasticSearch-NodeUrls
