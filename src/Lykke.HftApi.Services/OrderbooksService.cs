@@ -2,9 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AutoMapper;
+using HftApi.Common.Domain.MyNoSqlEntities;
 using Lykke.HftApi.Domain.Entities;
 using Lykke.HftApi.Domain.Services;
 using Microsoft.Extensions.Caching.Distributed;
+using MyNoSqlServer.Abstractions;
 using Newtonsoft.Json;
 
 namespace Lykke.HftApi.Services
@@ -13,17 +16,23 @@ namespace Lykke.HftApi.Services
     {
         private readonly IDistributedCache _redisCache;
         private readonly IAssetsService _assetsService;
+        private readonly IMyNoSqlServerDataReader<OrderbookEntity> _orderbooksReader;
         private readonly string _orderBooksCacheKeyPattern;
+        private readonly IMapper _mapper;
 
         public OrderbooksService(
             IDistributedCache redisCache,
             IAssetsService assetsService,
-            string orderBooksCacheKeyPattern
+            IMyNoSqlServerDataReader<OrderbookEntity> orderbooksReader,
+            string orderBooksCacheKeyPattern,
+            IMapper mapper
             )
         {
             _redisCache = redisCache;
             _assetsService = assetsService;
+            _orderbooksReader = orderbooksReader;
             _orderBooksCacheKeyPattern = orderBooksCacheKeyPattern;
+            _mapper = mapper;
         }
 
         public async Task<IReadOnlyCollection<Orderbook>> GetAsync(string assetPairId = null, int? depth = null)
@@ -61,6 +70,13 @@ namespace Lykke.HftApi.Services
 
         private async Task<Orderbook> GetOrderbookAsync(string assetPairId)
         {
+            var orderbookEntity = _orderbooksReader.Get(OrderbookEntity.GetPk(), assetPairId);
+
+            if (orderbookEntity != null)
+            {
+                return _mapper.Map<Orderbook>(orderbookEntity);
+            }
+
             var buyBook = GetOrderbook(assetPairId, true);
             var sellBook = GetOrderbook(assetPairId, false);
 

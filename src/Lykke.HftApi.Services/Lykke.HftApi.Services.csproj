@@ -5,11 +5,13 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\HftApi.Common\HftApi.Common.csproj" />
       <ProjectReference Include="..\Lykke.HftApi.Domain\Lykke.HftApi.Domain.csproj" />
     </ItemGroup>
 
     <ItemGroup>
       <PackageReference Include="Autofac" Version="5.2.0" />
+      <PackageReference Include="AutoMapper" Version="9.0.0" />
       <PackageReference Include="Grpc.AspNetCore" Version="2.29.0" />
       <PackageReference Include="Lykke.MatchingEngineConnector" Version="8.6.0" />
       <PackageReference Include="Lykke.Service.HftInternalService.Client" Version="2.1.1" />

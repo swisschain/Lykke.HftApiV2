@@ -10,6 +10,7 @@ namespace HftApi.WebApi.Models
         public DateTime Timestamp { get; set; }
         public string AssetPairId { get; set; }
         public string OrderId { get; set; }
+        public string OppositeOrderId { get; set; }
         public string Role { get; set; }
         public decimal Price { get; set; }
         public decimal BaseVolume { get; set; }

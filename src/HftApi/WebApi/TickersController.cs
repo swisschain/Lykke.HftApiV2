@@ -2,11 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AutoMapper;
 using Google.Protobuf.WellKnownTypes;
+using HftApi.Common.Domain.MyNoSqlEntities;
 using HftApi.WebApi.Models;
 using Lykke.Exchange.Api.MarketData;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using MyNoSqlServer.Abstractions;
 
 namespace HftApi.WebApi
 {
@@ -14,20 +17,38 @@ namespace HftApi.WebApi
     [Route("api/tickers")]
     public class TickersController : ControllerBase
     {
+        private readonly IMyNoSqlServerDataReader<TickerEntity> _tickersReader;
         private readonly MarketDataService.MarketDataServiceClient _marketDataClient;
+        private readonly IMapper _mapper;
 
         public TickersController(
-            MarketDataService.MarketDataServiceClient marketDataClient)
+            IMyNoSqlServerDataReader<TickerEntity> tickersReader,
+            MarketDataService.MarketDataServiceClient marketDataClient,
+            IMapper mapper
+            )
         {
+            _tickersReader = tickersReader;
             _marketDataClient = marketDataClient;
+            _mapper = mapper;
         }
 
         [HttpGet]
-        [ProducesResponseType(typeof(ResponseModel<IReadOnlyCollection<MarketSlice>>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ResponseModel<IReadOnlyCollection<TickerModel>>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetTickers([FromQuery]string[] assetPairIds)
         {
-            var marketData = await _marketDataClient.GetMarketDataAsync(new Empty());
-            var result = marketData.Items.ToList();
+            var entities = _tickersReader.Get(TickerEntity.GetPk());
+
+            List<TickerModel> result;
+
+            if (entities.Any())
+            {
+                result = _mapper.Map<List<TickerModel>>(entities);
+            }
+            else
+            {
+                var marketData = await _marketDataClient.GetMarketDataAsync(new Empty());
+                result = _mapper.Map<List<TickerModel>>(marketData.Items.ToList());
+            }
 
             if (assetPairIds.Any())
             {
@@ -36,7 +57,7 @@ namespace HftApi.WebApi
                     .ToList();
             }
 
-            return Ok(ResponseModel<IReadOnlyCollection<MarketSlice>>.Ok(result));
+            return Ok(ResponseModel<IReadOnlyCollection<TickerModel>>.Ok(result));
         }
     }
 }

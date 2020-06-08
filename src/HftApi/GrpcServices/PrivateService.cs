@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using AutoMapper;
 using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
+using HftApi.Common.Domain.MyNoSqlEntities;
 using HftApi.Extensions;
 using JetBrains.Annotations;
 using Lykke.HftApi.ApiContract;
@@ -16,6 +17,7 @@ using Lykke.MatchingEngine.Connector.Models.Api;
 using Lykke.MatchingEngine.Connector.Models.Common;
 using Lykke.Service.History.Contracts.Enums;
 using Microsoft.AspNetCore.Authorization;
+using MyNoSqlServer.Abstractions;
 using LimitOrderResponse = Lykke.HftApi.ApiContract.LimitOrderResponse;
 using MarketOrderResponse = Lykke.HftApi.ApiContract.MarketOrderResponse;
 
@@ -33,6 +35,7 @@ namespace HftApi.GrpcServices
         private readonly IStreamService<BalanceUpdate> _balanceUpdateService;
         private readonly IStreamService<OrderUpdate> _orderUpdateService;
         private readonly IStreamService<TradeUpdate> _tradeUpdateService;
+        private readonly IMyNoSqlServerDataReader<OrderEntity> _ordersReader;
         private readonly IMapper _mapper;
 
         public PrivateService(
@@ -44,6 +47,7 @@ namespace HftApi.GrpcServices
             IStreamService<BalanceUpdate> balanceUpdateService,
             IStreamService<OrderUpdate> orderUpdateService,
             IStreamService<TradeUpdate> tradeUpdateService,
+            IMyNoSqlServerDataReader<OrderEntity> ordersReader,
             IMapper mapper
             )
         {
@@ -55,6 +59,7 @@ namespace HftApi.GrpcServices
             _balanceUpdateService = balanceUpdateService;
             _orderUpdateService = orderUpdateService;
             _tradeUpdateService = tradeUpdateService;
+            _ordersReader = ordersReader;
             _mapper = mapper;
         }
 
@@ -258,11 +263,10 @@ namespace HftApi.GrpcServices
                 };
             }
 
-            var orders = await _historyClient.GetOrdersByWalletAsync(context.GetHttpContext().User.GetWalletId(), request.AssetPairId, new []
-            {
-                OrderStatus.Placed,
-                OrderStatus.PartiallyMatched
-            }, null, request.WithTrades, request.Offset, request.Take);
+            var statuses = new List<string> {OrderStatus.Placed.ToString(), OrderStatus.PartiallyMatched.ToString()};
+
+            var orders = _ordersReader.Get(context.GetHttpContext().User.GetWalletId(), request.Offset, request.Take,
+                x => (string.IsNullOrEmpty(request.AssetPairId) || x.AssetPairId == request.AssetPairId) && statuses.Contains(x.Status));
 
             var res = new OrdersResponse();
             res.Payload.AddRange(_mapper.Map<List<Order>>(orders));
@@ -303,8 +307,8 @@ namespace HftApi.GrpcServices
                 };
             }
 
-            var orders = await _historyClient.GetOrdersByWalletAsync(context.GetHttpContext().User.GetWalletId(), request.AssetPairId,
-                new [] { OrderStatus.Matched }, null, request.WithTrades, request.Offset, request.Take);
+            var orders = _ordersReader.Get(context.GetHttpContext().User.GetWalletId(), request.Offset, request.Take,
+                x => (string.IsNullOrEmpty(request.AssetPairId) || x.AssetPairId == request.AssetPairId) && x.Status == OrderStatus.Matched.ToString());
 
             var res = new OrdersResponse();
             res.Payload.AddRange(_mapper.Map<List<Order>>(orders));

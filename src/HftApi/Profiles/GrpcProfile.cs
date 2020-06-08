@@ -4,6 +4,7 @@ using AutoMapper;
 using HftApi.Common.Domain.MyNoSqlEntities;
 using JetBrains.Annotations;
 using Lykke.Exchange.Api.MarketData;
+using Lykke.HftApi.Domain.Entities;
 
 namespace HftApi.Profiles
 {
@@ -16,6 +17,9 @@ namespace HftApi.Profiles
             CreateMap<decimal, string>().ConvertUsing(d => d.ToString(CultureInfo.InvariantCulture));
 
             CreateMap<Lykke.HftApi.Domain.Entities.Balance, Lykke.HftApi.ApiContract.Balance>(MemberList.Destination);
+            CreateMap<BalanceEntity, Lykke.HftApi.Domain.Entities.Balance>(MemberList.Destination)
+                .ForMember(d => d.Timestamp, o => o.MapFrom(x => x.CreatedAt))
+                .ForMember(d => d.Available, o => o.MapFrom(x => x.Balance));
 
             CreateMap<Lykke.HftApi.Domain.Entities.AssetPair, Lykke.HftApi.ApiContract.AssetPair>(MemberList.Destination);
 
@@ -48,6 +52,11 @@ namespace HftApi.Profiles
 
             CreateMap<OrderbookEntity, Lykke.HftApi.ApiContract.Orderbook>(MemberList.Destination)
                 .ForMember(d => d.Timestamp, o => o.MapFrom(x => x.CreatedAt));
+
+            CreateMap<OrderbookEntity, Orderbook>(MemberList.Destination)
+                .ForMember(d => d.Timestamp, o => o.MapFrom(x => x.CreatedAt));
+
+            CreateMap<VolumePriceEntity, VolumePrice>(MemberList.Destination);
 
             CreateMap<VolumePriceEntity, Lykke.HftApi.ApiContract.Orderbook.Types.PriceVolume>(MemberList.Destination)
                 .ForMember(d => d.V, o => o.MapFrom(x => x.Volume))

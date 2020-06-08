@@ -36,7 +36,8 @@ namespace HftApi.Worker.RabbitSubscribers
         public void Start()
         {
             var settings = RabbitMqSubscriptionSettings
-                .ForSubscriber(_connectionString, _exchangeName, $"hft-{nameof(BalancesSubscriber)}-{Environment.MachineName}");
+                .ForSubscriber(_connectionString, _exchangeName, $"hft-{nameof(BalancesSubscriber)}")
+                .MakeDurable();
 
             settings.DeadLetterExchangeName = null;
 
