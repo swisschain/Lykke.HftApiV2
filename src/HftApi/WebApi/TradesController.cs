@@ -6,9 +6,7 @@ using AutoMapper;
 using HftApi.Common.Domain.MyNoSqlEntities;
 using HftApi.Extensions;
 using HftApi.WebApi.Models;
-using Lykke.HftApi.Domain;
 using Lykke.HftApi.Domain.Exceptions;
-using Lykke.HftApi.Domain.Services;
 using Lykke.HftApi.Services;
 using Lykke.MatchingEngine.Connector.Models.Common;
 using Microsoft.AspNetCore.Authorization;
@@ -23,21 +21,18 @@ namespace HftApi.WebApi
     [Route("api/trades")]
     public class TradesController : ControllerBase
     {
-        private readonly IAssetsService _assetsService;
-        private readonly HistoryHttpClient _historyClient;
+        private readonly ValidationService _validationService;
         private readonly IMyNoSqlServerDataReader<TradeEntity> _tradesReader;
         private readonly IMapper _mapper;
         private const int MaxPageSize = 500;
 
         public TradesController(
-            IAssetsService assetsService,
-            HistoryHttpClient historyClient,
+            ValidationService validationService,
             IMyNoSqlServerDataReader<TradeEntity> tradesReader,
             IMapper mapper
             )
         {
-            _assetsService = assetsService;
-            _historyClient = historyClient;
+            _validationService = validationService;
             _tradesReader = tradesReader;
             _mapper = mapper;
         }
@@ -53,28 +48,11 @@ namespace HftApi.WebApi
             [FromQuery]DateTime? to = null
             )
         {
-            if (!string.IsNullOrEmpty(assetPairId))
-            {
-                var assetPair = await _assetsService.GetAssetPairByIdAsync(assetPairId);
+            var result = await _validationService.ValidateOrdersRequestAsync(assetPairId, offset, take);
 
-                if (assetPair == null)
-                {
-                    throw HftApiException.Create(HftApiErrorCode.ItemNotFound, HftApiErrorMessages.AssetPairNotFound)
-                        .AddField(nameof(assetPairId));
-                }
-            }
-
-            if (offset.HasValue && offset < 0)
-                throw HftApiException.Create(HftApiErrorCode.InvalidField, HftApiErrorMessages.LessThanZero(nameof(offset)))
-                    .AddField(nameof(offset));
-
-            if (take.HasValue && take < 0)
-                throw HftApiException.Create(HftApiErrorCode.InvalidField, HftApiErrorMessages.LessThanZero(nameof(take)))
-                    .AddField(nameof(take));
-
-            if (take.HasValue && take > MaxPageSize)
-                throw HftApiException.Create(HftApiErrorCode.InvalidField, HftApiErrorMessages.TooBig(nameof(take), take.Value.ToString(), MaxPageSize.ToString()))
-                    .AddField(nameof(take));
+            if (result != null)
+                throw HftApiException.Create(result.Code, result.Message)
+                    .AddField(result.FieldName);
 
             var trades = _tradesReader.Get(User.GetWalletId(), offset ?? 0, take ?? MaxPageSize,
                 x =>
@@ -88,9 +66,9 @@ namespace HftApi.WebApi
 
         [HttpGet("order/{orderId}")]
         [ProducesResponseType(typeof(ResponseModel<IReadOnlyCollection<TradeModel>>), StatusCodes.Status200OK)]
-        public async Task<IActionResult> OrderTrades(string orderId)
+        public IActionResult OrderTrades(string orderId)
         {
-            var trades = await _historyClient.GetOrderTradesAsync(User.GetWalletId(), orderId);
+            var trades = _tradesReader.Get(User.GetWalletId(), orderId);
             return Ok(ResponseModel<IReadOnlyCollection<TradeModel>>.Ok(_mapper.Map<IReadOnlyCollection<TradeModel>>(trades)));
         }
     }

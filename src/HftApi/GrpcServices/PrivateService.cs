@@ -27,8 +27,6 @@ namespace HftApi.GrpcServices
     [UsedImplicitly]
     public class PrivateService : Lykke.HftApi.ApiContract.PrivateService.PrivateServiceBase
     {
-        private readonly IAssetsService _assetsService;
-        private readonly HistoryHttpClient _historyClient;
         private readonly IBalanceService _balanceService;
         private readonly ValidationService _validationService;
         private readonly IMatchingEngineClient _matchingEngineClient;
@@ -36,11 +34,10 @@ namespace HftApi.GrpcServices
         private readonly IStreamService<OrderUpdate> _orderUpdateService;
         private readonly IStreamService<TradeUpdate> _tradeUpdateService;
         private readonly IMyNoSqlServerDataReader<OrderEntity> _ordersReader;
+        private readonly IMyNoSqlServerDataReader<TradeEntity> _tradesReader;
         private readonly IMapper _mapper;
 
         public PrivateService(
-            IAssetsService assetsService,
-            HistoryHttpClient historyClient,
             IBalanceService balanceService,
             ValidationService validationService,
             IMatchingEngineClient matchingEngineClient,
@@ -48,11 +45,10 @@ namespace HftApi.GrpcServices
             IStreamService<OrderUpdate> orderUpdateService,
             IStreamService<TradeUpdate> tradeUpdateService,
             IMyNoSqlServerDataReader<OrderEntity> ordersReader,
+            IMyNoSqlServerDataReader<TradeEntity> tradesReader,
             IMapper mapper
             )
         {
-            _assetsService = assetsService;
-            _historyClient = historyClient;
             _balanceService = balanceService;
             _validationService = validationService;
             _matchingEngineClient = matchingEngineClient;
@@ -60,6 +56,7 @@ namespace HftApi.GrpcServices
             _orderUpdateService = orderUpdateService;
             _tradeUpdateService = tradeUpdateService;
             _ordersReader = ordersReader;
+            _tradesReader = tradesReader;
             _mapper = mapper;
         }
 
@@ -78,21 +75,7 @@ namespace HftApi.GrpcServices
         {
             var walletId = context.GetHttpContext().User.GetWalletId();
 
-            var assetPair = await _assetsService.GetAssetPairByIdAsync(request.AssetPairId);
-
-            if (assetPair == null)
-            {
-                return new LimitOrderResponse
-                {
-                    Error = new Error
-                    {
-                        Code = (int)HftApiErrorCode.ItemNotFound,
-                        Message = HftApiErrorMessages.AssetPairNotFound
-                    }
-                };
-            }
-
-            var result = _validationService.ValidateLimitOrder(Convert.ToDecimal(request.Price), Convert.ToDecimal(request.Volume), assetPair.MinVolume);
+            var result = await _validationService.ValidateLimitOrderAsync(request.AssetPairId, Convert.ToDecimal(request.Price), Convert.ToDecimal(request.Volume));
 
             if (result != null)
             {
@@ -156,21 +139,7 @@ namespace HftApi.GrpcServices
         {
             var walletId = context.GetHttpContext().User.GetWalletId();
 
-            var assetPair = await _assetsService.GetAssetPairByIdAsync(request.AssetPairId);
-
-            if (assetPair == null)
-            {
-                return new MarketOrderResponse
-                {
-                    Error = new Error
-                    {
-                        Code = (int)HftApiErrorCode.ItemNotFound,
-                        Message = HftApiErrorMessages.AssetPairNotFound
-                    }
-                };
-            }
-
-            var result = _validationService.ValidateMarketOrder(Convert.ToDecimal(request.Volume), assetPair.MinVolume);
+            var result = await _validationService.ValidateMarketOrderAsync(request.AssetPairId, Convert.ToDecimal(request.Volume));
 
             if (result != null)
             {
@@ -232,24 +201,7 @@ namespace HftApi.GrpcServices
 
         public override async Task<OrdersResponse> GetActiveOrders(OrdersRequest request, ServerCallContext context)
         {
-            if (!string.IsNullOrEmpty(request.AssetPairId))
-            {
-                var assetPair = await _assetsService.GetAssetPairByIdAsync(request.AssetPairId);
-
-                if (assetPair == null)
-                {
-                    return new OrdersResponse
-                    {
-                        Error = new Error
-                        {
-                            Code = (int)HftApiErrorCode.ItemNotFound,
-                            Message = HftApiErrorMessages.AssetPairNotFound
-                        }
-                    };
-                }
-            }
-
-            var result = _validationService.ValidateOrdersRequest(request.Offset, request.Take);
+            var result = await _validationService.ValidateOrdersRequestAsync(request.AssetPairId, request.Offset, request.Take);
 
             if (result != null)
             {
@@ -257,8 +209,8 @@ namespace HftApi.GrpcServices
                 {
                     Error = new Error
                     {
-                        Code = (int)HftApiErrorCode.ItemNotFound,
-                        Message = HftApiErrorMessages.AssetPairNotFound
+                        Code = (int)result.Code,
+                        Message = result.Message
                     }
                 };
             }
@@ -276,24 +228,7 @@ namespace HftApi.GrpcServices
 
         public override async Task<OrdersResponse> GetClosedOrders(OrdersRequest request, ServerCallContext context)
         {
-            if (!string.IsNullOrEmpty(request.AssetPairId))
-            {
-                var assetPair = await _assetsService.GetAssetPairByIdAsync(request.AssetPairId);
-
-                if (assetPair == null)
-                {
-                    return new OrdersResponse
-                    {
-                        Error = new Error
-                        {
-                            Code = (int)HftApiErrorCode.ItemNotFound,
-                            Message = HftApiErrorMessages.AssetPairNotFound
-                        }
-                    };
-                }
-            }
-
-            var result = _validationService.ValidateOrdersRequest(request.Offset, request.Take);
+            var result = await _validationService.ValidateOrdersRequestAsync(request.AssetPairId, request.Offset, request.Take);
 
             if (result != null)
             {
@@ -301,38 +236,41 @@ namespace HftApi.GrpcServices
                 {
                     Error = new Error
                     {
-                        Code = (int)HftApiErrorCode.ItemNotFound,
-                        Message = HftApiErrorMessages.AssetPairNotFound
+                        Code = (int)result.Code,
+                        Message = result.Message
                     }
                 };
             }
 
-            var orders = _ordersReader.Get(context.GetHttpContext().User.GetWalletId(), request.Offset, request.Take,
+            var orderEntities = _ordersReader.Get(context.GetHttpContext().User.GetWalletId(), request.Offset, request.Take,
                 x => (string.IsNullOrEmpty(request.AssetPairId) || x.AssetPairId == request.AssetPairId) && x.Status == OrderStatus.Matched.ToString());
 
             var res = new OrdersResponse();
-            res.Payload.AddRange(_mapper.Map<List<Order>>(orders));
+
+            foreach (var orderEntity in orderEntities)
+            {
+                var order = _mapper.Map<Order>(orderEntity);
+                order.Trades.AddRange(_mapper.Map<List<Trade>>(orderEntity.Trades));
+                res.Payload.Add(order);
+            }
 
             return res;
         }
 
         public override async Task<CancelOrderResponse> CancelAllOrders(CancelOrdersRequest request, ServerCallContext context)
         {
-            if (!string.IsNullOrEmpty(request.AssetPairId))
-            {
-                var assetPair = await _assetsService.GetAssetPairByIdAsync(request.AssetPairId);
+            var result = await _validationService.ValidateAssetPairAsync(request.AssetPairId);
 
-                if (assetPair == null)
+            if (result != null)
+            {
+                return new CancelOrderResponse
                 {
-                    return new CancelOrderResponse
+                    Error = new Error
                     {
-                        Error = new Error
-                        {
-                            Code = (int)HftApiErrorCode.ItemNotFound,
-                            Message = HftApiErrorMessages.AssetPairNotFound
-                        }
-                    };
-                }
+                        Code = (int)result.Code,
+                        Message = result.Message
+                    }
+                };
             }
 
             bool? isBuy;
@@ -421,6 +359,45 @@ namespace HftApi.GrpcServices
                     Message = message
                 }
             };
+        }
+
+        public override async Task<TradesResponse> GetTrades(TradesRequest request, ServerCallContext context)
+        {
+            var result = await _validationService.ValidateTradesRequestAsync(request.AssetPairId, request.Offset, request.Take);
+
+            if (result != null)
+            {
+                return new TradesResponse
+                {
+                    Error = new Error
+                    {
+                        Code = (int)result.Code,
+                        Message = result.Message
+                    }
+                };
+            }
+
+            DateTime? from = null;
+            DateTime? to = null;
+
+            if (DateTime.TryParse(request.From, out var fromDate))
+                from = fromDate;
+
+            if (DateTime.TryParse(request.To, out var toDate))
+                to = toDate;
+
+            var trades = _tradesReader.Get(context.GetHttpContext().User.GetWalletId(), request.Offset, request.Take,
+                x =>
+                    (string.IsNullOrEmpty(request.AssetPairId) || x.AssetPairId == request.AssetPairId) &&
+                    (request.Side == Side.Buy && x.Role == "Maker" || request.Side == Side.Sell && x.Role == "Taker") &&
+                    (!from.HasValue || x.CreatedAt >= from.Value) &&
+                    (!to.HasValue || x.CreatedAt <= to.Value));
+
+            var res = new TradesResponse();
+            var data = _mapper.Map<List<Trade>>(trades);
+            res.Payload.AddRange(data);
+
+            return res;
         }
 
         public override Task GetBalanceUpdates(Empty request, IServerStreamWriter<BalanceUpdate> responseStream, ServerCallContext context)

@@ -1,6 +1,6 @@
-namespace HftApi.WebApi.Models
+namespace HftApi.WebApi.Models.Response
 {
-    public class MarketOrderResponseModel
+    public class MarketOrderResponse
     {
         public string OrderId { get; set; }
         public decimal Price { get; set; }

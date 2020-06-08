@@ -15,6 +15,7 @@ service PrivateService {
 	rpc GetClosedOrders (OrdersRequest) returns (OrdersResponse);
 	rpc CancelAllOrders (CancelOrdersRequest) returns (CancelOrderResponse);
 	rpc CancelOrder (CancelOrderRequest) returns (CancelOrderResponse);
+	rpc GetTrades (TradesRequest) returns (TradesResponse);
 
     rpc GetBalanceUpdates (google.protobuf.Empty) returns (stream BalanceUpdate);
     rpc GetOrderUpdates (google.protobuf.Empty) returns (stream OrderUpdate);
@@ -41,10 +42,8 @@ message MarketOrderRequest {
 
 message OrdersRequest {
     string assetPairId = 1;
-    bool withTrades = 2;
-    string volume = 3;
-    int32 offset = 4;
-    int32 take = 5;
+    int32 offset = 2;
+    int32 take = 3;
 }
 
 message CancelOrdersRequest {
@@ -54,6 +53,15 @@ message CancelOrdersRequest {
 
 message CancelOrderRequest {
     string orderId = 1;
+}
+
+message TradesRequest {
+    string assetPairId = 1;
+    Side side = 2;
+    int32 offset = 3;
+    int32 take = 4;
+    string from = 5;
+    string to = 6;
 }
 
 message BalancesResponse {
@@ -90,11 +98,16 @@ message CancelOrderResponse {
     hft.common.Error error = 2;
 }
 
+message TradesResponse {
+    repeated Trade payload = 1;
+    hft.common.Error error = 2;
+}
+
 message Balance {
-    string AssetId = 1;
-    string Available = 2;
-    string Reserved = 3;
-    string Timestamp = 4;
+    string assetId = 1;
+    string available = 2;
+    string reserved = 3;
+    string timestamp = 4;
 }
 
 message Order {
@@ -110,24 +123,23 @@ message Order {
     string filledVolume = 10;//> Volume - RemainingVolume;
     string remainingVolume = 11;
     string cost = 12;// FilledVolume * Price;
-    repeated Trade Trades = 13;
+    repeated Trade trades = 13;
 }
 
 message Trade {
     string id = 1;
-    string walletId = 2;
-    int32 index = 3;
-    string Timestamp = 4;
-    string assetPairId = 5;
-    string orderId = 6;
-    string oppositeOrderId = 7;
-    string role = 8;
-    string price = 9;
-    string baseVolume = 10;
-    string quoteVolume = 11;
-    string baseAssetId = 12;
-    string quoteAssetId = 13;
-    TradeFee Fee = 14;
+    int32 index = 2;
+    string timestamp = 3;
+    string assetPairId = 4;
+    string orderId = 5;
+    string oppositeOrderId = 6;
+    string role = 7;
+    string price = 8;
+    string baseVolume = 9;
+    string quoteVolume = 10;
+    string baseAssetId = 11;
+    string quoteAssetId = 12;
+    TradeFee fee = 13;
 }
 
 message TradeFee {

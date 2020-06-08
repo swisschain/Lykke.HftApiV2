@@ -1,4 +1,4 @@
-namespace HftApi.WebApi.Models
+namespace HftApi.WebApi.Models.Response
 {
     public class LimitOrderResponse
     {

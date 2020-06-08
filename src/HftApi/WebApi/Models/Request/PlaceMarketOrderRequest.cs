@@ -1,9 +1,9 @@
 using System.ComponentModel.DataAnnotations;
 using Lykke.MatchingEngine.Connector.Models.Common;
 
-namespace HftApi.WebApi.Models
+namespace HftApi.WebApi.Models.Request
 {
-    public class PlaceMarketOrderModel
+    public class PlaceMarketOrderRequest
     {
         [Required]
         public string AssetPairId { get; set; }

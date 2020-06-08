@@ -5,9 +5,10 @@ using AutoMapper;
 using HftApi.Common.Domain.MyNoSqlEntities;
 using HftApi.Extensions;
 using HftApi.WebApi.Models;
+using HftApi.WebApi.Models.Request;
+using HftApi.WebApi.Models.Response;
 using Lykke.HftApi.Domain;
 using Lykke.HftApi.Domain.Exceptions;
-using Lykke.HftApi.Domain.Services;
 using Lykke.HftApi.Services;
 using Lykke.MatchingEngine.Connector.Abstractions.Services;
 using Lykke.MatchingEngine.Connector.Models.Api;
@@ -17,6 +18,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using MyNoSqlServer.Abstractions;
+using MarketOrderResponse = HftApi.WebApi.Models.Response.MarketOrderResponse;
 
 namespace HftApi.WebApi
 {
@@ -25,21 +27,18 @@ namespace HftApi.WebApi
     [Route("api/orders")]
     public class OrdersController : ControllerBase
     {
-        private readonly IAssetsService _assetsService;
         private readonly ValidationService _validationService;
         private readonly IMatchingEngineClient _matchingEngineClient;
         private readonly IMyNoSqlServerDataReader<OrderEntity> _ordersReader;
         private readonly IMapper _mapper;
 
         public OrdersController(
-            IAssetsService assetsService,
             ValidationService validationService,
             IMatchingEngineClient matchingEngineClient,
             IMyNoSqlServerDataReader<OrderEntity> ordersReader,
             IMapper mapper
             )
         {
-            _assetsService = assetsService;
             _validationService = validationService;
             _matchingEngineClient = matchingEngineClient;
             _ordersReader = ordersReader;
@@ -48,36 +47,24 @@ namespace HftApi.WebApi
 
         [HttpPost("limit")]
         [ProducesResponseType(typeof(ResponseModel<LimitOrderResponse>), StatusCodes.Status200OK)]
-        public async Task<IActionResult> PlaceLimitOrder(PlaceLimitOrderModel model)
+        public async Task<IActionResult> PlaceLimitOrder(PlaceLimitOrderRequest request)
         {
-            #region Validation
-
-            var assetPair = await _assetsService.GetAssetPairByIdAsync(model.AssetPairId);
-
-            if (assetPair == null)
-            {
-                throw HftApiException.Create(HftApiErrorCode.ItemNotFound, HftApiErrorMessages.AssetPairNotFound)
-                    .AddField(nameof(model.AssetPairId));
-            }
-
-            var result = _validationService.ValidateLimitOrder(model.Price, model.Volume, assetPair.MinVolume);
+            var result = await _validationService.ValidateLimitOrderAsync(request.AssetPairId, request.Price, request.Volume);
 
             if (result != null)
                 throw HftApiException.Create(result.Code, result.Message).AddField(result.FieldName);
-
-            #endregion
 
             var walletId = User.GetWalletId();
 
             var order = new LimitOrderModel
             {
                 Id = Guid.NewGuid().ToString(),
-                AssetPairId = model.AssetPairId,
+                AssetPairId = request.AssetPairId,
                 ClientId = walletId,
-                Price = (double)model.Price,
+                Price = (double)request.Price,
                 CancelPreviousOrders = false,
-                Volume = (double)Math.Abs(model.Volume),
-                OrderAction = model.Side
+                Volume = (double)Math.Abs(request.Volume),
+                OrderAction = request.Side
             };
 
             MeResponseModel response = await _matchingEngineClient.PlaceLimitOrderAsync(order);
@@ -94,37 +81,27 @@ namespace HftApi.WebApi
         }
 
         [HttpPost("market")]
-        [ProducesResponseType(typeof(ResponseModel<MarketOrderResponseModel>), StatusCodes.Status200OK)]
-        public async Task<IActionResult> PlaceMarketOrder(PlaceMarketOrderModel model)
+        [ProducesResponseType(typeof(ResponseModel<MarketOrderResponse>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> PlaceMarketOrder(PlaceMarketOrderRequest request)
         {
-            #region Validation
-
-            var assetPair = await _assetsService.GetAssetPairByIdAsync(model.AssetPairId);
-
-            if (assetPair == null)
-                throw HftApiException.Create(HftApiErrorCode.ItemNotFound, HftApiErrorMessages.AssetPairNotFound)
-                    .AddField(nameof(model.AssetPairId));
-
-            var result = _validationService.ValidateMarketOrder(model.Volume, assetPair.MinVolume);
+            var result = await _validationService.ValidateMarketOrderAsync(request.AssetPairId, request.Volume);
 
             if (result != null)
                 throw HftApiException.Create(result.Code, result.Message).AddField(result.FieldName);
-
-            #endregion
 
             var walletId = User.GetWalletId();
 
             var order = new MarketOrderModel
             {
                 Id = Guid.NewGuid().ToString(),
-                AssetPairId = model.AssetPairId,
+                AssetPairId = request.AssetPairId,
                 ClientId = walletId,
-                Volume = (double)model.Volume,
-                OrderAction = model.Side,
+                Volume = (double)request.Volume,
+                OrderAction = request.Side,
                 Straight = true
             };
 
-            MarketOrderResponse response = await _matchingEngineClient.HandleMarketOrderAsync(order);
+            var response = await _matchingEngineClient.HandleMarketOrderAsync(order);
 
             if (response == null)
                 throw HftApiException.Create(HftApiErrorCode.MeRuntime, "ME not available");
@@ -133,7 +110,7 @@ namespace HftApi.WebApi
 
             if (code == HftApiErrorCode.Success)
             {
-                return Ok(ResponseModel<MarketOrderResponseModel>.Ok(new MarketOrderResponseModel {OrderId = order.Id, Price = (decimal)response.Price}));
+                return Ok(ResponseModel<MarketOrderResponse>.Ok(new MarketOrderResponse {OrderId = order.Id, Price = (decimal)response.Price}));
             }
 
             throw HftApiException.Create(code, message);
@@ -147,18 +124,7 @@ namespace HftApi.WebApi
             [FromQuery]int? take = 100
             )
         {
-            if (!string.IsNullOrEmpty(assetPairId))
-            {
-                var assetPair = await _assetsService.GetAssetPairByIdAsync(assetPairId);
-
-                if (assetPair == null)
-                {
-                    throw HftApiException.Create(HftApiErrorCode.ItemNotFound, HftApiErrorMessages.AssetPairNotFound)
-                        .AddField(nameof(assetPairId));
-                }
-            }
-
-            var result = _validationService.ValidateOrdersRequest(offset, take);
+            var result = await _validationService.ValidateOrdersRequestAsync(assetPairId, offset, take);
 
             if (result != null)
                 throw HftApiException.Create(result.Code, result.Message).AddField(result.FieldName);
@@ -179,18 +145,7 @@ namespace HftApi.WebApi
             [FromQuery]int? take = 100
             )
         {
-            if (!string.IsNullOrEmpty(assetPairId))
-            {
-                var assetPair = await _assetsService.GetAssetPairByIdAsync(assetPairId);
-
-                if (assetPair == null)
-                {
-                    throw HftApiException.Create(HftApiErrorCode.ItemNotFound, HftApiErrorMessages.AssetPairNotFound)
-                        .AddField(nameof(assetPairId));
-                }
-            }
-
-            var result = _validationService.ValidateOrdersRequest(offset, take);
+            var result = await _validationService.ValidateOrdersRequestAsync(assetPairId, offset, take);
 
             if (result != null)
                 throw HftApiException.Create(result.Code, result.Message).AddField(result.FieldName);
@@ -203,18 +158,12 @@ namespace HftApi.WebApi
 
         [HttpDelete]
         [ProducesResponseType(typeof(void), StatusCodes.Status200OK)]
-        public async Task<IActionResult> CancelAllOrders(string assetPairId = null, OrderAction? side = null)
+        public async Task<IActionResult> CancelAllOrders([FromQuery]string assetPairId = null, [FromQuery]OrderAction? side = null)
         {
-            if (!string.IsNullOrEmpty(assetPairId))
-            {
-                var assetPair = await _assetsService.GetAssetPairByIdAsync(assetPairId);
+            var assetPairResult = await _validationService.ValidateAssetPairAsync(assetPairId);
 
-                if (assetPair == null)
-                {
-                    throw HftApiException.Create(HftApiErrorCode.ItemNotFound, HftApiErrorMessages.AssetPairNotFound)
-                        .AddField(nameof(assetPairId));
-                }
-            }
+            if (assetPairResult != null)
+                throw HftApiException.Create(assetPairResult.Code, assetPairResult.Message).AddField(assetPairResult.FieldName);
 
             bool? isBuy;
             switch (side)
