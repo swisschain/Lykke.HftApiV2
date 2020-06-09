@@ -60,6 +60,9 @@ namespace HftApi.GrpcServices
 
         public override async Task<AssetPairResponse> GetAssetPair(AssetPairRequest request, ServerCallContext context)
         {
+            if (request.AssetPairId == "givemeerror")
+                throw new ArgumentException("Exception for this asset pair");
+
             var assetPair = await _assetsService.GetAssetPairByIdAsync(request.AssetPairId);
 
             var result = new AssetPairResponse
