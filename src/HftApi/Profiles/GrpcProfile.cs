@@ -72,7 +72,7 @@ namespace HftApi.Profiles
                 .ForMember(d => d.LastTradeTimestamp, o => o.MapFrom(x => x.LastTradeTimestamp.HasValue
                     ? x.LastTradeTimestamp.Value.ToString("yyyy-MM-ddTHH:mm:ss.fffZ") : string.Empty))
                 .ForMember(d => d.Volume, o => o.MapFrom(x => Math.Abs(x.Volume)))
-                .ForMember(d => d.RemainingVolume, o => o.MapFrom(x => Math.Abs(x.Volume)))
+                .ForMember(d => d.RemainingVolume, o => o.MapFrom(x => Math.Abs(x.RemainingVolume)))
                 .ForMember(d => d.FilledVolume, o => o.MapFrom(x => x.Volume - x.RemainingVolume))
                 .ForMember(d => d.Cost, o => o.MapFrom(x => x.FilledVolume * x.Price))
                 .ForMember(d => d.Trades, o => o.Ignore());

@@ -305,7 +305,7 @@ namespace HftApi.GrpcServices
 
             var model = new LimitOrderMassCancelModel
             {
-                Id = new Guid().ToString(),
+                Id = Guid.NewGuid().ToString(),
                 AssetPairId = request.AssetPairId,
                 ClientId = context.GetHttpContext().User.GetWalletId(),
                 IsBuy = isBuy
