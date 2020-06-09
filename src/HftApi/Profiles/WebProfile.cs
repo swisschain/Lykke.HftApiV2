@@ -11,7 +11,8 @@ namespace HftApi.Profiles
     {
         public WebProfile()
         {
-            CreateMap<OrderEntity, OrderModel>(MemberList.Destination);
+            CreateMap<OrderEntity, OrderModel>(MemberList.Destination)
+                .ForMember(d => d.Trades, o => o.Ignore());
             CreateMap<Trade, TradeModel>(MemberList.Destination);
             CreateMap<TradeEntity, TradeModel>(MemberList.Destination);
             CreateMap<TickerEntity, TickerModel>(MemberList.Destination);

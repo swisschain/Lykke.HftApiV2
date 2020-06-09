@@ -57,7 +57,7 @@ namespace HftApi.WebApi
             var trades = _tradesReader.Get(User.GetWalletId(), offset ?? 0, take ?? MaxPageSize,
                 x =>
                     (string.IsNullOrEmpty(assetPairId) || x.AssetPairId == assetPairId) &&
-                    (!side.HasValue || (side == OrderAction.Buy && x.Role == "Maker" || side == OrderAction.Sell && x.Role == "Taker")) &&
+                    (!side.HasValue || (side == OrderAction.Buy && x.BaseVolume > 0 || side == OrderAction.Sell && x.BaseVolume < 0)) &&
                     (!from.HasValue || x.CreatedAt >= from.Value) &&
                     (!to.HasValue || x.CreatedAt <= to.Value));
 

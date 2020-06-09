@@ -60,23 +60,24 @@ namespace HftApi.Worker.RabbitSubscribers
 
         private async Task ProcessMessageAsync(ExecutionEvent message)
         {
-            var orders = _mapper.Map<List<OrderEntity>>(message.Orders);
-
+            var orders = new List<OrderEntity>();
             var trades = new List<TradeEntity>();
 
-            foreach (var order in orders)
+            foreach (var order in message.Orders)
             {
+                var orderEntity = _mapper.Map<OrderEntity>(order);
+                orders.Add(orderEntity);
+
+                if (order.Trades == null)
+                    continue;
+
                 foreach (var trade in order.Trades)
                 {
-                    trade.AssetPairId = order.AssetPairId;
-                    trade.OrderId = order.Id;
-                    trade.WalletId = order.WalletId;
-
                     var tradeEntity = _mapper.Map<TradeEntity>(trade);
-                    tradeEntity.AssetPairId = order.AssetPairId;
-                    tradeEntity.OrderId = order.Id;
-                    tradeEntity.WalletId = order.WalletId;
-
+                    tradeEntity.AssetPairId = orderEntity.AssetPairId;
+                    tradeEntity.OrderId = orderEntity.Id;
+                    tradeEntity.PartitionKey = orderEntity.WalletId;
+                    tradeEntity.WalletId = orderEntity.WalletId;
                     trades.Add(tradeEntity);
                 }
             }

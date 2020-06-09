@@ -12,7 +12,7 @@ namespace HftApi.Worker.Profiles
         {
             CreateMap<Order, OrderEntity>(MemberList.Destination)
                 .ForMember(d => d.PartitionKey, o => o.MapFrom(x => x.WalletId))
-                .ForMember(d => d.RowKey, o => o.MapFrom(x => x.Id))
+                .ForMember(d => d.RowKey, o => o.MapFrom(x => x.ExternalId))
                 .ForMember(d => d.TimeStamp, o => o.Ignore())
                 .ForMember(d => d.Expires, o => o.Ignore())
                 .ForMember(d => d.Id, o => o.MapFrom(x => x.ExternalId))
@@ -31,14 +31,19 @@ namespace HftApi.Worker.Profiles
                 .ForMember(d => d.QuoteAssetId, o => o.MapFrom(x => x.QuotingAssetId))
                 .ForMember(d => d.Fee, o => o.Ignore());
 
-            CreateMap<Trade, TradeEntity>(MemberList.Destination)
-                .ForMember(d => d.PartitionKey, o => o.MapFrom(x => x.WalletId))
-                .ForMember(d => d.RowKey, o => o.MapFrom(x => x.Id))
+            CreateMap<Lykke.MatchingEngine.Connector.Models.Events.Trade, TradeEntity>(MemberList.Destination)
+                .ForMember(d => d.PartitionKey, o => o.Ignore())//fill manually
+                .ForMember(d => d.RowKey, o => o.MapFrom(x => x.TradeId))
+                .ForMember(d => d.Id, o => o.MapFrom(x => x.TradeId))
                 .ForMember(d => d.TimeStamp, o => o.Ignore())
                 .ForMember(d => d.Expires, o => o.Ignore())
                 .ForMember(d => d.CreatedAt, o => o.MapFrom(x => x.Timestamp))
                 .ForMember(d => d.AssetPairId, o => o.Ignore()) //fill manually
-                .ForMember(d => d.OrderId, o => o.MapFrom(x => x.OrderId)); //fill manually
+                .ForMember(d => d.OrderId, o => o.Ignore())
+                .ForMember(d => d.WalletId, o => o.Ignore())
+                .ForMember(d => d.QuoteVolume, o => o.MapFrom(x => x.QuotingVolume))
+                .ForMember(d => d.QuoteAssetId, o => o.MapFrom(x => x.QuotingAssetId))
+                .ForMember(d => d.Fee, o => o.Ignore());
         }
     }
 }

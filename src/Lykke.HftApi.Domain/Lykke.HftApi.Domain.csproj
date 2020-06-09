@@ -6,7 +6,6 @@
 
     <ItemGroup>
       <PackageReference Include="Grpc.Core.Api" Version="2.29.0" />
-      <PackageReference Include="MyNoSqlServer.Abstractions" Version="1.0.4" />
       <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     </ItemGroup>
 

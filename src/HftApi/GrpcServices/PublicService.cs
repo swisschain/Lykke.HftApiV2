@@ -10,6 +10,7 @@ using Lykke.Exchange.Api.MarketData;
 using Lykke.HftApi.ApiContract;
 using Lykke.HftApi.Domain;
 using Lykke.HftApi.Domain.Services;
+using Lykke.HftApi.Services;
 
 namespace HftApi.GrpcServices
 {
@@ -22,6 +23,7 @@ namespace HftApi.GrpcServices
         private readonly IStreamService<PriceUpdate> _priceStreamService;
         private readonly IStreamService<TickerUpdate> _tickerUpdateService;
         private readonly IStreamService<Orderbook> _orderbookUpdateService;
+        private readonly ValidationService _validationService;
         private readonly IMapper _mapper;
 
         public PublicService(
@@ -31,6 +33,7 @@ namespace HftApi.GrpcServices
             IStreamService<PriceUpdate> priceStreamService,
             IStreamService<TickerUpdate> tickerUpdateService,
             IStreamService<Orderbook> orderbookUpdateService,
+            ValidationService validationService,
             IMapper mapper
             )
         {
@@ -40,6 +43,7 @@ namespace HftApi.GrpcServices
             _priceStreamService = priceStreamService;
             _tickerUpdateService = tickerUpdateService;
             _orderbookUpdateService = orderbookUpdateService;
+            _validationService = validationService;
             _mapper = mapper;
         }
 
@@ -91,11 +95,31 @@ namespace HftApi.GrpcServices
 
         public override async Task<OrderbookResponse> GetOrderbooks(OrderbookRequest request, ServerCallContext context)
         {
+            var assetPairResult = await _validationService.ValidateAssetPairAsync(request.AssetPairId);
+
+            if (assetPairResult != null)
+            {
+                return new OrderbookResponse
+                {
+                    Error = new Error
+                    {
+                        Code = (int)assetPairResult.Code,
+                        Message = assetPairResult.Message
+                    }
+                };
+            }
+
             var orderbooks = await _orderbooksService.GetAsync(request.AssetPairId, request.Depth);
 
             var result = new OrderbookResponse();
 
-            result.Payload.AddRange(_mapper.Map<List<Orderbook>>(orderbooks));
+            foreach (var orderbook in orderbooks)
+            {
+                var resOrderBook = _mapper.Map<Orderbook>(orderbook);
+                resOrderBook.Asks.AddRange(_mapper.Map<List<Orderbook.Types.PriceVolume>>(orderbook.Asks));
+                resOrderBook.Bids.AddRange(_mapper.Map<List<Orderbook.Types.PriceVolume>>(orderbook.Bids));
+                result.Payload.Add(resOrderBook);
+            }
 
             return result;
         }

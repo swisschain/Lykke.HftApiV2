@@ -1,6 +1,4 @@
 using System;
-using System.Collections.Generic;
-using Lykke.HftApi.Domain.Entities;
 using MyNoSqlServer.Abstractions;
 
 namespace HftApi.Common.Domain.MyNoSqlEntities
@@ -20,7 +18,6 @@ namespace HftApi.Common.Domain.MyNoSqlEntities
         public decimal FilledVolume => Volume - RemainingVolume;
         public decimal RemainingVolume { get; set; }
         public decimal Cost => Math.Abs(FilledVolume * Price);
-        public IReadOnlyCollection<Trade> Trades { get; set; } = Array.Empty<Trade>();
 
         public string PartitionKey { get; set; }
         public string RowKey { get; set; }

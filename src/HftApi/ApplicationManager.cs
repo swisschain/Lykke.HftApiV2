@@ -110,15 +110,7 @@ namespace HftApi
                 foreach (var walletOrders in ordersByWallet)
                 {
                     var orderUpdate = new OrderUpdate();
-                    var orders = walletOrders.ToList();
-
-                    foreach (var order in orders)
-                    {
-                        var updateOrder = _mapper.Map<Order>(order);
-                        updateOrder.Trades.AddRange(_mapper.Map<List<Trade>>(order.Trades));
-                        orderUpdate.Orders.Add(updateOrder);
-                    }
-
+                    orderUpdate.Orders.AddRange(_mapper.Map<List<Order>>(walletOrders.ToList()));
                     _orderStream.WriteToStream(orderUpdate, walletOrders.Key);
                 }
             });

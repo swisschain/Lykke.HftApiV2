@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
 using Google.Protobuf.WellKnownTypes;
@@ -223,6 +224,16 @@ namespace HftApi.GrpcServices
             var res = new OrdersResponse();
             res.Payload.AddRange(_mapper.Map<List<Order>>(orders));
 
+            if (request.WithTrades)
+            {
+                foreach (var order in res.Payload)
+                {
+                    var trades = _tradesReader.Get(context.GetHttpContext().User.GetWalletId())
+                        .Where(x => x.OrderId == order.Id).ToList();
+                    order.Trades.AddRange(_mapper.Map<List<Trade>>(trades));
+                }
+            }
+
             return res;
         }
 
@@ -247,11 +258,16 @@ namespace HftApi.GrpcServices
 
             var res = new OrdersResponse();
 
-            foreach (var orderEntity in orderEntities)
+            res.Payload.AddRange(_mapper.Map<List<Order>>(orderEntities));
+
+            if (request.WithTrades)
             {
-                var order = _mapper.Map<Order>(orderEntity);
-                order.Trades.AddRange(_mapper.Map<List<Trade>>(orderEntity.Trades));
-                res.Payload.Add(order);
+                foreach (var order in res.Payload)
+                {
+                    var trades = _tradesReader.Get(context.GetHttpContext().User.GetWalletId())
+                        .Where(x => x.OrderId == order.Id).ToList();
+                    order.Trades.AddRange(_mapper.Map<List<Trade>>(trades));
+                }
             }
 
             return res;
@@ -389,7 +405,7 @@ namespace HftApi.GrpcServices
             var trades = _tradesReader.Get(context.GetHttpContext().User.GetWalletId(), request.Offset, request.Take,
                 x =>
                     (string.IsNullOrEmpty(request.AssetPairId) || x.AssetPairId == request.AssetPairId) &&
-                    (request.Side == Side.Buy && x.Role == "Maker" || request.Side == Side.Sell && x.Role == "Taker") &&
+                    (request.Side == Side.Buy && x.BaseVolume > 0 || request.Side == Side.Sell && x.BaseVolume < 0) &&
                     (!from.HasValue || x.CreatedAt >= from.Value) &&
                     (!to.HasValue || x.CreatedAt <= to.Value));
 
