@@ -43,7 +43,7 @@ RabbitMq:
   BalancesExchangeName:
     settings-key: Hftv2Service-RabbitMq-BalancesExchangeName
   OrdersExchangeName:
-    settings-key: Hftv2Service-RabbitMq-OrdersExchangeName
+    settings-key: MatchingEngineSpotEventsExchange
 MyNoSqlServer:
   ReaderServiceUrl:
     settings-key: MyNoSqlServer-ReaderUrl
