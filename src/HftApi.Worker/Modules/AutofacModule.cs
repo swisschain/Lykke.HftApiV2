@@ -29,22 +29,22 @@ namespace HftApi.Worker.Modules
             builder.RegisterType<OrderbooksSubscriber>()
                 .As<IStartable>()
                 .AutoActivate()
-                .WithParameter("connectionString", _config.RabbitMq.MeConnectionString)
-                .WithParameter("exchangeName", _config.RabbitMq.OrderbooksExchangeName)
+                .WithParameter("connectionString", _config.RabbitMq.Orderbooks.ConnectionString)
+                .WithParameter("exchangeName", _config.RabbitMq.Orderbooks.ExchangeName)
                 .SingleInstance();
 
             builder.RegisterType<BalancesSubscriber>()
                 .As<IStartable>()
                 .AutoActivate()
-                .WithParameter("connectionString", _config.RabbitMq.MeConnectionString)
-                .WithParameter("exchangeName", _config.RabbitMq.BalancesExchangeName)
+                .WithParameter("connectionString", _config.RabbitMq.Balances.ConnectionString)
+                .WithParameter("exchangeName", _config.RabbitMq.Balances.ExchangeName)
                 .SingleInstance();
 
             builder.RegisterType<OrdersSubscriber>()
                 .As<IStartable>()
                 .AutoActivate()
-                .WithParameter("connectionString", _config.RabbitMq.MeConnectionString)
-                .WithParameter("exchangeName", _config.RabbitMq.OrdersExchangeName)
+                .WithParameter("connectionString", _config.RabbitMq.Orders.ConnectionString)
+                .WithParameter("exchangeName", _config.RabbitMq.Orders.ExchangeName)
                 .SingleInstance();
 
             builder.Register(ctx =>

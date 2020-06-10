@@ -65,8 +65,8 @@ namespace HftApi.Modules
             builder.RegisterType<KeyUpdateSubscriber>()
                 .As<IStartable>()
                 .AutoActivate()
-                .WithParameter("connectionString", _config.RabbitMq.ConnectionString)
-                .WithParameter("exchangeName", _config.RabbitMq.ExchangeName)
+                .WithParameter("connectionString", _config.RabbitMq.HftInternal.ConnectionString)
+                .WithParameter("exchangeName", _config.RabbitMq.HftInternal.ExchangeName)
                 .SingleInstance();
 
             builder.RegisterHftInternalClient(_config.Services.HftInternalServiceUrl);

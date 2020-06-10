@@ -30,20 +30,30 @@ MatchingEngine:
   Port:
     settings-key: MatchingEngine-Port
 RabbitMq:
-  ConnectionString:
-    settings-key: SagasRabbitMqConnStr
-    types: [RabbitMq]
-  MeConnectionString:
-    settings-key: MatchingEngine-OrderBookRabbit
-    types: [RabbitMq]
-  ExchangeName:
-    settings-key: Hftv2Service-RabbitMq-HftInternalExchangeName
-  OrderbooksExchangeName:
-    settings-key: Hftv2Service-RabbitMq-OrderbooksExchangeName
-  BalancesExchangeName:
-    settings-key: Hftv2Service-RabbitMq-BalancesExchangeName
-  OrdersExchangeName:
-    settings-key: MatchingEngineSpotEventsExchange
+  HftInternal:
+    ConnectionString:
+      settings-key: RabbitSagas
+      types: [RabbitMq]
+    ExchangeName:
+      settings-key: RabbitMq-HftInternalExchangeName
+  Orderbooks:
+    ConnectionString:
+      settings-key: RabbitSpotPricesConnString
+      types: [RabbitMq]
+    ExchangeName:
+      settings-key: LykkeOrderBooksRabbitExchangeNameFull
+  Balances:
+    ConnectionString:
+      settings-key: RabbitMEConnString
+      types: [RabbitMq]
+    ExchangeName:
+      settings-key: LykkeBalancesRabbitExchangeNameFull
+  Orders:
+    ConnectionString:
+      settings-key: MatchingEngineSpotEventsRabbit
+      types: [RabbitMq]
+    ExchangeName:
+      settings-key: MatchingEngineSpotEventsExchange
 MyNoSqlServer:
   ReaderServiceUrl:
     settings-key: MyNoSqlServer-ReaderUrl
