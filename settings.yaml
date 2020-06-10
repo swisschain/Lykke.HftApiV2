@@ -50,7 +50,7 @@ RabbitMq:
       settings-key: LykkeBalancesRabbitExchangeNameFull
   Orders:
     ConnectionString:
-      settings-key: MatchingEngineSpotEventsRabbit
+      settings-key: MatchingEngineRabbitMqConnectionString
       types: [RabbitMq]
     ExchangeName:
       settings-key: MatchingEngineSpotEventsExchange
