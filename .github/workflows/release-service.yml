@@ -18,7 +18,7 @@ jobs:
       - name: Build
         run: dotnet build --configuration Release /p:AssemblyVersion=${GITHUB_REF#refs/tags/service-}
       - name: Test
-        run: dotnet test --no-build --configuration Release /p:AssemblyVersion=${GITHUB_REF#refs/tags/service-}
+        run: dotnet test --no-build --configuration Release
       - name: Publish API
         run: dotnet publish --no-build ./src/HftApi/HftApi.csproj --output ./publish-api --configuration Release
       - name: Publish worker
