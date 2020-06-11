@@ -49,6 +49,9 @@ namespace HftApi.Middleware
 
             sw.Stop();
 
+            if (context.Request.Path == "/api/isalive")
+                return;
+
             context.GetEnrichLogger(body).Information(MessageTemplate,  context.Request.Method, $"{context.Request.Path}{context.Request.QueryString}", context.Response.StatusCode, sw.Elapsed.TotalMilliseconds);
         }
 
