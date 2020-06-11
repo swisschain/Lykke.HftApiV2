@@ -17,9 +17,9 @@ jobs:
         with:
           dotnet-version: 3.1.100
       - name: Build
-        run: dotnet build --configuration Release /p:AssemblyVersion=1.0.5
+        run: dotnet build --configuration Release /p:AssemblyVersion=0.0.0
       - name: Test
-        run: dotnet test --no-build --configuration Release /p:AssemblyVersion=1.0.5
+        run: dotnet test --no-build --configuration Release /p:AssemblyVersion=0.0.0
       - name: Publish API
         run: dotnet publish --no-build ./src/HftApi/HftApi.csproj --output ./publish-api --configuration Release
       - name: Publish worker

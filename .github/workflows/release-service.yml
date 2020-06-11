@@ -20,9 +20,9 @@ jobs:
       - name: Test
         run: dotnet test --no-build --configuration Release /p:AssemblyVersion=${GITHUB_REF#refs/tags/service-}
       - name: Publish API
-        run: dotnet publish --no-build ./src/HftApi/HftApi.csproj --output ./publish-api --configuration Release /p:AssemblyVersion=${GITHUB_REF#refs/tags/service-}
+        run: dotnet publish --no-build ./src/HftApi/HftApi.csproj --output ./publish-api --configuration Release
       - name: Publish worker
-        run: dotnet publish --no-build ./src/HftApi.Worker/HftApi.Worker.csproj --output ./publish-worker --configuration Release /p:AssemblyVersion=${GITHUB_REF#refs/tags/service-}
+        run: dotnet publish --no-build ./src/HftApi.Worker/HftApi.Worker.csproj --output ./publish-worker --configuration Release
       - name: Check API dir
         run: ls ./publish-api
       - name: Check worker dir
