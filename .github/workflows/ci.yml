@@ -17,7 +17,7 @@ jobs:
         with:
           dotnet-version: 3.1.100
       - name: Build
-        run: dotnet build --configuration Release /p:AssemblyVersion=0.0.0
+        run: dotnet build --configuration Release /p:AssemblyVersion=1.0.6
       - name: Test
         run: dotnet test --no-build --configuration Release
       - name: Publish API
