@@ -21,9 +21,9 @@ jobs:
       - name: Test
         run: dotnet test --no-build --configuration Release
       - name: Publish API
-        run: dotnet publish --no-build ./src/HftApi/HftApi.csproj --output ./publish-api --configuration Release /p:AssemblyVersion=0.0.0
+        run: dotnet publish --no-build ./src/HftApi/HftApi.csproj --output ./publish-api --configuration Release /p:AssemblyVersion=1.0.5
       - name: Publish worker
-        run: dotnet publish --no-build ./src/HftApi.Worker/HftApi.Worker.csproj --output ./publish-worker --configuration Release /p:AssemblyVersion=0.0.0
+        run: dotnet publish --no-build ./src/HftApi.Worker/HftApi.Worker.csproj --output ./publish-worker --configuration Release /p:AssemblyVersion=1.0.5
       - name: Check api dir
         run: ls ./publish-api
       - name: Check worker dir
