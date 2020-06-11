@@ -20,7 +20,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\HftApi.Common\HftApi.Common.csproj" />
-    <ProjectReference Include="..\HftApi.MessagingContract\HftApi.MessagingContract.csproj" />
   </ItemGroup>
 
   <ItemGroup>
