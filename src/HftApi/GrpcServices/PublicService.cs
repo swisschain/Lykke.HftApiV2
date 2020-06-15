@@ -63,6 +63,20 @@ namespace HftApi.GrpcServices
             if (request.AssetPairId == "givemeerror")
                 throw new ArgumentException("Exception for this asset pair");
 
+            var validationResult = await _validationService.ValidateAssetPairAsync(request.AssetPairId);
+
+            if (validationResult != null)
+            {
+                return new AssetPairResponse
+                {
+                    Error = new Error
+                    {
+                        Code = (int)validationResult.Code,
+                        Message = validationResult.Message
+                    }
+                };
+            }
+
             var assetPair = await _assetsService.GetAssetPairByIdAsync(request.AssetPairId);
 
             var result = new AssetPairResponse
@@ -86,6 +100,20 @@ namespace HftApi.GrpcServices
 
         public override async Task<AssetResponse> GetAsset(AssetRequest request, ServerCallContext context)
         {
+            var validationResult = await _validationService.ValidateAssetAsync(request.AssetId);
+
+            if (validationResult != null)
+            {
+                return new AssetResponse
+                {
+                    Error = new Error
+                    {
+                        Code = (int)validationResult.Code,
+                        Message = validationResult.Message
+                    }
+                };
+            }
+
             var asset = await _assetsService.GetAssetByIdAsync(request.AssetId);
 
             var result = new AssetResponse
