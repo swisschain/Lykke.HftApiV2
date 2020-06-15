@@ -35,7 +35,6 @@ namespace HftApi.GrpcServices
         private readonly IStreamService<OrderUpdate> _orderUpdateService;
         private readonly IStreamService<TradeUpdate> _tradeUpdateService;
         private readonly IMyNoSqlServerDataReader<OrderEntity> _ordersReader;
-        private readonly IMyNoSqlServerDataReader<TradeEntity> _tradesReader;
         private readonly IMapper _mapper;
 
         public PrivateService(
@@ -47,7 +46,6 @@ namespace HftApi.GrpcServices
             IStreamService<OrderUpdate> orderUpdateService,
             IStreamService<TradeUpdate> tradeUpdateService,
             IMyNoSqlServerDataReader<OrderEntity> ordersReader,
-            IMyNoSqlServerDataReader<TradeEntity> tradesReader,
             IMapper mapper
             )
         {
@@ -59,7 +57,6 @@ namespace HftApi.GrpcServices
             _orderUpdateService = orderUpdateService;
             _tradeUpdateService = tradeUpdateService;
             _ordersReader = ordersReader;
-            _tradesReader = tradesReader;
             _mapper = mapper;
         }
 
@@ -383,12 +380,22 @@ namespace HftApi.GrpcServices
             if (DateTime.TryParse(request.To, out var toDate))
                 to = toDate;
 
-            var trades = _tradesReader.Get(context.GetHttpContext().User.GetWalletId(), request.Offset, request.Take,
-                x =>
-                    (string.IsNullOrEmpty(request.AssetPairId) || x.AssetPairId == request.AssetPairId) &&
-                    (request.Side == Side.Buy && x.BaseVolume > 0 || request.Side == Side.Sell && x.BaseVolume < 0) &&
-                    (!from.HasValue || x.CreatedAt >= from.Value) &&
-                    (!to.HasValue || x.CreatedAt <= to.Value));
+            var orderAction = request.OptionalSideCase == TradesRequest.OptionalSideOneofCase.None
+                ? (OrderAction?) null
+                : request.Side == Side.Buy ? OrderAction.Buy : OrderAction.Sell;
+            var trades = await _historyClient.GetTradersAsync(context.GetHttpContext().User.GetWalletId(),
+                request.AssetPairId, request.Offset, request.Take, orderAction, from, to);
+
+            var res = new TradesResponse();
+            var data = _mapper.Map<List<Trade>>(trades);
+            res.Payload.AddRange(data);
+
+            return res;
+        }
+
+        public override async Task<TradesResponse> GetOrderTrades(OrderTradesRequest request, ServerCallContext context)
+        {
+            var trades = await _historyClient.GetOrderTradesAsync(context.GetHttpContext().User.GetWalletId(), request.OrderId);
 
             var res = new TradesResponse();
             var data = _mapper.Map<List<Trade>>(trades);

@@ -16,6 +16,7 @@ service PrivateService {
 	rpc CancelAllOrders (CancelOrdersRequest) returns (CancelOrderResponse);
 	rpc CancelOrder (CancelOrderRequest) returns (CancelOrderResponse);
 	rpc GetTrades (TradesRequest) returns (TradesResponse);
+	rpc GetOrderTrades (OrderTradesRequest) returns (TradesResponse);
 
     rpc GetBalanceUpdates (google.protobuf.Empty) returns (stream BalanceUpdate);
     rpc GetOrderUpdates (google.protobuf.Empty) returns (stream OrderUpdate);
@@ -57,12 +58,17 @@ message CancelOrderRequest {
 
 message TradesRequest {
     string assetPairId = 1;
-    string orderId = 2;
-    Side side = 3;
-    int32 offset = 4;
-    int32 take = 5;
-    string from = 6;
-    string to = 7;
+    oneof optional_side {
+        Side side = 2;
+    }
+    int32 offset = 3;
+    int32 take = 4;
+    string from = 5;
+    string to = 6;
+}
+
+message OrderTradesRequest {
+    string orderId = 1;
 }
 
 message BalancesResponse {
@@ -132,14 +138,13 @@ message Trade {
     string timestamp = 3;
     string assetPairId = 4;
     string orderId = 5;
-    string oppositeOrderId = 6;
-    string role = 7;
-    string price = 8;
-    string baseVolume = 9;
-    string quoteVolume = 10;
-    string baseAssetId = 11;
-    string quoteAssetId = 12;
-    TradeFee fee = 13;
+    string role = 6;
+    string price = 7;
+    string baseVolume = 8;
+    string quoteVolume = 9;
+    string baseAssetId = 10;
+    string quoteAssetId = 11;
+    TradeFee fee = 12;
 }
 
 message TradeFee {

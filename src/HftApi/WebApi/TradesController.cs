@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
-using HftApi.Common.Domain.MyNoSqlEntities;
 using HftApi.Extensions;
 using HftApi.WebApi.Models;
 using Lykke.HftApi.Domain.Exceptions;
@@ -12,7 +10,6 @@ using Lykke.MatchingEngine.Connector.Models.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using MyNoSqlServer.Abstractions;
 
 namespace HftApi.WebApi
 {
@@ -22,18 +19,17 @@ namespace HftApi.WebApi
     public class TradesController : ControllerBase
     {
         private readonly ValidationService _validationService;
-        private readonly IMyNoSqlServerDataReader<TradeEntity> _tradesReader;
+        private readonly HistoryHttpClient _historyClient;
         private readonly IMapper _mapper;
-        private const int MaxPageSize = 500;
 
         public TradesController(
             ValidationService validationService,
-            IMyNoSqlServerDataReader<TradeEntity> tradesReader,
+            HistoryHttpClient historyClient,
             IMapper mapper
             )
         {
             _validationService = validationService;
-            _tradesReader = tradesReader;
+            _historyClient = historyClient;
             _mapper = mapper;
         }
 
@@ -54,21 +50,16 @@ namespace HftApi.WebApi
                 throw HftApiException.Create(result.Code, result.Message)
                     .AddField(result.FieldName);
 
-            var trades = _tradesReader.Get(User.GetWalletId(), offset ?? 0, take ?? MaxPageSize,
-                x =>
-                    (string.IsNullOrEmpty(assetPairId) || x.AssetPairId == assetPairId) &&
-                    (!side.HasValue || (side == OrderAction.Buy && x.BaseVolume > 0 || side == OrderAction.Sell && x.BaseVolume < 0)) &&
-                    (!from.HasValue || x.CreatedAt >= from.Value) &&
-                    (!to.HasValue || x.CreatedAt <= to.Value));
+            var trades = await _historyClient.GetTradersAsync(User.GetWalletId(), assetPairId, offset, take, side, from, to);
 
-            return Ok(ResponseModel<IReadOnlyCollection<TradeModel>>.Ok(_mapper.Map<IReadOnlyCollection<TradeModel>>(trades.OrderByDescending(x => x.CreatedAt))));
+            return Ok(ResponseModel<IReadOnlyCollection<TradeModel>>.Ok(_mapper.Map<IReadOnlyCollection<TradeModel>>(trades)));
         }
 
         [HttpGet("order/{orderId}")]
         [ProducesResponseType(typeof(ResponseModel<IReadOnlyCollection<TradeModel>>), StatusCodes.Status200OK)]
-        public IActionResult OrderTrades(string orderId)
+        public async Task<IActionResult> OrderTrades(string orderId)
         {
-            var trades = _tradesReader.Get(User.GetWalletId(), orderId);
+            var trades = await _historyClient.GetOrderTradesAsync(User.GetWalletId(), orderId);
             return Ok(ResponseModel<IReadOnlyCollection<TradeModel>>.Ok(_mapper.Map<IReadOnlyCollection<TradeModel>>(trades)));
         }
     }
