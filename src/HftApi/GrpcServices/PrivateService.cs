@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
 using Google.Protobuf.WellKnownTypes;
@@ -28,6 +27,7 @@ namespace HftApi.GrpcServices
     [UsedImplicitly]
     public class PrivateService : Lykke.HftApi.ApiContract.PrivateService.PrivateServiceBase
     {
+        private readonly HistoryHttpClient _historyClient;
         private readonly IBalanceService _balanceService;
         private readonly ValidationService _validationService;
         private readonly IMatchingEngineClient _matchingEngineClient;
@@ -39,6 +39,7 @@ namespace HftApi.GrpcServices
         private readonly IMapper _mapper;
 
         public PrivateService(
+            HistoryHttpClient historyClient,
             IBalanceService balanceService,
             ValidationService validationService,
             IMatchingEngineClient matchingEngineClient,
@@ -50,6 +51,7 @@ namespace HftApi.GrpcServices
             IMapper mapper
             )
         {
+            _historyClient = historyClient;
             _balanceService = balanceService;
             _validationService = validationService;
             _matchingEngineClient = matchingEngineClient;
@@ -223,17 +225,6 @@ namespace HftApi.GrpcServices
 
             var res = new OrdersResponse();
             res.Payload.AddRange(_mapper.Map<List<Order>>(orders));
-
-            if (request.WithTrades)
-            {
-                foreach (var order in res.Payload)
-                {
-                    var trades = _tradesReader.Get(context.GetHttpContext().User.GetWalletId())
-                        .Where(x => x.OrderId == order.Id).ToList();
-                    order.Trades.AddRange(_mapper.Map<List<Trade>>(trades));
-                }
-            }
-
             return res;
         }
 
@@ -253,22 +244,12 @@ namespace HftApi.GrpcServices
                 };
             }
 
-            var orderEntities = _ordersReader.Get(context.GetHttpContext().User.GetWalletId(), request.Offset, request.Take,
-                x => (string.IsNullOrEmpty(request.AssetPairId) || x.AssetPairId == request.AssetPairId) && x.Status == OrderStatus.Matched.ToString());
+            var orders = await _historyClient.GetOrdersByWalletAsync(context.GetHttpContext().User.GetWalletId(), request.AssetPairId,
+                new [] { OrderStatus.Matched, OrderStatus.Cancelled }, null, false, request.Offset, request.Take);
 
             var res = new OrdersResponse();
 
-            res.Payload.AddRange(_mapper.Map<List<Order>>(orderEntities));
-
-            if (request.WithTrades)
-            {
-                foreach (var order in res.Payload)
-                {
-                    var trades = _tradesReader.Get(context.GetHttpContext().User.GetWalletId())
-                        .Where(x => x.OrderId == order.Id).ToList();
-                    order.Trades.AddRange(_mapper.Map<List<Trade>>(trades));
-                }
-            }
+            res.Payload.AddRange(_mapper.Map<List<Order>>(orders));
 
             return res;
         }

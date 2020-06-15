@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 
 namespace HftApi.WebApi.Models
 {
@@ -17,6 +16,5 @@ namespace HftApi.WebApi.Models
         public decimal FilledVolume => Volume - RemainingVolume;
         public decimal RemainingVolume { get; set; }
         public decimal Cost => FilledVolume * Price;
-        public IReadOnlyCollection<TradeModel> Trades { get; set; } = Array.Empty<TradeModel>();
     }
 }

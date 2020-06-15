@@ -27,24 +27,24 @@ namespace HftApi.WebApi
     [Route("api/orders")]
     public class OrdersController : ControllerBase
     {
+        private readonly HistoryHttpClient _historyClient;
         private readonly ValidationService _validationService;
         private readonly IMatchingEngineClient _matchingEngineClient;
         private readonly IMyNoSqlServerDataReader<OrderEntity> _ordersReader;
-        private readonly IMyNoSqlServerDataReader<TradeEntity> _tradesReader;
         private readonly IMapper _mapper;
 
         public OrdersController(
+            HistoryHttpClient historyClient,
             ValidationService validationService,
             IMatchingEngineClient matchingEngineClient,
             IMyNoSqlServerDataReader<OrderEntity> ordersReader,
-            IMyNoSqlServerDataReader<TradeEntity> tradesReader,
             IMapper mapper
             )
         {
+            _historyClient = historyClient;
             _validationService = validationService;
             _matchingEngineClient = matchingEngineClient;
             _ordersReader = ordersReader;
-            _tradesReader = tradesReader;
             _mapper = mapper;
         }
 
@@ -123,7 +123,6 @@ namespace HftApi.WebApi
         [ProducesResponseType(typeof(ResponseModel<IReadOnlyCollection<OrderModel>>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetActiveOrders(
             [FromQuery]string assetPairId = null,
-            [FromQuery]bool withTrades = false,
             [FromQuery]int? offset = 0,
             [FromQuery]int? take = 100
             )
@@ -140,15 +139,6 @@ namespace HftApi.WebApi
 
             var ordersModel = _mapper.Map<IReadOnlyCollection<OrderModel>>(orders);
 
-            if (withTrades)
-            {
-                foreach (var order in ordersModel)
-                {
-                    var trades = _tradesReader.Get(order.Id);
-                    order.Trades = _mapper.Map<List<TradeModel>>(trades);
-                }
-            }
-
             return Ok(ResponseModel<IReadOnlyCollection<OrderModel>>.Ok(ordersModel));
         }
 
@@ -156,7 +146,6 @@ namespace HftApi.WebApi
         [ProducesResponseType(typeof(ResponseModel<IReadOnlyCollection<OrderModel>>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetCloasedOrders(
             [FromQuery]string assetPairId = null,
-            [FromQuery]bool withTrades = false,
             [FromQuery]int? offset = 0,
             [FromQuery]int? take = 100
             )
@@ -166,21 +155,12 @@ namespace HftApi.WebApi
             if (result != null)
                 throw HftApiException.Create(result.Code, result.Message).AddField(result.FieldName);
 
-            var orders = _ordersReader.Get(User.GetWalletId(), offset ?? 0, take ?? 100,
-                x => (string.IsNullOrEmpty(assetPairId) || x.AssetPairId == assetPairId) && x.Status == OrderStatus.Matched.ToString());
+            var orders = await _historyClient.GetOrdersByWalletAsync(User.GetWalletId(), assetPairId,
+                new [] { OrderStatus.Matched, OrderStatus.Cancelled }, null, false, offset, take );
 
             var ordersModel = _mapper.Map<IReadOnlyCollection<OrderModel>>(orders);
 
-            if (withTrades)
-            {
-                foreach (var order in ordersModel)
-                {
-                    var trades = _tradesReader.Get(order.Id);
-                    order.Trades = _mapper.Map<List<TradeModel>>(trades);
-                }
-            }
-
-            return Ok(ResponseModel<IReadOnlyCollection<OrderModel>>.Ok(_mapper.Map<IReadOnlyCollection<OrderModel>>(orders)));
+            return Ok(ResponseModel<IReadOnlyCollection<OrderModel>>.Ok(_mapper.Map<IReadOnlyCollection<OrderModel>>(ordersModel)));
         }
 
         [HttpDelete]
