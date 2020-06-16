@@ -10,18 +10,23 @@ using Lykke.HftApi.Domain.Services;
 
 namespace Lykke.HftApi.Services
 {
-    public class StreamService<T>: IStreamService<T>
+    public class StreamService<T>: IStreamService<T> where T : class
     {
         private readonly List<StreamData<T>> _streamList = new List<StreamData<T>>();
-        private readonly TimerTrigger _timerTrigger;
+        private readonly TimerTrigger _checkTimer;
+        private readonly TimerTrigger _pingTimer;
 
         public StreamService(ILogFactory logFactory, bool needPing = false)
         {
             if (needPing)
             {
-                _timerTrigger = new TimerTrigger(nameof(StreamService<T>), TimeSpan.FromSeconds(10), logFactory);
-                _timerTrigger.Triggered += Ping;
-                _timerTrigger.Start();
+                _checkTimer = new TimerTrigger(nameof(StreamService<T>), TimeSpan.FromSeconds(10), logFactory);
+                _checkTimer.Triggered += CheckStreams;
+                _checkTimer.Start();
+
+                _pingTimer = new TimerTrigger(nameof(StreamService<T>), TimeSpan.FromMinutes(1), logFactory);
+                _pingTimer.Triggered += Ping;
+                _pingTimer.Start();
             }
         }
 
@@ -33,16 +38,22 @@ namespace Lykke.HftApi.Services
 
             foreach (var streamData in items)
             {
+                streamData.LastSentData = streamData.KeepLastData ? data : null;
                 streamData.Stream.WriteAsync(data)
                     .ContinueWith(t => RemoveStream(streamData), TaskContinuationOptions.OnlyOnFaulted);
             }
         }
 
-        public Task RegisterStream(StreamInfo<T> streamInfo)
+        public Task RegisterStream(StreamInfo<T> streamInfo, T initData = null)
         {
-            var data = StreamData<T>.Create(streamInfo);
+            var data = StreamData<T>.Create(streamInfo, initData);
 
             _streamList.Add(data);
+
+            if (initData != null)
+            {
+                data.Stream.WriteAsync(initData);
+            }
 
             return data.CompletionTask.Task;
         }
@@ -55,8 +66,11 @@ namespace Lykke.HftApi.Services
                 Console.WriteLine($"Remove stream connect (peer: {streamInfo.Peer}");
             }
 
-            _timerTrigger.Stop();
-            _timerTrigger.Dispose();
+            _checkTimer.Stop();
+            _checkTimer.Dispose();
+
+            _pingTimer.Stop();
+            _pingTimer.Dispose();
         }
 
         public void Stop()
@@ -64,20 +78,21 @@ namespace Lykke.HftApi.Services
             foreach (var streamInfo in _streamList)
             {
                 streamInfo.CompletionTask.TrySetResult(1);
-                Console.WriteLine($"Remove stream connect (peer: {streamInfo.Peer}");
+                Console.WriteLine($"Remove stream connect (peer: {streamInfo.Peer})");
             }
 
-            _timerTrigger.Stop();
+            _checkTimer.Stop();
+            _pingTimer.Stop();
         }
 
         private void RemoveStream(StreamData<T> streamData)
         {
             streamData.CompletionTask.TrySetResult(1);
             _streamList.Remove(streamData);
-            Console.WriteLine($"Remove stream connect (peer: {streamData.Peer}");
+            Console.WriteLine($"Remove stream connect (peer: {streamData.Peer})");
         }
 
-        private Task Ping(ITimerTrigger timer, TimerTriggeredHandlerArgs args, CancellationToken cancellationtoken)
+        private Task CheckStreams(ITimerTrigger timer, TimerTriggeredHandlerArgs args, CancellationToken cancellationtoken)
         {
             var streamsToRemove = _streamList
                 .Where(x => x.CancelationToken.HasValue && x.CancelationToken.Value.IsCancellationRequested)
@@ -90,13 +105,32 @@ namespace Lykke.HftApi.Services
 
             return Task.CompletedTask;
         }
+
+        private Task Ping(ITimerTrigger timer, TimerTriggeredHandlerArgs args, CancellationToken cancellationtoken)
+        {
+            foreach (var streamData in _streamList)
+            {
+                var instance = streamData.LastSentData ?? Activator.CreateInstance<T>();
+
+                try
+                {
+                    streamData.Stream.WriteAsync(instance)
+                        .ContinueWith(t => RemoveStream(streamData), TaskContinuationOptions.OnlyOnFaulted);
+                }
+                catch {}
+            }
+
+            return Task.CompletedTask;
+        }
     }
 
-    internal class StreamData<T> : StreamInfo<T>
+    internal class StreamData<T> : StreamInfo<T> where T : class
     {
         public TaskCompletionSource<int> CompletionTask { get; set; }
+        public T LastSentData { get; set; }
+        public bool KeepLastData { get; set; }
 
-        public static StreamData<T> Create(StreamInfo<T> streamInfo)
+        public static StreamData<T> Create(StreamInfo<T> streamInfo, T initData = null)
         {
             return new StreamData<T>
             {
@@ -104,7 +138,9 @@ namespace Lykke.HftApi.Services
                 CancelationToken = streamInfo.CancelationToken,
                 Stream = streamInfo.Stream,
                 Key = streamInfo.Key,
-                Peer = streamInfo.Peer
+                Peer = streamInfo.Peer,
+                LastSentData = initData,
+                KeepLastData = initData != null
             };
         }
     }

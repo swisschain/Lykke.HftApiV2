@@ -404,9 +404,13 @@ namespace HftApi.GrpcServices
             return res;
         }
 
-        public override Task GetBalanceUpdates(Empty request, IServerStreamWriter<BalanceUpdate> responseStream, ServerCallContext context)
+        public override async Task GetBalanceUpdates(Empty request, IServerStreamWriter<BalanceUpdate> responseStream, ServerCallContext context)
         {
             Console.WriteLine($"New balance stream connect. peer:{context.Peer}");
+
+            string walletId = context.GetHttpContext().User.GetWalletId();
+
+            var balances = await _balanceService.GetBalancesAsync(walletId);
 
             var streamInfo = new StreamInfo<BalanceUpdate>
             {
@@ -416,7 +420,9 @@ namespace HftApi.GrpcServices
                 Peer = context.Peer
             };
 
-            return _balanceUpdateService.RegisterStream(streamInfo);
+            var initData = new BalanceUpdate();
+            initData.Balances.AddRange(_mapper.Map<List<Balance>>(balances));
+            await _balanceUpdateService.RegisterStream(streamInfo, initData);
         }
 
         public override Task GetOrderUpdates(Empty request, IServerStreamWriter<OrderUpdate> responseStream, ServerCallContext context)

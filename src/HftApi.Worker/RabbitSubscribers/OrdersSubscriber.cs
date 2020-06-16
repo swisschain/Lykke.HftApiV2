@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Autofac;
 using AutoMapper;
@@ -84,6 +85,26 @@ namespace HftApi.Worker.RabbitSubscribers
 
             await _orderWriter.BulkInsertOrReplaceAsync(orders);
             await _tradeWriter.BulkInsertOrReplaceAsync(trades);
+
+            Task.Run(async () =>
+            {
+                var ordersToRemove = orders
+                    .Where(x => x.Status == OrderStatus.Matched.ToString() ||
+                        x.Status == OrderStatus.Cancelled.ToString() ||
+                        x.Status == OrderStatus.Rejected.ToString()).ToList();
+
+                foreach (var order in ordersToRemove)
+                {
+                    await _orderWriter.DeleteAsync(order.WalletId, order.Id);
+                }
+
+                var walletIds = trades.Select(x => x.WalletId).Distinct().ToList();
+
+                foreach (var walletId in walletIds)
+                {
+                    await _tradeWriter.CleanAndKeepMaxRecords(walletId, 0);
+                }
+            });
         }
 
         public void Dispose()
