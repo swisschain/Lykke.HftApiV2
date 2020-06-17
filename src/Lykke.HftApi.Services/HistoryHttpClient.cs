@@ -149,7 +149,6 @@ namespace Lykke.HftApi.Services
             return new Trade
             {
                 Id = trade.Id.ToString(),
-                Index = trade.Index,
                 Timestamp = trade.Timestamp,
                 AssetPairId = trade.AssetPairId,
                 OrderId = trade.OrderId.ToString(),

@@ -134,17 +134,16 @@ message Order {
 
 message Trade {
     string id = 1;
-    int32 index = 2;
-    string timestamp = 3;
-    string assetPairId = 4;
-    string orderId = 5;
-    string role = 6;
-    string price = 7;
-    string baseVolume = 8;
-    string quoteVolume = 9;
-    string baseAssetId = 10;
-    string quoteAssetId = 11;
-    TradeFee fee = 12;
+    string timestamp = 2;
+    string assetPairId = 3;
+    string orderId = 4;
+    string role = 5;
+    string price = 6;
+    string baseVolume = 7;
+    string quoteVolume = 8;
+    string baseAssetId = 9;
+    string quoteAssetId = 10;
+    TradeFee fee = 11;
 }
 
 message TradeFee {

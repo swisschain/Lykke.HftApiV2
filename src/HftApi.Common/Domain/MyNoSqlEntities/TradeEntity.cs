@@ -8,7 +8,6 @@ namespace HftApi.Common.Domain.MyNoSqlEntities
     {
         public string Id { get; set; }
         public string WalletId { get; set; }
-        public int Index { get; set; }
         public DateTime CreatedAt { get; set; }
         public string AssetPairId { get; set; }
         public string OrderId { get; set; }
