@@ -68,7 +68,7 @@ namespace HftApi
             {
                 foreach (var price in prices)
                 {
-                    _priceStraem.WriteToStream(_mapper.Map<PriceUpdate>(price));
+                    _priceStraem.WriteToStream(_mapper.Map<PriceUpdate>(price), price.AssetPairId);
                 }
             });
 

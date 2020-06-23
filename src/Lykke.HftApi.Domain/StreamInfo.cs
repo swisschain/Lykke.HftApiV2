@@ -1,3 +1,4 @@
+using System;
 using System.Threading;
 using Grpc.Core;
 
@@ -7,7 +8,8 @@ namespace Lykke.HftApi.Domain
     {
         public IServerStreamWriter<T> Stream { get; set; }
         public CancellationToken? CancelationToken { get; set; }
-        public string Key { get; set; }
+        public string[] Keys { get; set; } = Array.Empty<string>();
+        public bool AllowEmptyKeys { get; set; }
         public string Peer { get; set; }
     }
 }

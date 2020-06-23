@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 
@@ -7,7 +6,7 @@ namespace HftApi.WebApi.Models
     public class OrderbookModel
     {
         public string AssetPairId { get; set; }
-        public DateTime Timestamp { get; set; }
+        public long Timestamp { get; set; }
         public IReadOnlyCollection<VolumePriceModel> Bids { get; set; }
         public IReadOnlyCollection<VolumePriceModel> Asks { get; set; }
     }

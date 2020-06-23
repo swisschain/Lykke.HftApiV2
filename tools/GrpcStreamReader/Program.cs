@@ -51,7 +51,7 @@ namespace GrpcStreamReader
                         case StreamName.Prices:
                             {
                                 Console.WriteLine("Get price updates....");
-                                var prices = client.PublicService.GetPriceUpdates(new Empty());
+                                var prices = client.PublicService.GetPriceUpdates(new PriceUpdatesRequest());
 
                                 await foreach (var item in prices.ResponseStream.ReadAllAsync())
                                 {

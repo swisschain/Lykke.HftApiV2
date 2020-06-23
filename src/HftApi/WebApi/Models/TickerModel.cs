@@ -11,6 +11,6 @@ namespace HftApi.WebApi.Models
         public decimal LastPrice { get; set; }
         public decimal High { get; set; }
         public decimal Low { get; set; }
-        public DateTime Timestamp { get; set; }
+        public long Timestamp { get; set; }
     }
 }

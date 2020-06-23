@@ -174,14 +174,16 @@ namespace HftApi.GrpcServices
             return result;
         }
 
-        public override Task GetPriceUpdates(Empty request, IServerStreamWriter<PriceUpdate> responseStream, ServerCallContext context)
+        public override Task GetPriceUpdates(PriceUpdatesRequest request, IServerStreamWriter<PriceUpdate> responseStream, ServerCallContext context)
         {
             Console.WriteLine($"New price stream connect. peer:{context.Peer}");
 
             var streamInfo = new StreamInfo<PriceUpdate>
             {
                 Stream = responseStream,
-                Peer = context.Peer
+                Peer = context.Peer,
+                Keys = request.AssetPairIds.ToArray(),
+                AllowEmptyKeys = true
             };
 
             return _priceStreamService.RegisterStream(streamInfo);
@@ -209,7 +211,7 @@ namespace HftApi.GrpcServices
             var streamInfo = new StreamInfo<Orderbook>
             {
                 Stream = responseStream,
-                Key = request.AssetPairId,
+                Keys = new [] {request.AssetPairId},
                 Peer = context.Peer
             };
 

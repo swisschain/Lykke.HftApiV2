@@ -6,7 +6,7 @@ namespace HftApi.WebApi.Models
     public class TradeModel
     {
         public string Id { get; set; }
-        public DateTime Timestamp { get; set; }
+        public long Timestamp { get; set; }
         public string AssetPairId { get; set; }
         public string OrderId { get; set; }
         public string Role { get; set; }

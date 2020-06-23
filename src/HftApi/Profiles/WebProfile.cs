@@ -11,6 +11,7 @@ namespace HftApi.Profiles
     {
         public WebProfile()
         {
+            CreateMap<DateTime, long>().ConvertUsing(dt => (long)(dt - DateTime.UnixEpoch).TotalMilliseconds);
             CreateMap<OrderEntity, OrderModel>(MemberList.Destination);
             CreateMap<Order, OrderModel>(MemberList.Destination);
             CreateMap<Trade, TradeModel>(MemberList.Destination);

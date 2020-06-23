@@ -24,7 +24,7 @@ namespace Lykke.HftApi.Services
                 _checkTimer.Triggered += CheckStreams;
                 _checkTimer.Start();
 
-                _pingTimer = new TimerTrigger(nameof(StreamService<T>), TimeSpan.FromMinutes(1), logFactory);
+                _pingTimer = new TimerTrigger(nameof(StreamService<T>), TimeSpan.FromSeconds(30), logFactory);
                 _pingTimer.Triggered += Ping;
                 _pingTimer.Start();
             }
@@ -34,7 +34,7 @@ namespace Lykke.HftApi.Services
         {
             var items = string.IsNullOrEmpty(key)
                 ? _streamList.ToArray()
-                : _streamList.Where(x => x.Key == key).ToArray();
+                : _streamList.Where(x => x.Keys.Contains(key, StringComparer.InvariantCultureIgnoreCase) || x.AllowEmptyKeys).ToArray();
 
             foreach (var streamData in items)
             {
@@ -137,7 +137,7 @@ namespace Lykke.HftApi.Services
                 CompletionTask = new TaskCompletionSource<int>(),
                 CancelationToken = streamInfo.CancelationToken,
                 Stream = streamInfo.Stream,
-                Key = streamInfo.Key,
+                Keys = streamInfo.Keys,
                 Peer = streamInfo.Peer,
                 LastSentData = initData,
                 KeepLastData = initData != null

@@ -1,12 +1,10 @@
-using System;
-
 namespace HftApi.WebApi.Models
 {
     public class OrderModel
     {
         public string Id { get; set; }
-        public DateTime Timestamp { get; set; }
-        public DateTime? LastTradeTimestamp { get; set; }
+        public long Timestamp { get; set; }
+        public long? LastTradeTimestamp { get; set; }
         public string Status { get; set; }
         public string AssetPairId { get; set; }
         public string Type { get; set; }

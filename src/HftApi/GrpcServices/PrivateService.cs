@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
 using Google.Protobuf.WellKnownTypes;
@@ -18,6 +19,7 @@ using Lykke.MatchingEngine.Connector.Models.Common;
 using Lykke.Service.History.Contracts.Enums;
 using Microsoft.AspNetCore.Authorization;
 using MyNoSqlServer.Abstractions;
+using BulkLimitOrderResponse = Lykke.HftApi.ApiContract.BulkLimitOrderResponse;
 using LimitOrderResponse = Lykke.HftApi.ApiContract.LimitOrderResponse;
 using MarketOrderResponse = Lykke.HftApi.ApiContract.MarketOrderResponse;
 
@@ -74,8 +76,9 @@ namespace HftApi.GrpcServices
         public override async Task<LimitOrderResponse> PlaceLimitOrder(LimitOrderRequest request, ServerCallContext context)
         {
             var walletId = context.GetHttpContext().User.GetWalletId();
+            var orderAction = _mapper.Map<OrderAction>(request.Side);
 
-            var result = await _validationService.ValidateLimitOrderAsync(request.AssetPairId, Convert.ToDecimal(request.Price), Convert.ToDecimal(request.Volume));
+            var result = await _validationService.ValidateLimitOrderAsync(walletId, request.AssetPairId, orderAction, Convert.ToDecimal(request.Price), Convert.ToDecimal(request.Volume));
 
             if (result != null)
             {
@@ -97,7 +100,7 @@ namespace HftApi.GrpcServices
                 Price = Convert.ToDouble(request.Price),
                 CancelPreviousOrders = false,
                 Volume = Math.Abs(Convert.ToDouble(request.Volume)),
-                OrderAction = request.Side == Side.Buy ? OrderAction.Buy : OrderAction.Sell
+                OrderAction = orderAction
             };
 
             MeResponseModel response = await _matchingEngineClient.PlaceLimitOrderAsync(order);
@@ -135,6 +138,92 @@ namespace HftApi.GrpcServices
             };
         }
 
+        public override async Task<BulkLimitOrderResponse> PlaceBulkLimitOrder(BulkLimitOrderRequest request, ServerCallContext context)
+        {
+            var walletId = context.GetHttpContext().User.GetWalletId();
+
+            foreach (var order in request.Orders)
+            {
+                var result = await _validationService.ValidateLimitOrderAsync(walletId, request.AssetPairId,
+                    _mapper.Map<OrderAction>(order.Side), Convert.ToDecimal(order.Price), Convert.ToDecimal(order.Volume));
+
+                if (result != null)
+                    return new BulkLimitOrderResponse
+                    {
+                        Error = new Error
+                        {
+                            Code = (int)result.Code,
+                            Message = result.Message
+                        }
+                    };
+            }
+
+            var items = request.Orders?.ToArray();
+
+            var orders = new List<MultiOrderItemModel>();
+
+            foreach (var item in items)
+            {
+                var order = new MultiOrderItemModel
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    Price = Convert.ToDouble(item.Price),
+                    Volume = Convert.ToDouble(item.Volume),
+                    OrderAction = _mapper.Map<OrderAction>(item.Side),
+                    OldId = item.OldId
+                };
+
+                orders.Add(order);
+            }
+
+            var multiOrder = new MultiLimitOrderModel
+            {
+                Id = Guid.NewGuid().ToString(),
+                ClientId = walletId,
+                AssetPairId = request.AssetPairId,
+                CancelPreviousOrders = request.CancelPreviousOrders,
+                Orders = orders.ToArray()
+            };
+
+            if (request.OptionalCancelModeCase != BulkLimitOrderRequest.OptionalCancelModeOneofCase.None)
+            {
+                multiOrder.CancelMode = _mapper.Map<Lykke.MatchingEngine.Connector.Models.Api.CancelMode>(request.CancelMode);
+            }
+
+            MultiLimitOrderResponse response = await _matchingEngineClient.PlaceMultiLimitOrderAsync(multiOrder);
+
+            if (response == null)
+            {
+                return new BulkLimitOrderResponse
+                {
+                    Error = new Error
+                    {
+                        Code = (int)HftApiErrorCode.MeRuntime,
+                        Message = "ME not available"
+                    }
+                };
+            }
+
+            var bulkResponse = new BulkLimitOrderResponse
+            {
+                Payload = new BulkLimitOrderResponse.Types.BulkLimitOrderPayload
+                {
+                    AssetPairId = request.AssetPairId,
+                    Error = (int)response.Status.ToHftApiError().code
+                }
+            };
+
+            bulkResponse.Payload.Statuses.AddRange(response.Statuses?.Select(x => new BulkOrderItemStatus
+            {
+                Id = x.Id,
+                Price = x.Price.ToString(CultureInfo.InvariantCulture),
+                Volume = x.Volume.ToString(CultureInfo.InvariantCulture),
+                Error = (int) x.Status.ToHftApiError().code
+            }));
+
+            return bulkResponse;
+        }
+
         public override async Task<MarketOrderResponse> PlaceMarketOrder(MarketOrderRequest request, ServerCallContext context)
         {
             var walletId = context.GetHttpContext().User.GetWalletId();
@@ -159,7 +248,7 @@ namespace HftApi.GrpcServices
                 AssetPairId = request.AssetPairId,
                 ClientId = walletId,
                 Volume = Math.Abs(Convert.ToDouble(request.Volume)),
-                OrderAction = request.Side == Side.Buy ? OrderAction.Buy : OrderAction.Sell,
+                OrderAction = _mapper.Map<OrderAction>(request.Side),
                 Straight = true
             };
 
@@ -382,7 +471,7 @@ namespace HftApi.GrpcServices
 
             var orderAction = request.OptionalSideCase == TradesRequest.OptionalSideOneofCase.None
                 ? (OrderAction?) null
-                : request.Side == Side.Buy ? OrderAction.Buy : OrderAction.Sell;
+                : _mapper.Map<OrderAction>(request.Side);
             var trades = await _historyClient.GetTradersAsync(context.GetHttpContext().User.GetWalletId(),
                 request.AssetPairId, request.Offset, request.Take, orderAction, from, to);
 
@@ -416,7 +505,7 @@ namespace HftApi.GrpcServices
             {
                 Stream = responseStream,
                 CancelationToken = context.CancellationToken,
-                Key = context.GetHttpContext().User.GetWalletId(),
+                Keys = new [] {context.GetHttpContext().User.GetWalletId()},
                 Peer = context.Peer
             };
 
@@ -433,7 +522,7 @@ namespace HftApi.GrpcServices
             {
                 Stream = responseStream,
                 CancelationToken = context.CancellationToken,
-                Key = context.GetHttpContext().User.GetWalletId(),
+                Keys = new [] {context.GetHttpContext().User.GetWalletId()},
                 Peer = context.Peer
             };
 
@@ -448,7 +537,7 @@ namespace HftApi.GrpcServices
             {
                 Stream = responseStream,
                 CancelationToken = context.CancellationToken,
-                Key = context.GetHttpContext().User.GetWalletId(),
+                Keys = new []{context.GetHttpContext().User.GetWalletId()},
                 Peer = context.Peer
             };
 

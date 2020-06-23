@@ -1,10 +1,21 @@
 using System;
 using System.Globalization;
 using AutoMapper;
+using Google.Protobuf.WellKnownTypes;
 using HftApi.Common.Domain.MyNoSqlEntities;
 using JetBrains.Annotations;
 using Lykke.Exchange.Api.MarketData;
+using Lykke.HftApi.ApiContract;
 using Lykke.HftApi.Domain.Entities;
+using Lykke.MatchingEngine.Connector.Models.Common;
+using Asset = Lykke.HftApi.Domain.Entities.Asset;
+using AssetPair = Lykke.HftApi.Domain.Entities.AssetPair;
+using Balance = Lykke.HftApi.Domain.Entities.Balance;
+using CancelMode = Lykke.MatchingEngine.Connector.Models.Api.CancelMode;
+using Order = Lykke.HftApi.Domain.Entities.Order;
+using Orderbook = Lykke.HftApi.Domain.Entities.Orderbook;
+using Trade = Lykke.HftApi.Domain.Entities.Trade;
+using TradeFee = Lykke.HftApi.Domain.Entities.TradeFee;
 
 namespace HftApi.Profiles
 {
@@ -15,9 +26,15 @@ namespace HftApi.Profiles
         {
             CreateMap<DateTime, string>().ConvertUsing(dt => dt.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"));
             CreateMap<DateTime?, string>().ConvertUsing(dt => dt.HasValue ? dt.Value.ToString("yyyy-MM-ddTHH:mm:ss.fffZ") : string.Empty);
+            CreateMap<DateTime, Timestamp>().ConvertUsing((dt, timestamp) =>
+            {
+                var date = DateTime.SpecifyKind(dt, DateTimeKind.Utc);
+                return Timestamp.FromDateTime(date);
+            });
             CreateMap<decimal, string>().ConvertUsing(d => d.ToString(CultureInfo.InvariantCulture));
 
             CreateMap<Balance, Lykke.HftApi.ApiContract.Balance>(MemberList.Destination);
+
             CreateMap<BalanceEntity, Balance>(MemberList.Destination)
                 .ForMember(d => d.Timestamp, o => o.MapFrom(x => x.CreatedAt))
                 .ForMember(d => d.Available, o => o.MapFrom(x => x.Balance));
@@ -32,7 +49,7 @@ namespace HftApi.Profiles
                 .ForMember(d => d.V, o => o.MapFrom(x => x.Volume))
                 .ForMember(d => d.P, o => o.MapFrom(x => x.Price));
 
-            CreateMap<MarketSlice, Lykke.HftApi.ApiContract.Ticker>(MemberList.Destination);
+            CreateMap<MarketSlice, Ticker>(MemberList.Destination);
 
             CreateMap<Order, Lykke.HftApi.ApiContract.Order>(MemberList.Destination)
                 .ForMember(d => d.Volume, o => o.MapFrom(x => Math.Abs(x.Volume)))
@@ -45,10 +62,10 @@ namespace HftApi.Profiles
 
             CreateMap<TradeFee, Lykke.HftApi.ApiContract.TradeFee>(MemberList.Destination);
 
-            CreateMap<TickerEntity, Lykke.HftApi.ApiContract.TickerUpdate>(MemberList.Destination)
+            CreateMap<TickerEntity, TickerUpdate>(MemberList.Destination)
                 .ForMember(d => d.Timestamp, o => o.MapFrom(x => x.UpdatedDt));
 
-            CreateMap<PriceEntity, Lykke.HftApi.ApiContract.PriceUpdate>(MemberList.Destination)
+            CreateMap<PriceEntity, PriceUpdate>(MemberList.Destination)
                 .ForMember(d => d.Timestamp, o => o.MapFrom(x => x.UpdatedDt));
 
             CreateMap<OrderbookEntity, Lykke.HftApi.ApiContract.Orderbook>(MemberList.Destination)
@@ -64,14 +81,12 @@ namespace HftApi.Profiles
                 .ForMember(d => d.P, o => o.MapFrom(x => x.Price));
 
             CreateMap<BalanceEntity, Lykke.HftApi.ApiContract.Balance>(MemberList.Destination)
-                .ForMember(d => d.Timestamp, o => o.MapFrom(x => x.CreatedAt))
+                .ForMember(d => d.Timestamp, o => o.MapFrom(x => Timestamp.FromDateTime(x.CreatedAt)))
                 .ForMember(d => d.Available, o => o.MapFrom(x => x.Balance))
                 .ForMember(d => d.Reserved, o => o.MapFrom(x => x.Reserved));
 
             CreateMap<OrderEntity, Lykke.HftApi.ApiContract.Order>(MemberList.Destination)
                 .ForMember(d => d.Timestamp, o => o.MapFrom(x => x.CreatedAt))
-                .ForMember(d => d.LastTradeTimestamp, o => o.MapFrom(x => x.LastTradeTimestamp.HasValue
-                    ? x.LastTradeTimestamp.Value.ToString("yyyy-MM-ddTHH:mm:ss.fffZ") : string.Empty))
                 .ForMember(d => d.Volume, o => o.MapFrom(x => Math.Abs(x.Volume)))
                 .ForMember(d => d.RemainingVolume, o => o.MapFrom(x => Math.Abs(x.RemainingVolume)))
                 .ForMember(d => d.FilledVolume, o => o.MapFrom(x => x.Volume - x.RemainingVolume))
@@ -79,6 +94,9 @@ namespace HftApi.Profiles
 
             CreateMap<TradeEntity, Lykke.HftApi.ApiContract.Trade>(MemberList.Destination)
                 .ForMember(d => d.Timestamp, o => o.MapFrom(x => x.CreatedAt));
+
+            CreateMap<CancelMode, Lykke.HftApi.ApiContract.CancelMode>();
+            CreateMap<OrderAction, Side>();
         }
     }
 }

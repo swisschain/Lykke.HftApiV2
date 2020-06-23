@@ -1,21 +1,28 @@
 using System.Globalization;
+using System.Linq;
 using System.Threading.Tasks;
 using Lykke.HftApi.Domain;
 using Lykke.HftApi.Domain.Services;
+using Lykke.MatchingEngine.Connector.Models.Common;
 
 namespace Lykke.HftApi.Services
 {
     public class ValidationService
     {
         private readonly IAssetsService _assetsService;
+        private readonly IBalanceService _balanceService;
         private const int MaxPageSize = 500;
 
-        public ValidationService(IAssetsService assetsService)
+        public ValidationService(
+            IAssetsService assetsService,
+            IBalanceService balanceService
+            )
         {
             _assetsService = assetsService;
+            _balanceService = balanceService;
         }
 
-        public async Task<ValidationResult> ValidateLimitOrderAsync(string assetPairId, decimal price, decimal volume)
+        public async Task<ValidationResult> ValidateLimitOrderAsync(string walletId, string assetPairId, OrderAction side, decimal price, decimal volume)
         {
             if (price <= 0)
             {
@@ -55,6 +62,34 @@ namespace Lykke.HftApi.Services
                 {
                     Code = HftApiErrorCode.InvalidField,
                     Message = HftApiErrorMessages.MustBeGreaterThan(nameof(volume), assetPair.MinVolume.ToString(CultureInfo.InvariantCulture)),
+                    FieldName = nameof(volume)
+                };
+            }
+
+            decimal totalVolume;
+            string asset;
+
+            if (side == OrderAction.Buy)
+            {
+                asset = assetPair.QuoteAssetId;
+                totalVolume = price * volume;
+            }
+            else
+            {
+                asset = assetPair.BaseAssetId;
+                totalVolume = volume;
+            }
+
+            var balances = await _balanceService.GetBalancesAsync(walletId);
+
+            var assetBalance = balances.FirstOrDefault(x => x.AssetId == asset);
+
+            if (assetBalance == null || assetBalance.Available - assetBalance.Reserved < totalVolume)
+            {
+                return new ValidationResult
+                {
+                    Code = HftApiErrorCode.MeNotEnoughFunds,
+                    Message = "Not enough funds",
                     FieldName = nameof(volume)
                 };
             }

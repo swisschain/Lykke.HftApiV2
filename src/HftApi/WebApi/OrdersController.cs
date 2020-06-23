@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
 using HftApi.Common.Domain.MyNoSqlEntities;
@@ -52,12 +53,12 @@ namespace HftApi.WebApi
         [ProducesResponseType(typeof(ResponseModel<LimitOrderResponse>), StatusCodes.Status200OK)]
         public async Task<IActionResult> PlaceLimitOrder(PlaceLimitOrderRequest request)
         {
-            var result = await _validationService.ValidateLimitOrderAsync(request.AssetPairId, request.Price, request.Volume);
+            var walletId = User.GetWalletId();
+
+            var result = await _validationService.ValidateLimitOrderAsync(walletId, request.AssetPairId, request.Side, request.Price, request.Volume);
 
             if (result != null)
                 throw HftApiException.Create(result.Code, result.Message).AddField(result.FieldName);
-
-            var walletId = User.GetWalletId();
 
             var order = new LimitOrderModel
             {
@@ -81,6 +82,73 @@ namespace HftApi.WebApi
                 return Ok(ResponseModel<LimitOrderResponse>.Ok(new LimitOrderResponse {OrderId = response.TransactionId}));
 
             throw HftApiException.Create(code, message);
+        }
+
+        [HttpPost("bulk")]
+        [ProducesResponseType(typeof(ResponseModel<BulkLimitOrderResponse>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> PlaceBulkOrder([FromBody] PlaceBulkLimitOrderRequest request)
+        {
+            var walletId = User.GetWalletId();
+
+            foreach (var order in request.Orders)
+            {
+                var result = await _validationService.ValidateLimitOrderAsync(walletId, request.AssetPairId, order.OrderAction, order.Price, order.Volume);
+
+                if (result != null)
+                    throw HftApiException.Create(result.Code, result.Message).AddField(result.FieldName);
+            }
+
+            var items = request.Orders?.ToArray();
+
+            var orders = new List<MultiOrderItemModel>();
+
+            foreach (var item in items)
+            {
+                var order = new MultiOrderItemModel
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    Price = (double)item.Price,
+                    Volume = (double)item.Volume,
+                    OrderAction = item.OrderAction,
+                    OldId = item.OldId
+                };
+
+                orders.Add(order);
+            }
+
+            var multiOrder = new MultiLimitOrderModel
+            {
+                Id = Guid.NewGuid().ToString(),
+                ClientId = walletId,
+                AssetPairId = request.AssetPairId,
+                CancelPreviousOrders = request.CancelPreviousOrders,
+                Orders = orders.ToArray()
+            };
+
+            if (request.CancelMode.HasValue)
+            {
+                multiOrder.CancelMode = request.CancelMode.Value;
+            }
+
+            MultiLimitOrderResponse response = await _matchingEngineClient.PlaceMultiLimitOrderAsync(multiOrder);
+
+            if (response == null)
+                throw HftApiException.Create(HftApiErrorCode.MeRuntime, "ME not available");
+
+            var bulkResponse = new BulkLimitOrderResponse
+            {
+                AssetPairId = request.AssetPairId,
+                Error = response.Status.ToHftApiError().code,
+                Statuses = response.Statuses?.Select(x => new BulkOrderItemStatusModel
+                {
+                    Id = x.Id,
+                    Price = (decimal)x.Price,
+                    Volume = (decimal)x.Volume,
+                    Error = x.Status.ToHftApiError().code
+                }).ToArray()
+            };
+
+            return Ok(ResponseModel<BulkLimitOrderResponse>.Ok(bulkResponse));
         }
 
         [HttpPost("market")]
@@ -188,7 +256,7 @@ namespace HftApi.WebApi
 
             var model = new LimitOrderMassCancelModel
             {
-                Id = new Guid().ToString(),
+                Id = Guid.NewGuid().ToString(),
                 AssetPairId = assetPairId,
                 ClientId = User.GetWalletId(),
                 IsBuy = isBuy

@@ -1,6 +1,7 @@
 syntax = "proto3";
 
 import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
 import "common.proto";
 
 option csharp_namespace = "Lykke.HftApi.ApiContract";
@@ -10,6 +11,7 @@ package hft;
 service PrivateService {
 	rpc GetBalances (google.protobuf.Empty) returns (BalancesResponse);
 	rpc PlaceLimitOrder (LimitOrderRequest) returns (LimitOrderResponse);
+	rpc PlaceBulkLimitOrder (BulkLimitOrderRequest) returns (BulkLimitOrderResponse);
 	rpc PlaceMarketOrder (MarketOrderRequest) returns (MarketOrderResponse);
 	rpc GetActiveOrders (OrdersRequest) returns (OrdersResponse);
 	rpc GetClosedOrders (OrdersRequest) returns (OrdersResponse);
@@ -30,9 +32,32 @@ message LimitOrderRequest {
     string price = 4;
 }
 
+message BulkLimitOrderRequest {
+    string assetPairId = 1;
+    bool cancelPreviousOrders = 2;
+    oneof optional_cancelMode {
+        CancelMode cancelMode = 3;
+    }
+    repeated BulkOrder orders = 4;
+}
+
+message BulkOrder {
+    Side side = 1;
+    string volume = 2;
+    string price = 3;
+    string oldId = 4;
+}
+
 enum Side {
     buy = 0;
     sell = 1;
+}
+
+enum CancelMode {
+    notEmptySide = 0;
+    bothSides = 1;
+    sellSide = 2;
+    buySide = 3;
 }
 
 message MarketOrderRequest {
@@ -85,6 +110,32 @@ message LimitOrderResponse {
     }
 }
 
+message BulkLimitOrderResponse {
+    BulkLimitOrderPayload payload = 1;
+    hft.common.Error error = 2;
+
+    message BulkLimitOrderPayload {
+        string assetPairId = 1;
+        int32 error = 2;
+        repeated BulkOrderItemStatus statuses = 3;
+    }
+}
+
+message BulkOrderItemStatus {
+    string id = 1;
+    oneof optional_error {
+        int32 error = 2;
+    }
+    string volume = 3;
+    string price = 4;
+}
+
+enum BulkErrorCode {
+    invalidInputField = 0;
+    rejected = 1;
+    runtime = 500;
+}
+
 message MarketOrderResponse {
     MarketOrderPayload payload = 1;
     hft.common.Error error = 2;
@@ -114,13 +165,15 @@ message Balance {
     string assetId = 1;
     string available = 2;
     string reserved = 3;
-    string timestamp = 4;
+    google.protobuf.Timestamp timestamp = 4;
 }
 
 message Order {
     string id = 1;
-    string timestamp = 2;
-    string lastTradeTimestamp = 3;
+    google.protobuf.Timestamp timestamp = 2;
+    oneof optional_lastTradeTimestamp {
+        google.protobuf.Timestamp lastTradeTimestamp = 3;
+    }
     string status = 4;
     string assetPairId = 5;
     string type = 6;
@@ -134,7 +187,7 @@ message Order {
 
 message Trade {
     string id = 1;
-    string timestamp = 2;
+    google.protobuf.Timestamp timestamp = 2;
     string assetPairId = 3;
     string orderId = 4;
     string role = 5;
