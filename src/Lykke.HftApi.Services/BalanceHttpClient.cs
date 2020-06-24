@@ -32,7 +32,7 @@ namespace Lykke.HftApi.Services
                 AssetId = x.AssetId,
                 Available = x.Balance,
                 Reserved = x.Reserved,
-                Timestamp = x.UpdatedAt
+                Timestamp = x.UpdatedAt ?? DateTime.UtcNow
             }).ToArray();
         }
     }
@@ -42,6 +42,6 @@ namespace Lykke.HftApi.Services
         public string AssetId { get; set; }
         public decimal Balance { get; set; }
         public decimal Reserved { get; set; }
-        public DateTime UpdatedAt { get; set; }
+        public DateTime? UpdatedAt { get; set; }
     }
 }
