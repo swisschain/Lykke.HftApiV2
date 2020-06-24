@@ -232,7 +232,7 @@ namespace HftApi.WebApi
         }
 
         [HttpDelete]
-        [ProducesResponseType(typeof(void), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ResponseModel<string>), StatusCodes.Status200OK)]
         public async Task<IActionResult> CancelAllOrders([FromQuery]string assetPairId = null, [FromQuery]OrderAction? side = null)
         {
             var assetPairResult = await _validationService.ValidateAssetPairAsync(assetPairId);
@@ -270,13 +270,13 @@ namespace HftApi.WebApi
             (HftApiErrorCode code, string message) = response.Status.ToHftApiError();
 
             if (code == HftApiErrorCode.Success)
-                return Ok();
+                return Ok(ResponseModel<string>.Ok(null));
 
             throw HftApiException.Create(code, message);
         }
 
         [HttpDelete("{orderId}")]
-        [ProducesResponseType(typeof(void), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ResponseModel<string>), StatusCodes.Status200OK)]
         public async Task<IActionResult> CancelOrder(string orderId)
         {
             MeResponseModel response = await _matchingEngineClient.CancelLimitOrderAsync(orderId);
@@ -287,7 +287,7 @@ namespace HftApi.WebApi
             (HftApiErrorCode code, string message) = response.Status.ToHftApiError();
 
             if (code == HftApiErrorCode.Success)
-                return Ok();
+                return Ok(ResponseModel<string>.Ok(null));
 
             throw HftApiException.Create(code, message);
         }
