@@ -17,6 +17,7 @@ service PublicService {
 
 	rpc GetOrderbooks (OrderbookRequest) returns (OrderbookResponse);
 	rpc GetTickers (TickersRequest) returns (TickersResponse);
+	rpc GetPrices (PricesRequest) returns (PricesResponse);
 
     rpc GetPriceUpdates (PriceUpdatesRequest) returns (stream PriceUpdate);
     rpc GetTickerUpdates (google.protobuf.Empty) returns (stream TickerUpdate);
@@ -37,6 +38,10 @@ message OrderbookRequest {
 }
 
 message TickersRequest {
+    repeated string assetPairIds = 1;
+}
+
+message PricesRequest {
     repeated string assetPairIds = 1;
 }
 
@@ -74,7 +79,12 @@ message OrderbookResponse {
 }
 
 message TickersResponse {
-    repeated Ticker payload = 1;
+    repeated TickerUpdate payload = 1;
+    hft.common.Error error = 2;
+}
+
+message PricesResponse {
+    repeated PriceUpdate payload = 1;
     hft.common.Error error = 2;
 }
 
@@ -107,18 +117,6 @@ message Orderbook {
         string p = 1;
         string v = 2;
     }
-}
-
-message Ticker {
-    string assetPairId = 1;
-    string volumeBase = 2;
-    string volumeQuote = 3;
-    string priceChange = 4;
-    string lastPrice = 5;
-    string bid = 6;
-    string ask = 7;
-    string high = 8;
-    string low = 9;
 }
 
 message PriceUpdate {

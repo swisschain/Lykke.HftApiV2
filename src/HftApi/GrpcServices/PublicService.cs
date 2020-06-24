@@ -5,12 +5,14 @@ using System.Threading.Tasks;
 using AutoMapper;
 using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
+using HftApi.Common.Domain.MyNoSqlEntities;
 using JetBrains.Annotations;
 using Lykke.Exchange.Api.MarketData;
 using Lykke.HftApi.ApiContract;
 using Lykke.HftApi.Domain;
 using Lykke.HftApi.Domain.Services;
 using Lykke.HftApi.Services;
+using MyNoSqlServer.Abstractions;
 
 namespace HftApi.GrpcServices
 {
@@ -24,6 +26,8 @@ namespace HftApi.GrpcServices
         private readonly IStreamService<TickerUpdate> _tickerUpdateService;
         private readonly IStreamService<Orderbook> _orderbookUpdateService;
         private readonly ValidationService _validationService;
+        private readonly IMyNoSqlServerDataReader<TickerEntity> _tickersReader;
+        private readonly IMyNoSqlServerDataReader<PriceEntity> _pricesReader;
         private readonly IMapper _mapper;
 
         public PublicService(
@@ -34,6 +38,8 @@ namespace HftApi.GrpcServices
             IStreamService<TickerUpdate> tickerUpdateService,
             IStreamService<Orderbook> orderbookUpdateService,
             ValidationService validationService,
+            IMyNoSqlServerDataReader<TickerEntity> tickersReader,
+            IMyNoSqlServerDataReader<PriceEntity> pricesReader,
             IMapper mapper
             )
         {
@@ -44,6 +50,8 @@ namespace HftApi.GrpcServices
             _tickerUpdateService = tickerUpdateService;
             _orderbookUpdateService = orderbookUpdateService;
             _validationService = validationService;
+            _tickersReader = tickersReader;
+            _pricesReader = pricesReader;
             _mapper = mapper;
         }
 
@@ -157,21 +165,63 @@ namespace HftApi.GrpcServices
 
         public override async Task<TickersResponse> GetTickers(TickersRequest request, ServerCallContext context)
         {
-            var marketData = await _marketDataClient.GetMarketDataAsync(new Empty());
-            var items = marketData.Items.ToList();
+            var entities = _tickersReader.Get(TickerEntity.GetPk());
+
+            List<TickerUpdate> result;
+
+            if (entities.Any())
+            {
+                result = _mapper.Map<List<TickerUpdate>>(entities);
+            }
+            else
+            {
+                var marketData = await _marketDataClient.GetMarketDataAsync(new Empty());
+                result = _mapper.Map<List<TickerUpdate>>(marketData.Items.ToList());
+            }
+
 
             if (request.AssetPairIds.Any())
             {
-                items = items.Where(x =>
+                result = result.Where(x =>
                         request.AssetPairIds.Contains(x.AssetPairId, StringComparer.InvariantCultureIgnoreCase))
                     .ToList();
             }
 
-            var result = new TickersResponse();
+            var response = new TickersResponse();
 
-            result.Payload.AddRange(_mapper.Map<List<Ticker>>(items));
+            response.Payload.AddRange(result);
 
-            return result;
+            return response;
+        }
+
+        public override async Task<PricesResponse> GetPrices(PricesRequest request, ServerCallContext context)
+        {
+            var entities = _pricesReader.Get(PriceEntity.GetPk());
+
+            List<PriceUpdate> result;
+
+            if (entities.Any())
+            {
+                result = _mapper.Map<List<PriceUpdate>>(entities);
+            }
+            else
+            {
+                var marketData = await _marketDataClient.GetMarketDataAsync(new Empty());
+                result = _mapper.Map<List<PriceUpdate>>(marketData.Items.ToList());
+            }
+
+            if (request.AssetPairIds.Any())
+            {
+                result = result.Where(x =>
+                        request.AssetPairIds.Contains(x.AssetPairId, StringComparer.InvariantCultureIgnoreCase))
+                    .ToList();
+            }
+
+            var response = new PricesResponse();
+
+            response.Payload.AddRange(result);
+
+            return response;
         }
 
         public override Task GetPriceUpdates(PriceUpdatesRequest request, IServerStreamWriter<PriceUpdate> responseStream, ServerCallContext context)

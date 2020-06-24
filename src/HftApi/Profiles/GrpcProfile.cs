@@ -49,7 +49,11 @@ namespace HftApi.Profiles
                 .ForMember(d => d.V, o => o.MapFrom(x => x.Volume))
                 .ForMember(d => d.P, o => o.MapFrom(x => x.Price));
 
-            CreateMap<MarketSlice, Ticker>(MemberList.Destination);
+            CreateMap<MarketSlice, TickerUpdate>(MemberList.Destination)
+                .ForMember(d => d.Timestamp, o => o.MapFrom(x => DateTime.UtcNow));
+
+            CreateMap<MarketSlice, PriceUpdate>(MemberList.Destination)
+                .ForMember(d => d.Timestamp, o => o.MapFrom(x => DateTime.UtcNow));
 
             CreateMap<Order, Lykke.HftApi.ApiContract.Order>(MemberList.Destination)
                 .ForMember(d => d.Volume, o => o.MapFrom(x => Math.Abs(x.Volume)))
