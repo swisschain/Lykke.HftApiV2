@@ -88,8 +88,12 @@ message TradesRequest {
     }
     int32 offset = 3;
     int32 take = 4;
-    string from = 5;
-    string to = 6;
+    oneof optional_from {
+        google.protobuf.Timestamp from = 5;
+    }
+    oneof optional_to {
+        google.protobuf.Timestamp to = 6;
+    }
 }
 
 message OrderTradesRequest {

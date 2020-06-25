@@ -12,7 +12,7 @@ namespace HftApi.Profiles
     {
         public WebProfile()
         {
-            CreateMap<DateTime, long>().ConvertUsing(dt => (long)(dt - DateTime.UnixEpoch).TotalMilliseconds);
+            CreateMap<DateTime, long>().ConvertUsing(dt => (long)(dt.ToUniversalTime() - DateTime.UnixEpoch).TotalMilliseconds);
             CreateMap<string, decimal>().ConvertUsing((str, res) => decimal.TryParse(str,
                 NumberStyles.Any, CultureInfo.InvariantCulture, out var result)
                 ? result

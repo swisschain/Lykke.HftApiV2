@@ -26,11 +26,7 @@ namespace HftApi.Profiles
         {
             CreateMap<DateTime, string>().ConvertUsing(dt => dt.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"));
             CreateMap<DateTime?, string>().ConvertUsing(dt => dt.HasValue ? dt.Value.ToString("yyyy-MM-ddTHH:mm:ss.fffZ") : string.Empty);
-            CreateMap<DateTime, Timestamp>().ConvertUsing((dt, timestamp) =>
-            {
-                var date = DateTime.SpecifyKind(dt, DateTimeKind.Utc);
-                return Timestamp.FromDateTime(date);
-            });
+            CreateMap<DateTime, Timestamp>().ConvertUsing((dt, timestamp) => Timestamp.FromDateTime(dt.ToUniversalTime()));
             CreateMap<decimal, string>().ConvertUsing(d => d.ToString(CultureInfo.InvariantCulture));
 
             CreateMap<Balance, Lykke.HftApi.ApiContract.Balance>(MemberList.Destination);

@@ -224,7 +224,7 @@ namespace HftApi.WebApi
                 throw HftApiException.Create(result.Code, result.Message).AddField(result.FieldName);
 
             var orders = await _historyClient.GetOrdersByWalletAsync(User.GetWalletId(), assetPairId,
-                new [] { OrderStatus.Matched, OrderStatus.Cancelled }, null, false, offset, take );
+                new [] { OrderStatus.Matched, OrderStatus.Cancelled, OrderStatus.Replaced }, null, false, offset, take );
 
             var ordersModel = _mapper.Map<IReadOnlyCollection<OrderModel>>(orders);
 

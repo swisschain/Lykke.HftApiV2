@@ -331,7 +331,7 @@ namespace HftApi.GrpcServices
             }
 
             var orders = await _historyClient.GetOrdersByWalletAsync(context.GetHttpContext().User.GetWalletId(), request.AssetPairId,
-                new [] { OrderStatus.Matched, OrderStatus.Cancelled }, null, false, request.Offset, request.Take);
+                new [] { OrderStatus.Matched, OrderStatus.Cancelled, OrderStatus.Replaced }, null, false, request.Offset, request.Take);
 
             var res = new OrdersResponse();
 
@@ -463,15 +463,20 @@ namespace HftApi.GrpcServices
             DateTime? from = null;
             DateTime? to = null;
 
-            if (DateTime.TryParse(request.From, out var fromDate))
-                from = fromDate;
+            if (request.OptionalFromCase != TradesRequest.OptionalFromOneofCase.None)
+            {
+                from = request.From.ToDateTime();
+            }
 
-            if (DateTime.TryParse(request.To, out var toDate))
-                to = toDate;
+            if (request.OptionalToCase != TradesRequest.OptionalToOneofCase.None)
+            {
+                to = request.To.ToDateTime();
+            }
 
             var orderAction = request.OptionalSideCase == TradesRequest.OptionalSideOneofCase.None
                 ? (OrderAction?) null
                 : _mapper.Map<OrderAction>(request.Side);
+
             var trades = await _historyClient.GetTradersAsync(context.GetHttpContext().User.GetWalletId(),
                 request.AssetPairId, request.Offset, request.Take, orderAction, from, to);
 

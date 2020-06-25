@@ -40,8 +40,8 @@ namespace HftApi.WebApi
             [FromQuery]OrderAction? side = null,
             [FromQuery]int? offset = 0,
             [FromQuery]int? take = 100,
-            [FromQuery]DateTime? from = null,
-            [FromQuery]DateTime? to = null
+            [FromQuery]double? from = null,
+            [FromQuery]double? to = null
             )
         {
             var result = await _validationService.ValidateOrdersRequestAsync(assetPairId, offset, take);
@@ -50,7 +50,10 @@ namespace HftApi.WebApi
                 throw HftApiException.Create(result.Code, result.Message)
                     .AddField(result.FieldName);
 
-            var trades = await _historyClient.GetTradersAsync(User.GetWalletId(), assetPairId, offset, take, side, from, to);
+            DateTime? fromDate = from == null ? (DateTime?) null : DateTime.UnixEpoch.AddMilliseconds(from.Value);
+            DateTime? toDate = to == null ? (DateTime?) null : DateTime.UnixEpoch.AddMilliseconds(to.Value);
+
+            var trades = await _historyClient.GetTradersAsync(User.GetWalletId(), assetPairId, offset, take, side, fromDate, toDate);
 
             return Ok(ResponseModel<IReadOnlyCollection<TradeModel>>.Ok(_mapper.Map<IReadOnlyCollection<TradeModel>>(trades)));
         }
