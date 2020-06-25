@@ -138,6 +138,7 @@ namespace Lykke.HftApi.Services
                 CancelationToken = streamInfo.CancelationToken,
                 Stream = streamInfo.Stream,
                 Keys = streamInfo.Keys,
+                AllowEmptyKeys = streamInfo.AllowEmptyKeys,
                 Peer = streamInfo.Peer,
                 LastSentData = initData,
                 KeepLastData = initData != null
