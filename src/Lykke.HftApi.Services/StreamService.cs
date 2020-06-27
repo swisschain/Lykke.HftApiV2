@@ -34,7 +34,7 @@ namespace Lykke.HftApi.Services
         {
             var items = string.IsNullOrEmpty(key)
                 ? _streamList.ToArray()
-                : _streamList.Where(x => x.Keys.Contains(key, StringComparer.InvariantCultureIgnoreCase) || x.AllowEmptyKeys).ToArray();
+                : _streamList.Where(x => x.Keys.Contains(key, StringComparer.InvariantCultureIgnoreCase) || x.Keys.Length == 0).ToArray();
 
             foreach (var streamData in items)
             {
@@ -138,7 +138,6 @@ namespace Lykke.HftApi.Services
                 CancelationToken = streamInfo.CancelationToken,
                 Stream = streamInfo.Stream,
                 Keys = streamInfo.Keys,
-                AllowEmptyKeys = streamInfo.AllowEmptyKeys,
                 Peer = streamInfo.Peer,
                 LastSentData = initData,
                 KeepLastData = initData != null

@@ -232,8 +232,7 @@ namespace HftApi.GrpcServices
             {
                 Stream = responseStream,
                 Peer = context.Peer,
-                Keys = request.AssetPairIds.ToArray(),
-                AllowEmptyKeys = true
+                Keys = request.AssetPairIds.ToArray()
             };
 
             return _priceStreamService.RegisterStream(streamInfo);
