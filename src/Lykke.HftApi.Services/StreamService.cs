@@ -18,12 +18,12 @@ namespace Lykke.HftApi.Services
 
         public StreamService(ILogFactory logFactory, bool needPing = false)
         {
+            _checkTimer = new TimerTrigger(nameof(StreamService<T>), TimeSpan.FromSeconds(10), logFactory);
+            _checkTimer.Triggered += CheckStreams;
+            _checkTimer.Start();
+
             if (needPing)
             {
-                _checkTimer = new TimerTrigger(nameof(StreamService<T>), TimeSpan.FromSeconds(10), logFactory);
-                _checkTimer.Triggered += CheckStreams;
-                _checkTimer.Start();
-
                 _pingTimer = new TimerTrigger(nameof(StreamService<T>), TimeSpan.FromSeconds(30), logFactory);
                 _pingTimer.Triggered += Ping;
                 _pingTimer.Start();
@@ -35,6 +35,8 @@ namespace Lykke.HftApi.Services
             var items = string.IsNullOrEmpty(key)
                 ? _streamList.ToArray()
                 : _streamList.Where(x => x.Keys.Contains(key, StringComparer.InvariantCultureIgnoreCase) || x.Keys.Length == 0).ToArray();
+
+            items = items.Where(x => !x.CancelationToken?.IsCancellationRequested ?? true).ToArray();
 
             foreach (var streamData in items)
             {

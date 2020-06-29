@@ -231,6 +231,7 @@ namespace HftApi.GrpcServices
             var streamInfo = new StreamInfo<PriceUpdate>
             {
                 Stream = responseStream,
+                CancelationToken = context.CancellationToken,
                 Peer = context.Peer,
                 Keys = request.AssetPairIds.ToArray()
             };
@@ -245,6 +246,7 @@ namespace HftApi.GrpcServices
             var streamInfo = new StreamInfo<TickerUpdate>
             {
                 Stream = responseStream,
+                CancelationToken = context.CancellationToken,
                 Peer = context.Peer
             };
 
@@ -260,6 +262,7 @@ namespace HftApi.GrpcServices
             var streamInfo = new StreamInfo<Orderbook>
             {
                 Stream = responseStream,
+                CancelationToken = context.CancellationToken,
                 Keys = new [] {request.AssetPairId},
                 Peer = context.Peer
             };
