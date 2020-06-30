@@ -516,7 +516,7 @@ namespace HftApi.GrpcServices
 
             var initData = new BalanceUpdate();
             initData.Balances.AddRange(_mapper.Map<List<Balance>>(balances));
-            await _balanceUpdateService.RegisterStream(streamInfo, initData);
+            await _balanceUpdateService.RegisterStream(streamInfo, new List<BalanceUpdate> { initData });
         }
 
         public override Task GetOrderUpdates(Empty request, IServerStreamWriter<OrderUpdate> responseStream, ServerCallContext context)

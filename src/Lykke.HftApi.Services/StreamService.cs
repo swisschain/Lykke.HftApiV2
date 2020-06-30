@@ -46,15 +46,18 @@ namespace Lykke.HftApi.Services
             }
         }
 
-        public Task RegisterStream(StreamInfo<T> streamInfo, T initData = null)
+        public Task RegisterStream(StreamInfo<T> streamInfo, List<T> initData = null)
         {
             var data = StreamData<T>.Create(streamInfo, initData);
 
             _streamList.Add(data);
 
-            if (initData != null)
+            if (initData == null)
+                return data.CompletionTask.Task;
+
+            foreach (var value in initData)
             {
-                data.Stream.WriteAsync(initData);
+                data.Stream.WriteAsync(value);
             }
 
             return data.CompletionTask.Task;
@@ -132,7 +135,7 @@ namespace Lykke.HftApi.Services
         public T LastSentData { get; set; }
         public bool KeepLastData { get; set; }
 
-        public static StreamData<T> Create(StreamInfo<T> streamInfo, T initData = null)
+        public static StreamData<T> Create(StreamInfo<T> streamInfo, List<T> initData = null)
         {
             return new StreamData<T>
             {
@@ -141,7 +144,7 @@ namespace Lykke.HftApi.Services
                 Stream = streamInfo.Stream,
                 Keys = streamInfo.Keys,
                 Peer = streamInfo.Peer,
-                LastSentData = initData,
+                LastSentData = initData?.Last(),
                 KeepLastData = initData != null
             };
         }

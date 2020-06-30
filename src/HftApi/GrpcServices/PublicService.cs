@@ -228,6 +228,13 @@ namespace HftApi.GrpcServices
         {
             Console.WriteLine($"New price stream connect. peer:{context.Peer}");
 
+            var entities = _pricesReader.Get(PriceEntity.GetPk());
+
+            var prices = _mapper.Map<List<PriceUpdate>>(entities);
+
+            if (request.AssetPairIds.Any())
+                prices = prices.Where(x => request.AssetPairIds.Contains(x.AssetPairId)).ToList();
+
             var streamInfo = new StreamInfo<PriceUpdate>
             {
                 Stream = responseStream,
@@ -236,7 +243,7 @@ namespace HftApi.GrpcServices
                 Keys = request.AssetPairIds.ToArray()
             };
 
-            return _priceStreamService.RegisterStream(streamInfo);
+            return _priceStreamService.RegisterStream(streamInfo, prices);
         }
 
         public override Task GetTickerUpdates(Empty request, IServerStreamWriter<TickerUpdate> responseStream, ServerCallContext context)
