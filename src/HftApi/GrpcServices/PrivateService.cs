@@ -209,7 +209,7 @@ namespace HftApi.GrpcServices
                 Payload = new BulkLimitOrderResponse.Types.BulkLimitOrderPayload
                 {
                     AssetPairId = request.AssetPairId,
-                    Error = (int)response.Status.ToHftApiError().code
+                    Error = _mapper.Map<ErrorCode>(response.Status.ToHftApiError())
                 }
             };
 
@@ -218,7 +218,7 @@ namespace HftApi.GrpcServices
                 Id = x.Id,
                 Price = x.Price.ToString(CultureInfo.InvariantCulture),
                 Volume = x.Volume.ToString(CultureInfo.InvariantCulture),
-                Error = (int) x.Status.ToHftApiError().code
+                Error = _mapper.Map<ErrorCode>(x.Status.ToHftApiError())
             }));
 
             return bulkResponse;

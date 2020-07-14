@@ -120,16 +120,14 @@ message BulkLimitOrderResponse {
 
     message BulkLimitOrderPayload {
         string assetPairId = 1;
-        int32 error = 2;
+        hft.common.ErrorCode error = 2;
         repeated BulkOrderItemStatus statuses = 3;
     }
 }
 
 message BulkOrderItemStatus {
     string id = 1;
-    oneof optional_error {
-        int32 error = 2;
-    }
+    hft.common.ErrorCode error = 2;
     string volume = 3;
     string price = 4;
 }
