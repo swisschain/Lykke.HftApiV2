@@ -79,7 +79,7 @@ namespace HftApi.GrpcServices
                 {
                     Error = new Error
                     {
-                        Code = (int)validationResult.Code,
+                        Code = _mapper.Map<ErrorCode>(validationResult.Code),
                         Message = validationResult.Message
                     }
                 };
@@ -116,7 +116,7 @@ namespace HftApi.GrpcServices
                 {
                     Error = new Error
                     {
-                        Code = (int)validationResult.Code,
+                        Code = _mapper.Map<ErrorCode>(validationResult.Code),
                         Message = validationResult.Message
                     }
                 };
@@ -142,7 +142,7 @@ namespace HftApi.GrpcServices
                 {
                     Error = new Error
                     {
-                        Code = (int)assetPairResult.Code,
+                        Code = _mapper.Map<ErrorCode>(assetPairResult.Code),
                         Message = assetPairResult.Message
                     }
                 };
@@ -260,11 +260,24 @@ namespace HftApi.GrpcServices
             return _tickerUpdateService.RegisterStream(streamInfo);
         }
 
-        public override Task GetOrderbookUpdates(OrderbookUpdatesRequest request,
+        public override async Task GetOrderbookUpdates(OrderbookUpdatesRequest request,
             IServerStreamWriter<Orderbook> responseStream,
             ServerCallContext context)
         {
             Console.WriteLine($"New orderbook stream connect. peer:{context.Peer}");
+
+            var data = await _orderbooksService.GetAsync(request.AssetPairId);
+
+            var orderbooks = new List<Orderbook>();
+
+            foreach (var item in data)
+            {
+                var orderbook = _mapper.Map<Orderbook>(item);
+                orderbook.Asks.AddRange(_mapper.Map<List<Orderbook.Types.PriceVolume>>(item.Asks));
+                orderbook.Bids.AddRange(_mapper.Map<List<Orderbook.Types.PriceVolume>>(item.Bids));
+
+                orderbooks.Add(orderbook);
+            }
 
             var streamInfo = new StreamInfo<Orderbook>
             {
@@ -274,7 +287,7 @@ namespace HftApi.GrpcServices
                 Peer = context.Peer
             };
 
-            return _orderbookUpdateService.RegisterStream(streamInfo);
+            await _orderbookUpdateService.RegisterStream(streamInfo, orderbooks);
         }
     }
 }

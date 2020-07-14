@@ -20,7 +20,6 @@ using Microsoft.OpenApi.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
-using Swisschain.Sdk.Server.Common;
 using Swisschain.Sdk.Server.Swagger;
 using PrivateService = HftApi.GrpcServices.PrivateService;
 using PublicService = HftApi.GrpcServices.PublicService;

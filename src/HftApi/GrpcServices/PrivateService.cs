@@ -86,7 +86,7 @@ namespace HftApi.GrpcServices
                 {
                     Error = new Error
                     {
-                        Code = (int)result.Code,
+                        Code = _mapper.Map<ErrorCode>(result.Code),
                         Message = result.Message
                     }
                 };
@@ -111,7 +111,7 @@ namespace HftApi.GrpcServices
                 {
                     Error = new Error
                     {
-                        Code = (int)HftApiErrorCode.MeRuntime,
+                        Code = _mapper.Map<ErrorCode>(HftApiErrorCode.MeRuntime),
                         Message = "ME not available"
                     }
                 };
@@ -132,7 +132,7 @@ namespace HftApi.GrpcServices
             {
                 Error = new Error
                 {
-                    Code = (int)code,
+                    Code = _mapper.Map<ErrorCode>(code),
                     Message = message
                 }
             };
@@ -152,7 +152,7 @@ namespace HftApi.GrpcServices
                     {
                         Error = new Error
                         {
-                            Code = (int)result.Code,
+                            Code = _mapper.Map<ErrorCode>(result.Code),
                             Message = result.Message
                         }
                     };
@@ -198,7 +198,7 @@ namespace HftApi.GrpcServices
                 {
                     Error = new Error
                     {
-                        Code = (int)HftApiErrorCode.MeRuntime,
+                        Code = _mapper.Map<ErrorCode>(HftApiErrorCode.MeRuntime),
                         Message = "ME not available"
                     }
                 };
@@ -236,7 +236,7 @@ namespace HftApi.GrpcServices
                 {
                     Error = new Error
                     {
-                        Code = (int)result.Code,
+                        Code = _mapper.Map<ErrorCode>(result.Code),
                         Message = result.Message
                     }
                 };
@@ -260,7 +260,7 @@ namespace HftApi.GrpcServices
                 {
                     Error = new Error
                     {
-                        Code = (int)HftApiErrorCode.MeRuntime,
+                        Code = _mapper.Map<ErrorCode>(HftApiErrorCode.MeRuntime),
                         Message = "ME not available"
                     }
                 };
@@ -282,7 +282,7 @@ namespace HftApi.GrpcServices
             {
                 Error = new Error
                 {
-                    Code = (int)code,
+                    Code = _mapper.Map<ErrorCode>(code),
                     Message = message
                 }
             };
@@ -298,7 +298,7 @@ namespace HftApi.GrpcServices
                 {
                     Error = new Error
                     {
-                        Code = (int)result.Code,
+                        Code =_mapper.Map<ErrorCode>(result.Code),
                         Message = result.Message
                     }
                 };
@@ -324,7 +324,7 @@ namespace HftApi.GrpcServices
                 {
                     Error = new Error
                     {
-                        Code = (int)result.Code,
+                        Code = _mapper.Map<ErrorCode>(result.Code),
                         Message = result.Message
                     }
                 };
@@ -350,7 +350,7 @@ namespace HftApi.GrpcServices
                 {
                     Error = new Error
                     {
-                        Code = (int)result.Code,
+                        Code = _mapper.Map<ErrorCode>(result.Code),
                         Message = result.Message
                     }
                 };
@@ -386,7 +386,7 @@ namespace HftApi.GrpcServices
                 {
                     Error = new Error
                     {
-                        Code = (int)HftApiErrorCode.MeRuntime,
+                        Code = _mapper.Map<ErrorCode>(HftApiErrorCode.MeRuntime),
                         Message = "ME not available"
                     }
                 };
@@ -404,7 +404,7 @@ namespace HftApi.GrpcServices
             {
                 Error = new Error
                 {
-                    Code = (int)code,
+                    Code = _mapper.Map<ErrorCode>(code),
                     Message = message
                 }
             };
@@ -420,7 +420,7 @@ namespace HftApi.GrpcServices
                 {
                     Error = new Error
                     {
-                        Code = (int)HftApiErrorCode.MeRuntime,
+                        Code = _mapper.Map<ErrorCode>(HftApiErrorCode.MeRuntime),
                         Message = "ME not available"
                     }
                 };
@@ -438,7 +438,7 @@ namespace HftApi.GrpcServices
             {
                 Error = new Error
                 {
-                    Code = (int)code,
+                    Code = _mapper.Map<ErrorCode>(code),
                     Message = message
                 }
             };
@@ -454,7 +454,7 @@ namespace HftApi.GrpcServices
                 {
                     Error = new Error
                     {
-                        Code = (int)result.Code,
+                        Code = _mapper.Map<ErrorCode>(result.Code),
                         Message = result.Message
                     }
                 };

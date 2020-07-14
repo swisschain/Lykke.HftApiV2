@@ -7,7 +7,7 @@ namespace Lykke.HftApi.Domain.Entities
     {
         public string AssetPairId { get; set; }
         public DateTime Timestamp { get; set; }
-        public IReadOnlyCollection<VolumePrice> Bids { get; set; }
-        public IReadOnlyCollection<VolumePrice> Asks { get; set; }
+        public IReadOnlyList<VolumePrice> Bids { get; set; }
+        public IReadOnlyList<VolumePrice> Asks { get; set; }
     }
 }

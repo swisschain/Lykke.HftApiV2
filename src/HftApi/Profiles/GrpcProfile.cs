@@ -6,6 +6,7 @@ using HftApi.Common.Domain.MyNoSqlEntities;
 using JetBrains.Annotations;
 using Lykke.Exchange.Api.MarketData;
 using Lykke.HftApi.ApiContract;
+using Lykke.HftApi.Domain;
 using Lykke.HftApi.Domain.Entities;
 using Lykke.MatchingEngine.Connector.Models.Common;
 using Asset = Lykke.HftApi.Domain.Entities.Asset;
@@ -97,6 +98,7 @@ namespace HftApi.Profiles
 
             CreateMap<CancelMode, Lykke.HftApi.ApiContract.CancelMode>();
             CreateMap<OrderAction, Side>();
+            CreateMap<HftApiErrorCode, ErrorCode>();
         }
     }
 }

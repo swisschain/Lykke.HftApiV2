@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
+using Common;
 using HftApi.Common.Domain.MyNoSqlEntities;
 using Lykke.HftApi.Domain.Entities;
 using Lykke.HftApi.Domain.Services;
@@ -66,6 +67,39 @@ namespace Lykke.HftApi.Services
             }
 
             return orderbooks;
+        }
+
+        public Orderbook GetOrderbookUpdates(Orderbook oldOrderbook, Orderbook newOrderbook)
+        {
+            var result = JsonConvert.DeserializeObject<Orderbook>(newOrderbook.ToJson());
+
+            result.Asks = MergeLevels(oldOrderbook.Asks.ToList(), newOrderbook.Asks.ToList()).OrderBy(x => x.Price).ToList();
+            result.Bids = MergeLevels(oldOrderbook.Bids.ToList(), newOrderbook.Bids.ToList()).OrderByDescending(x => x.Price).ToList();
+
+            return result;
+        }
+
+        private List<VolumePrice> MergeLevels(List<VolumePrice> oldLevels, List<VolumePrice> newLevels)
+        {
+            var result = new List<VolumePrice>();
+
+            foreach (var level in oldLevels)
+            {
+                var existingLevel = newLevels.FirstOrDefault(x => x.Price == level.Price);
+
+                if (existingLevel == null)
+                    result.Add(new VolumePrice(0, level.Price));
+            }
+
+            foreach (var level in newLevels)
+            {
+                var existingLevel = oldLevels.FirstOrDefault(x => x.Price == level.Price && x.Volume == level.Volume);
+
+                if (existingLevel == null)
+                    result.Add(level);
+            }
+
+            return result;
         }
 
         private async Task<Orderbook> GetOrderbookAsync(string assetPairId)
