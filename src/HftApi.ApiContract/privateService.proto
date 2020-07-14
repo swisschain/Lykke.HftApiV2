@@ -120,7 +120,6 @@ message BulkLimitOrderResponse {
 
     message BulkLimitOrderPayload {
         string assetPairId = 1;
-        hft.common.ErrorCode error = 2;
         repeated BulkOrderItemStatus statuses = 3;
     }
 }

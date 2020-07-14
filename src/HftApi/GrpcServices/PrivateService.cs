@@ -208,8 +208,7 @@ namespace HftApi.GrpcServices
             {
                 Payload = new BulkLimitOrderResponse.Types.BulkLimitOrderPayload
                 {
-                    AssetPairId = request.AssetPairId,
-                    Error = _mapper.Map<ErrorCode>(response.Status.ToHftApiError())
+                    AssetPairId = request.AssetPairId
                 }
             };
 
