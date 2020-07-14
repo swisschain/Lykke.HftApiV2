@@ -63,7 +63,7 @@ namespace HftApi
 
             services.AddSwaggerGen(c =>
             {
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = ApplicationInformation.AppName, Version = "v1" });
+                c.SwaggerDoc("v2", new OpenApiInfo { Title = "Lykke Trading API", Version = "v2" });
                 c.EnableXmsEnumExtension();
                 c.MakeResponseValueTypesRequired();
                 c.AddJwtBearerAuthorization();
@@ -151,7 +151,7 @@ namespace HftApi
             app.UseSwagger(c => c.RouteTemplate = "api/{documentName}/swagger.json");
             app.UseSwaggerUI(c =>
             {
-                c.SwaggerEndpoint("../../api/v1/swagger.json", "API V1");
+                c.SwaggerEndpoint("../../api/v2/swagger.json", "API V2");
                 c.RoutePrefix = "swagger/ui";
             });
         }
