@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Globalization;
+using System.IO;
+using System.Reflection;
 using System.Text;
 using Autofac;
 using Microsoft.AspNetCore.Builder;
@@ -62,10 +64,13 @@ namespace HftApi
 
             services.AddSwaggerGen(c =>
             {
-                c.SwaggerDoc("v2", new OpenApiInfo { Title = "Lykke Trading API", Version = "v2" });
+                c.SwaggerDoc("v2", new OpenApiInfo { Title = "Lykke Trading API", Description = $"Lykke trading API. See documentation <a target='_blank' href='{Config.DocumentationUrl}'>here</a>", Version = "v2" });
                 c.EnableXmsEnumExtension();
                 c.MakeResponseValueTypesRequired();
                 c.AddJwtBearerAuthorization();
+                var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+                var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+                c.IncludeXmlComments(xmlPath);
             });
             services.AddSwaggerGenNewtonsoftSupport();
 

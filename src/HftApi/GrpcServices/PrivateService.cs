@@ -142,22 +142,6 @@ namespace HftApi.GrpcServices
         {
             var walletId = context.GetHttpContext().User.GetWalletId();
 
-            foreach (var order in request.Orders)
-            {
-                var result = await _validationService.ValidateLimitOrderAsync(walletId, request.AssetPairId,
-                    _mapper.Map<OrderAction>(order.Side), Convert.ToDecimal(order.Price), Convert.ToDecimal(order.Volume));
-
-                if (result != null)
-                    return new BulkLimitOrderResponse
-                    {
-                        Error = new Error
-                        {
-                            Code = _mapper.Map<ErrorCode>(result.Code),
-                            Message = result.Message
-                        }
-                    };
-            }
-
             var items = request.Orders?.ToArray();
 
             var orders = new List<MultiOrderItemModel>();

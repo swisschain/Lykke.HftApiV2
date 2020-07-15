@@ -1,3 +1,5 @@
+DocumentationUrl:
+  settings-key: Hftv2Service-DocumentationUrl
 Auth:
   JwtSecret:
     settings-key: Hftv2Service-Auth-JwtSecret

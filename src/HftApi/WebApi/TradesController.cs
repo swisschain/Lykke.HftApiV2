@@ -33,6 +33,10 @@ namespace HftApi.WebApi
             _mapper = mapper;
         }
 
+        /// <summary>
+        /// Get trade history
+        /// </summary>
+        /// <remarks>Gets the trading history of an account. Also, with the use of parameters, it can returns a single order.</remarks>
         [HttpGet]
         [ProducesResponseType(typeof(ResponseModel<IReadOnlyCollection<TradeModel>>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetTrades(
@@ -58,6 +62,10 @@ namespace HftApi.WebApi
             return Ok(ResponseModel<IReadOnlyCollection<TradeModel>>.Ok(_mapper.Map<IReadOnlyCollection<TradeModel>>(trades)));
         }
 
+        /// <summary>
+        /// Get order trades
+        /// </summary>
+        /// <remarks>Get trades for specific order.</remarks>
         [HttpGet("order/{orderId}")]
         [ProducesResponseType(typeof(ResponseModel<IReadOnlyCollection<TradeModel>>), StatusCodes.Status200OK)]
         public async Task<IActionResult> OrderTrades(string orderId)

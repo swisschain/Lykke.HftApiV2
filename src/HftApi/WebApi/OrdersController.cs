@@ -49,6 +49,10 @@ namespace HftApi.WebApi
             _mapper = mapper;
         }
 
+        /// <summary>
+        /// Place a limit order
+        /// </summary>
+        /// <remarks>Place a limit order.</remarks>
         [HttpPost("limit")]
         [ProducesResponseType(typeof(ResponseModel<LimitOrderResponse>), StatusCodes.Status200OK)]
         public async Task<IActionResult> PlaceLimitOrder(PlaceLimitOrderRequest request)
@@ -84,21 +88,17 @@ namespace HftApi.WebApi
             throw HftApiException.Create(code, message);
         }
 
+        /// <summary>
+        /// Place multiple limit orders
+        /// </summary>
+        /// <remarks>Place multiple limit orders in one package. The method also allows you to replace orders in the order book. You can replace all orders completely, or each separately.</remarks>
         [HttpPost("bulk")]
         [ProducesResponseType(typeof(ResponseModel<BulkLimitOrderResponse>), StatusCodes.Status200OK)]
         public async Task<IActionResult> PlaceBulkOrder([FromBody] PlaceBulkLimitOrderRequest request)
         {
             var walletId = User.GetWalletId();
 
-            foreach (var order in request.Orders)
-            {
-                var result = await _validationService.ValidateLimitOrderAsync(walletId, request.AssetPairId, order.OrderAction, order.Price, order.Volume);
-
-                if (result != null)
-                    throw HftApiException.Create(result.Code, result.Message).AddField(result.FieldName);
-            }
-
-            var items = request.Orders?.ToArray();
+            var items = request.Orders?.ToArray() ?? Array.Empty<BulkOrderItemModel>();
 
             var orders = new List<MultiOrderItemModel>();
 
@@ -151,6 +151,10 @@ namespace HftApi.WebApi
             return Ok(ResponseModel<BulkLimitOrderResponse>.Ok(bulkResponse));
         }
 
+        /// <summary>
+        /// Place a market order
+        /// </summary>
+        /// <remarks>Place a Fill-Or-Kill market order.</remarks>
         [HttpPost("market")]
         [ProducesResponseType(typeof(ResponseModel<MarketOrderResponse>), StatusCodes.Status200OK)]
         public async Task<IActionResult> PlaceMarketOrder(PlaceMarketOrderRequest request)
@@ -187,6 +191,10 @@ namespace HftApi.WebApi
             throw HftApiException.Create(code, message);
         }
 
+        /// <summary>
+        /// Get active orders
+        /// </summary>
+        /// <remarks>Get active orders orders from history.</remarks>
         [HttpGet("active")]
         [ProducesResponseType(typeof(ResponseModel<IReadOnlyCollection<OrderModel>>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetActiveOrders(
@@ -210,6 +218,10 @@ namespace HftApi.WebApi
             return Ok(ResponseModel<IReadOnlyCollection<OrderModel>>.Ok(ordersModel));
         }
 
+        /// <summary>
+        /// Get closed orders
+        /// </summary>
+        /// <remarks>Get closed orders from history.</remarks>
         [HttpGet("closed")]
         [ProducesResponseType(typeof(ResponseModel<IReadOnlyCollection<OrderModel>>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetCloasedOrders(
@@ -231,6 +243,10 @@ namespace HftApi.WebApi
             return Ok(ResponseModel<IReadOnlyCollection<OrderModel>>.Ok(_mapper.Map<IReadOnlyCollection<OrderModel>>(ordersModel)));
         }
 
+        /// <summary>
+        /// Mass cancel orders
+        /// </summary>
+        /// <remarks>Cancel all active orders or filter order to cancel by AssetPair or Side.</remarks>
         [HttpDelete]
         [ProducesResponseType(typeof(ResponseModel<string>), StatusCodes.Status200OK)]
         public async Task<IActionResult> CancelAllOrders([FromQuery]string assetPairId = null, [FromQuery]OrderAction? side = null)
@@ -275,6 +291,10 @@ namespace HftApi.WebApi
             throw HftApiException.Create(code, message);
         }
 
+        /// <summary>
+        /// Cancel orders by ID
+        /// </summary>
+        /// <remarks>Cancel a specific order by order ID.</remarks>
         [HttpDelete("{orderId}")]
         [ProducesResponseType(typeof(ResponseModel<string>), StatusCodes.Status200OK)]
         public async Task<IActionResult> CancelOrder(string orderId)

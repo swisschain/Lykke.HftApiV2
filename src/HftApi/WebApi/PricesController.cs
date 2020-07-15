@@ -32,6 +32,10 @@ namespace HftApi.WebApi
             _mapper = mapper;
         }
 
+        /// <summary>
+        /// Get current prices
+        /// </summary>
+        /// <remarks>Get current prices by symbols.</remarks>
         [HttpGet]
         [ProducesResponseType(typeof(ResponseModel<IReadOnlyCollection<PriceModel>>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetPrices([FromQuery]string[] assetPairIds)

@@ -24,6 +24,10 @@ namespace HftApi.WebApi
             _balanceService = balanceService;
         }
 
+        /// <summary>
+        /// Get the current balance
+        /// </summary>
+        /// <remarks>Get the current balance from the API Key account.</remarks>
         [HttpGet]
         [ProducesResponseType(typeof(ResponseModel<IReadOnlyCollection<Balance>>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetBalances()

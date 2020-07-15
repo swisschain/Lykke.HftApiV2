@@ -32,6 +32,10 @@ namespace HftApi.WebApi
             _mapper = mapper;
         }
 
+        /// <summary>
+        /// 24hr Ticker Price Change Statistics
+        /// </summary>
+        /// <remarks>24 hour rolling-window price change statistics.</remarks>
         [HttpGet]
         [ProducesResponseType(typeof(ResponseModel<IReadOnlyCollection<TickerModel>>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetTickers([FromQuery]string[] assetPairIds)

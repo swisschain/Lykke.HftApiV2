@@ -29,6 +29,10 @@ namespace HftApi.WebApi
             _mapper = mapper;
         }
 
+        /// <summary>
+        /// Asset Pair Order Book Ticker
+        /// </summary>
+        /// <remarks>Get the order book by asset pair. The order books contain a list of Buy(Bid) and Sell(Ask) orders with their corresponding price and volume.</remarks>
         [HttpGet]
         [ProducesResponseType(typeof(ResponseModel<IReadOnlyCollection<OrderbookModel>>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetOrderbooks(string assetPairId = null, int? depth = null)

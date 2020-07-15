@@ -26,6 +26,10 @@ namespace HftApi.WebApi
             _validationService = validationService;
         }
 
+        /// <summary>
+        /// Get all assets
+        /// </summary>
+        /// <remarks>Get a list of supported assets with parameters.</remarks>
         [HttpGet]
         [ProducesResponseType(typeof(ResponseModel<IReadOnlyList<Asset>>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetAllAssets()
@@ -34,6 +38,10 @@ namespace HftApi.WebApi
             return Ok(ResponseModel<IReadOnlyList<Asset>>.Ok(assets));
         }
 
+        /// <summary>
+        /// Get Asset by ID
+        /// </summary>
+        /// <remarks>Get information about specific asset.</remarks>
         [HttpGet("{assetId}")]
         [ProducesResponseType(typeof(ResponseModel<Asset>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetAssetAsync(string assetId)
