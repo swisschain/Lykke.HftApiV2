@@ -114,11 +114,11 @@ namespace HftApi
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IHostApplicationLifetime applicationLifetime)
         {
             applicationLifetime.ApplicationStarted.Register(() =>
-                app.ApplicationServices.GetService<ApplicationManager>().Start()
+                app.ApplicationServices.GetService<StreamsManager>().Start()
             );
 
             applicationLifetime.ApplicationStopping.Register(() =>
-                app.ApplicationServices.GetService<ApplicationManager>().Stop()
+                app.ApplicationServices.GetService<StreamsManager>().Stop()
             );
 
             if (env.IsDevelopment())

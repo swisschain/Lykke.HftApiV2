@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using AutoMapper;
@@ -12,7 +13,7 @@ using Orderbook = Lykke.HftApi.ApiContract.Orderbook;
 
 namespace HftApi
 {
-    public class ApplicationManager
+    public class StreamsManager
     {
         private readonly MyNoSqlTcpClient _noSqlTcpClient;
         private readonly IMyNoSqlServerDataReader<PriceEntity> _pricesReader;
@@ -27,9 +28,11 @@ namespace HftApi
         private readonly IStreamService<BalanceUpdate> _balanceStream;
         private readonly IStreamService<OrderUpdate> _orderStream;
         private readonly IStreamService<TradeUpdate> _tradeStream;
+        private readonly IOrderbooksService _orderbooksService;
         private readonly IMapper _mapper;
+        private readonly ConcurrentDictionary<string, Lykke.HftApi.Domain.Entities.Orderbook> _lastSentOrderbooks = new ConcurrentDictionary<string, Lykke.HftApi.Domain.Entities.Orderbook>();
 
-        public ApplicationManager(
+        public StreamsManager(
             MyNoSqlTcpClient noSqlTcpClient,
             IMyNoSqlServerDataReader<PriceEntity> pricesReader,
             IMyNoSqlServerDataReader<TickerEntity> tickerReader,
@@ -43,6 +46,7 @@ namespace HftApi
             IStreamService<BalanceUpdate> balanceStream,
             IStreamService<OrderUpdate> orderStream,
             IStreamService<TradeUpdate> tradeStream,
+            IOrderbooksService orderbooksService,
             IMapper mapper
             )
         {
@@ -59,6 +63,7 @@ namespace HftApi
             _balanceStream = balanceStream;
             _orderStream = orderStream;
             _tradeStream = tradeStream;
+            _orderbooksService = orderbooksService;
             _mapper = mapper;
         }
 
@@ -84,9 +89,12 @@ namespace HftApi
             {
                 foreach (var orderbook in orderbooks)
                 {
-                    var item = _mapper.Map<Orderbook>(orderbook);
-                    item.Asks.AddRange(_mapper.Map<List<Orderbook.Types.PriceVolume>>(orderbook.Asks));
-                    item.Bids.AddRange(_mapper.Map<List<Orderbook.Types.PriceVolume>>(orderbook.Bids));
+                    var ob = _mapper.Map<Lykke.HftApi.Domain.Entities.Orderbook>(orderbook);
+                    Lykke.HftApi.Domain.Entities.Orderbook orderbookUpdates = GetOrderbookUpdates(ob);
+
+                    var item = _mapper.Map<Orderbook>(orderbookUpdates);
+                    item.Asks.AddRange(_mapper.Map<List<Orderbook.Types.PriceVolume>>(orderbookUpdates.Asks));
+                    item.Bids.AddRange(_mapper.Map<List<Orderbook.Types.PriceVolume>>(orderbookUpdates.Bids));
                     _orderbookStream.WriteToStream(item, orderbook.AssetPairId);
                 }
             });
@@ -137,6 +145,27 @@ namespace HftApi
             _tickerStream.Stop();
             _noSqlTcpClient.Stop();
             Console.WriteLine("Stream services stopped.");
+        }
+
+        public void AddOrderbook(Lykke.HftApi.Domain.Entities.Orderbook orderbook)
+        {
+            _lastSentOrderbooks[orderbook.AssetPairId] = orderbook;
+        }
+
+        private Lykke.HftApi.Domain.Entities.Orderbook GetOrderbookUpdates(
+            Lykke.HftApi.Domain.Entities.Orderbook orderbook)
+        {
+            if (!_lastSentOrderbooks.TryGetValue(orderbook.AssetPairId, out var oldOrderbook))
+            {
+                _lastSentOrderbooks[orderbook.AssetPairId] = orderbook;
+                return orderbook;
+            }
+
+            var update = _orderbooksService.GetOrderbookUpdates(oldOrderbook, orderbook);
+            _lastSentOrderbooks[orderbook.AssetPairId] = orderbook;
+
+            return update;
+
         }
     }
 }

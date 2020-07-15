@@ -132,7 +132,7 @@ namespace HftApi.Modules
                 .WithParameter(TypedParameter.From(true))
                 .As<IStreamService<TradeUpdate>>()
                 .SingleInstance();
-            builder.RegisterType<ApplicationManager>().AsSelf().SingleInstance();
+            builder.RegisterType<StreamsManager>().AsSelf().SingleInstance();
         }
     }
 }

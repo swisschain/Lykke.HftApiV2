@@ -28,6 +28,7 @@ namespace HftApi.GrpcServices
         private readonly ValidationService _validationService;
         private readonly IMyNoSqlServerDataReader<TickerEntity> _tickersReader;
         private readonly IMyNoSqlServerDataReader<PriceEntity> _pricesReader;
+        private readonly StreamsManager _streamsManager;
         private readonly IMapper _mapper;
 
         public PublicService(
@@ -40,6 +41,7 @@ namespace HftApi.GrpcServices
             ValidationService validationService,
             IMyNoSqlServerDataReader<TickerEntity> tickersReader,
             IMyNoSqlServerDataReader<PriceEntity> pricesReader,
+            StreamsManager streamsManager,
             IMapper mapper
             )
         {
@@ -52,6 +54,7 @@ namespace HftApi.GrpcServices
             _validationService = validationService;
             _tickersReader = tickersReader;
             _pricesReader = pricesReader;
+            _streamsManager = streamsManager;
             _mapper = mapper;
         }
 
@@ -277,6 +280,7 @@ namespace HftApi.GrpcServices
                 orderbook.Bids.AddRange(_mapper.Map<List<Orderbook.Types.PriceVolume>>(item.Bids));
 
                 orderbooks.Add(orderbook);
+                _streamsManager.AddOrderbook(item);
             }
 
             var streamInfo = new StreamInfo<Orderbook>
