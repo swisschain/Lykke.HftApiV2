@@ -9,6 +9,10 @@ namespace Lykke.HftApi.Domain.Entities
         [JsonProperty("p")]
         public decimal Price { get; set; }
 
+        public VolumePrice()
+        {
+        }
+
         public VolumePrice(decimal volume, decimal price)
         {
             Volume = volume;

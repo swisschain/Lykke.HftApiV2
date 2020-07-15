@@ -1,5 +1,6 @@
 using System;
 using System.Globalization;
+using System.Linq;
 using AutoMapper;
 using Google.Protobuf.WellKnownTypes;
 using HftApi.Common.Domain.MyNoSqlEntities;
@@ -28,6 +29,7 @@ namespace HftApi.Profiles
             CreateMap<DateTime, string>().ConvertUsing(dt => dt.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"));
             CreateMap<DateTime?, string>().ConvertUsing(dt => dt.HasValue ? dt.Value.ToString("yyyy-MM-ddTHH:mm:ss.fffZ") : string.Empty);
             CreateMap<DateTime, Timestamp>().ConvertUsing((dt, timestamp) => Timestamp.FromDateTime(dt.ToUniversalTime()));
+            CreateMap<Timestamp, DateTime>().ConvertUsing((dt, timestamp) => dt.ToDateTime());
             CreateMap<decimal, string>().ConvertUsing(d => d.ToString(CultureInfo.InvariantCulture));
 
             CreateMap<Balance, Lykke.HftApi.ApiContract.Balance>(MemberList.Destination);
@@ -74,6 +76,14 @@ namespace HftApi.Profiles
 
             CreateMap<OrderbookEntity, Orderbook>(MemberList.Destination)
                 .ForMember(d => d.Timestamp, o => o.MapFrom(x => x.CreatedAt));
+
+            CreateMap<Lykke.HftApi.ApiContract.Orderbook, Orderbook>(MemberList.Destination)
+                .ForMember(d => d.Asks, o => o.MapFrom(x => x.Asks.ToList()))
+                .ForMember(d => d.Bids, o => o.MapFrom(x => x.Bids.ToList()));
+
+            CreateMap<Lykke.HftApi.ApiContract.Orderbook.Types.PriceVolume, VolumePrice>(MemberList.Destination)
+                .ForMember(d => d.Volume, o => o.MapFrom(x => x.V))
+                .ForMember(d => d.Price, o => o.MapFrom(x => x.P));
 
             CreateMap<VolumePriceEntity, VolumePrice>(MemberList.Destination);
 

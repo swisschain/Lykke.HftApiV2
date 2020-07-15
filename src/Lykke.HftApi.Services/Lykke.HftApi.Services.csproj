@@ -5,6 +5,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\HftApi.ApiContract\HftApi.ApiContract.csproj" />
       <ProjectReference Include="..\HftApi.Common\HftApi.Common.csproj" />
       <ProjectReference Include="..\Lykke.HftApi.Domain\Lykke.HftApi.Domain.csproj" />
     </ItemGroup>

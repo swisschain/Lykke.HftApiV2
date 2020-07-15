@@ -22,26 +22,24 @@ namespace HftApi.GrpcServices
         private readonly IAssetsService _assetsService;
         private readonly IOrderbooksService _orderbooksService;
         private readonly MarketDataService.MarketDataServiceClient _marketDataClient;
-        private readonly IStreamService<PriceUpdate> _priceStreamService;
-        private readonly IStreamService<TickerUpdate> _tickerUpdateService;
-        private readonly IStreamService<Orderbook> _orderbookUpdateService;
+        private readonly PricesStreamService _priceStreamService;
+        private readonly TickersStreamService _tickerUpdateService;
+        private readonly OrderbookStreamService _orderbookUpdateService;
         private readonly ValidationService _validationService;
         private readonly IMyNoSqlServerDataReader<TickerEntity> _tickersReader;
         private readonly IMyNoSqlServerDataReader<PriceEntity> _pricesReader;
-        private readonly StreamsManager _streamsManager;
         private readonly IMapper _mapper;
 
         public PublicService(
             IAssetsService assetsService,
             IOrderbooksService orderbooksService,
             MarketDataService.MarketDataServiceClient marketDataClient,
-            IStreamService<PriceUpdate> priceStreamService,
-            IStreamService<TickerUpdate> tickerUpdateService,
-            IStreamService<Orderbook> orderbookUpdateService,
+            PricesStreamService priceStreamService,
+            TickersStreamService tickerUpdateService,
+            OrderbookStreamService orderbookUpdateService,
             ValidationService validationService,
             IMyNoSqlServerDataReader<TickerEntity> tickersReader,
             IMyNoSqlServerDataReader<PriceEntity> pricesReader,
-            StreamsManager streamsManager,
             IMapper mapper
             )
         {
@@ -54,7 +52,6 @@ namespace HftApi.GrpcServices
             _validationService = validationService;
             _tickersReader = tickersReader;
             _pricesReader = pricesReader;
-            _streamsManager = streamsManager;
             _mapper = mapper;
         }
 
@@ -278,9 +275,7 @@ namespace HftApi.GrpcServices
                 var orderbook = _mapper.Map<Orderbook>(item);
                 orderbook.Asks.AddRange(_mapper.Map<List<Orderbook.Types.PriceVolume>>(item.Asks));
                 orderbook.Bids.AddRange(_mapper.Map<List<Orderbook.Types.PriceVolume>>(item.Bids));
-
                 orderbooks.Add(orderbook);
-                _streamsManager.AddOrderbook(item);
             }
 
             var streamInfo = new StreamInfo<Orderbook>

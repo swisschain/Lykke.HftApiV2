@@ -33,9 +33,9 @@ namespace HftApi.GrpcServices
         private readonly IBalanceService _balanceService;
         private readonly ValidationService _validationService;
         private readonly IMatchingEngineClient _matchingEngineClient;
-        private readonly IStreamService<BalanceUpdate> _balanceUpdateService;
-        private readonly IStreamService<OrderUpdate> _orderUpdateService;
-        private readonly IStreamService<TradeUpdate> _tradeUpdateService;
+        private readonly BalancesStreamService _balanceUpdateService;
+        private readonly OrdersStreamService _orderUpdateService;
+        private readonly TradesStreamService _tradeUpdateService;
         private readonly IMyNoSqlServerDataReader<OrderEntity> _ordersReader;
         private readonly IMapper _mapper;
 
@@ -44,9 +44,9 @@ namespace HftApi.GrpcServices
             IBalanceService balanceService,
             ValidationService validationService,
             IMatchingEngineClient matchingEngineClient,
-            IStreamService<BalanceUpdate> balanceUpdateService,
-            IStreamService<OrderUpdate> orderUpdateService,
-            IStreamService<TradeUpdate> tradeUpdateService,
+            BalancesStreamService balanceUpdateService,
+            OrdersStreamService orderUpdateService,
+            TradesStreamService tradeUpdateService,
             IMyNoSqlServerDataReader<OrderEntity> ordersReader,
             IMapper mapper
             )

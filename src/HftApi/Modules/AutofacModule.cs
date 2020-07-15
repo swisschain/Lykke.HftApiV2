@@ -5,7 +5,6 @@ using HftApi.Common.Domain.MyNoSqlEntities;
 using HftApi.RabbitSubscribers;
 using Lykke.Common.Log;
 using Lykke.Exchange.Api.MarketData.Contract;
-using Lykke.HftApi.ApiContract;
 using Lykke.HftApi.Domain.Services;
 using Lykke.HftApi.Services;
 using Lykke.Service.HftInternalService.Client;
@@ -114,26 +113,31 @@ namespace HftApi.Modules
                 new MyNoSqlReadRepository<TradeEntity>(ctx.Resolve<MyNoSqlTcpClient>(), _config.MyNoSqlServer.TradesTableName)
             ).As<IMyNoSqlServerDataReader<TradeEntity>>().SingleInstance();
 
-            builder.RegisterType<StreamService<PriceUpdate>>()
+            builder.RegisterType<PricesStreamService>()
                 .WithParameter(TypedParameter.From(true))
-                .As<IStreamService<PriceUpdate>>()
+                .AsSelf()
                 .SingleInstance();
-            builder.RegisterType<StreamService<TickerUpdate>>().As<IStreamService<TickerUpdate>>().SingleInstance();
-            builder.RegisterType<StreamService<Orderbook>>().As<IStreamService<Orderbook>>().SingleInstance();
-            builder.RegisterType<StreamService<BalanceUpdate>>()
+            builder.RegisterType<TickersStreamService>()
                 .WithParameter(TypedParameter.From(true))
-                .As<IStreamService<BalanceUpdate>>()
+                .AsSelf()
                 .SingleInstance();
-            builder.RegisterType<StreamService<OrderUpdate>>()
+            builder.RegisterType<OrderbookStreamService>()
                 .WithParameter(TypedParameter.From(true))
-                .As<IStreamService<OrderUpdate>>()
+                .AsSelf()
                 .SingleInstance();
-            builder.RegisterType<StreamService<TradeUpdate>>()
+            builder.RegisterType<BalancesStreamService>()
                 .WithParameter(TypedParameter.From(true))
-                .As<IStreamService<TradeUpdate>>()
+                .AsSelf()
+                .SingleInstance();
+            builder.RegisterType<OrdersStreamService>()
+                .WithParameter(TypedParameter.From(true))
+                .AsSelf()
+                .SingleInstance();
+            builder.RegisterType<TradesStreamService>()
+                .WithParameter(TypedParameter.From(true))
+                .AsSelf()
                 .SingleInstance();
             builder.RegisterType<StreamsManager>().AsSelf().SingleInstance();
         }
     }
 }
-
