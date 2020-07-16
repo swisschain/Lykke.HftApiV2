@@ -20,13 +20,11 @@ namespace HftApi
         private readonly IMyNoSqlServerDataReader<OrderbookEntity> _orderbookReader;
         private readonly IMyNoSqlServerDataReader<BalanceEntity> _balanceReader;
         private readonly IMyNoSqlServerDataReader<OrderEntity> _orderReader;
-        private readonly IMyNoSqlServerDataReader<TradeEntity> _tradeReader;
         private readonly PricesStreamService _priceStraem;
         private readonly TickersStreamService _tickerStream;
         private readonly OrderbookStreamService _orderbookStream;
         private readonly BalancesStreamService _balanceStream;
         private readonly OrdersStreamService _orderStream;
-        private readonly TradesStreamService _tradeStream;
         private readonly IMapper _mapper;
 
         public StreamsManager(
@@ -36,13 +34,11 @@ namespace HftApi
             IMyNoSqlServerDataReader<OrderbookEntity> orderbookReader,
             IMyNoSqlServerDataReader<BalanceEntity> balanceReader,
             IMyNoSqlServerDataReader<OrderEntity> orderReader,
-            IMyNoSqlServerDataReader<TradeEntity> tradeReader,
             PricesStreamService priceStraem,
             TickersStreamService tickerStream,
             OrderbookStreamService orderbookStream,
             BalancesStreamService balanceStream,
             OrdersStreamService orderStream,
-            TradesStreamService tradeStream,
             IMapper mapper
             )
         {
@@ -52,13 +48,11 @@ namespace HftApi
             _orderbookReader = orderbookReader;
             _balanceReader = balanceReader;
             _orderReader = orderReader;
-            _tradeReader = tradeReader;
             _priceStraem = priceStraem;
             _tickerStream = tickerStream;
             _orderbookStream = orderbookStream;
             _balanceStream = balanceStream;
             _orderStream = orderStream;
-            _tradeStream = tradeStream;
             _mapper = mapper;
         }
 
@@ -112,19 +106,6 @@ namespace HftApi
                     var orderUpdate = new OrderUpdate();
                     orderUpdate.Orders.AddRange(_mapper.Map<List<Order>>(walletOrders.ToList()));
                     _orderStream.WriteToStream(orderUpdate, walletOrders.Key);
-                }
-            });
-
-            _tradeReader.SubscribeToChanges(tradeEntities =>
-            {
-                var tradesByWallet = tradeEntities.GroupBy(x => x.WalletId);
-
-                foreach (var walletTrades in tradesByWallet)
-                {
-                    var tradeUpdate = new TradeUpdate();
-
-                    tradeUpdate.Trades.AddRange(_mapper.Map<List<Trade>>(walletTrades.ToList()));
-                    _tradeStream.WriteToStream(tradeUpdate, walletTrades.Key);
                 }
             });
 

@@ -67,13 +67,6 @@ namespace HftApi.Worker.Modules
                         _config.MyNoSqlServer.WriterServiceUrl,
                     _config.MyNoSqlServer.OrdersTableName);
             }).As<IMyNoSqlServerDataWriter<OrderEntity>>().SingleInstance();
-
-            builder.Register(ctx =>
-            {
-                return new MyNoSqlServer.DataWriter.MyNoSqlServerDataWriter<TradeEntity>(() =>
-                        _config.MyNoSqlServer.WriterServiceUrl,
-                    _config.MyNoSqlServer.TradesTableName);
-            }).As<IMyNoSqlServerDataWriter<TradeEntity>>().SingleInstance();
         }
     }
 }
