@@ -41,7 +41,7 @@ namespace HftApi.Worker.RabbitSubscribers
         public void Start()
         {
             var settings = RabbitMqSubscriptionSettings
-                .ForSubscriber(_connectionString, _exchangeName, $"hft-{nameof(OrdersSubscriber)}-local")
+                .ForSubscriber(_connectionString, _exchangeName, $"hft-{nameof(OrdersSubscriber)}")
                 .UseRoutingKey(((int) Lykke.MatchingEngine.Connector.Models.Events.Common.MessageType.Order).ToString())
                 .MakeDurable();
 
