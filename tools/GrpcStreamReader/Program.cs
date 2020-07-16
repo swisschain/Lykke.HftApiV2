@@ -94,17 +94,6 @@ namespace GrpcStreamReader
                                 }
                             }
                             break;
-                        case StreamName.Orders:
-                            {
-                                Console.WriteLine($"Get order updates....");
-                                using var orders = client.PrivateService.GetOrderUpdates(new Empty(), headers);
-
-                                await foreach (var item in orders.ResponseStream.ReadAllAsync())
-                                {
-                                    Console.WriteLine($"{JsonConvert.SerializeObject(item.Orders)}");
-                                }
-                            }
-                            break;
                         case StreamName.Trades:
                             {
                                 Console.WriteLine($"Get trade updates....");

@@ -19,9 +19,9 @@ service PublicService {
 	rpc GetTickers (TickersRequest) returns (TickersResponse);
 	rpc GetPrices (PricesRequest) returns (PricesResponse);
 
-    rpc GetPriceUpdates (PriceUpdatesRequest) returns (stream PriceUpdate);
-    rpc GetTickerUpdates (google.protobuf.Empty) returns (stream TickerUpdate);
-    rpc GetOrderbookUpdates (OrderbookUpdatesRequest) returns (stream Orderbook);
+	rpc GetPriceUpdates (PriceUpdatesRequest) returns (stream PriceUpdate);
+	rpc GetTickerUpdates (google.protobuf.Empty) returns (stream TickerUpdate);
+	rpc GetOrderbookUpdates (OrderbookUpdatesRequest) returns (stream Orderbook);
 }
 
 message AssetPairRequest {

@@ -502,7 +502,7 @@ namespace HftApi.GrpcServices
             await _balanceUpdateService.RegisterStream(streamInfo, new List<BalanceUpdate> { initData });
         }
 
-        public override Task GetOrderUpdates(Empty request, IServerStreamWriter<OrderUpdate> responseStream, ServerCallContext context)
+        public Task GetOrderUpdates(Empty request, IServerStreamWriter<OrderUpdate> responseStream, ServerCallContext context)
         {
             Console.WriteLine($"New order stream connect. peer:{context.Peer}");
 
