@@ -30,7 +30,7 @@ jobs:
       - name: Publish API to Registry
         uses: swisschain/Publish-Docker-Github-Action@master
         with:
-          name: swisschains/lykke-hftapi
+          name: swisschains/lykke-hftapi-v2
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
           workdir: ./publish-api
@@ -40,7 +40,7 @@ jobs:
       - name: Publish worker to Registry
         uses: swisschain/Publish-Docker-Github-Action@master
         with:
-          name: swisschains/lykke-hftapi-worker
+          name: swisschains/lykke-hftapi-v2-worker
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
           workdir: ./publish-worker
