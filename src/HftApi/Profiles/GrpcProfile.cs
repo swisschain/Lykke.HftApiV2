@@ -92,7 +92,7 @@ namespace HftApi.Profiles
                 .ForMember(d => d.P, o => o.MapFrom(x => x.Price));
 
             CreateMap<BalanceEntity, Lykke.HftApi.ApiContract.Balance>(MemberList.Destination)
-                .ForMember(d => d.Timestamp, o => o.MapFrom(x => Timestamp.FromDateTime(x.CreatedAt)))
+                .ForMember(d => d.Timestamp, o => o.MapFrom(x => x.CreatedAt))
                 .ForMember(d => d.Available, o => o.MapFrom(x => x.Balance))
                 .ForMember(d => d.Reserved, o => o.MapFrom(x => x.Reserved));
 
