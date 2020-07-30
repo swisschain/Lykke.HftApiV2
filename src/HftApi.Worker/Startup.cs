@@ -1,9 +1,11 @@
-﻿using Autofac;
+﻿using System;
+using Autofac;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using HftApi.Common.Configuration;
 using HftApi.Worker.Modules;
 using JetBrains.Annotations;
+using Lykke.HftApi.Services;
 using Swisschain.Sdk.Server.Common;
 
 namespace HftApi.Worker
@@ -21,6 +23,11 @@ namespace HftApi.Worker
             base.ConfigureServicesExt(services);
 
             services.AddHttpClient();
+
+            services.AddHttpClient<BalanceHttpClient>(client =>
+            {
+                client.BaseAddress = new Uri(Config.Services.BalancesServiceUrl);
+            });
         }
 
         protected override void ConfigureContainerExt(ContainerBuilder builder)

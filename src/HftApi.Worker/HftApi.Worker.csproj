@@ -20,6 +20,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\HftApi.Common\HftApi.Common.csproj" />
+    <ProjectReference Include="..\Lykke.HftApi.Services\Lykke.HftApi.Services.csproj" />
   </ItemGroup>
 
   <ItemGroup>
