@@ -134,6 +134,19 @@ namespace Lykke.HftApi.Services
             return trades.Select(x => x.ToDomain()).ToList();
         }
 
+        public async Task<Order> GetOrderAsync(string orderId)
+        {
+            var request = new HttpRequestMessage(HttpMethod.Get, $"/api/orders/{orderId}");
+            var response = await _client.SendAsync(request);
+
+            response.EnsureSuccessStatusCode();
+
+            var responseString = await response.Content.ReadAsStringAsync();
+            var order = JsonConvert.DeserializeObject<OrderModel>(responseString);
+
+            return order.ToDomain();
+        }
+
         private async Task<string> GetUrlWithQueryStringAsync(string url, List<KeyValuePair<string, string>> parameters)
         {
             using var content = new FormUrlEncodedContent(parameters);

@@ -142,7 +142,7 @@ namespace HftApi.GrpcServices
         {
             var walletId = context.GetHttpContext().User.GetWalletId();
 
-            var items = request.Orders?.ToArray();
+            var items = request.Orders?.ToArray() ?? Array.Empty<BulkOrder>();
 
             var orders = new List<MultiOrderItemModel>();
 
@@ -269,6 +269,25 @@ namespace HftApi.GrpcServices
                     Message = message
                 }
             };
+        }
+
+        public override async Task<OrderResponse> GetOrder(OrderRequest request, ServerCallContext context)
+        {
+            if (string.IsNullOrEmpty(request.OrderId))
+            {
+                return new OrderResponse
+                {
+                    Error = new Error
+                    {
+                        Code = ErrorCode.InvalidField,
+                        Message = $"{nameof(request.OrderId)} is required"
+                    }
+                };
+            }
+
+            var order = await _historyClient.GetOrderAsync(request.OrderId);
+
+            return new OrderResponse {Payload = _mapper.Map<Order>(order)};
         }
 
         public override async Task<OrdersResponse> GetActiveOrders(OrdersRequest request, ServerCallContext context)
