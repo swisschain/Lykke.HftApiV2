@@ -308,6 +308,9 @@ namespace HftApi.GrpcServices
 
             var statuses = new List<string> {OrderStatus.Placed.ToString(), OrderStatus.PartiallyMatched.ToString()};
 
+            if (request.Take == 0)
+                request.Take = Constants.MaxPageSize;
+
             var orders = _ordersReader.Get(context.GetHttpContext().User.GetWalletId(), request.Offset, request.Take,
                 x => (string.IsNullOrEmpty(request.AssetPairId) || x.AssetPairId == request.AssetPairId) && statuses.Contains(x.Status));
 
@@ -331,6 +334,9 @@ namespace HftApi.GrpcServices
                     }
                 };
             }
+
+            if (request.Take == 0)
+                request.Take = Constants.MaxPageSize;
 
             var orders = await _historyClient.GetOrdersByWalletAsync(context.GetHttpContext().User.GetWalletId(), request.AssetPairId,
                 new [] { OrderStatus.Matched, OrderStatus.Cancelled, OrderStatus.Replaced }, null, false, request.Offset, request.Take);
@@ -478,6 +484,9 @@ namespace HftApi.GrpcServices
             var orderAction = request.OptionalSideCase == TradesRequest.OptionalSideOneofCase.None
                 ? (OrderAction?) null
                 : _mapper.Map<OrderAction>(request.Side);
+
+            if (request.Take == 0)
+                request.Take = Constants.MaxPageSize;
 
             var trades = await _historyClient.GetTradersAsync(context.GetHttpContext().User.GetWalletId(),
                 request.AssetPairId, request.Offset, request.Take, orderAction, from, to);

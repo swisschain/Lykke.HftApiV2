@@ -11,7 +11,6 @@ namespace Lykke.HftApi.Services
     {
         private readonly IAssetsService _assetsService;
         private readonly IBalanceService _balanceService;
-        private const int MaxPageSize = 500;
 
         public ValidationService(
             IAssetsService assetsService,
@@ -161,12 +160,12 @@ namespace Lykke.HftApi.Services
                 };
             }
 
-            if (take.HasValue && take > MaxPageSize)
+            if (take.HasValue && take > Constants.MaxPageSize)
             {
                 return new ValidationResult
                 {
                     Code = HftApiErrorCode.InvalidField,
-                    Message = HftApiErrorMessages.TooBig(nameof(take), take.Value.ToString(), MaxPageSize.ToString()),
+                    Message = HftApiErrorMessages.TooBig(nameof(take), take.Value.ToString(), Constants.MaxPageSize.ToString()),
                     FieldName = nameof(take)
                 };
             }
@@ -201,12 +200,12 @@ namespace Lykke.HftApi.Services
                 };
             }
 
-            if (take.HasValue && take > MaxPageSize)
+            if (take.HasValue && take > Constants.MaxPageSize)
             {
                 return new ValidationResult
                 {
                     Code = HftApiErrorCode.InvalidField,
-                    Message = HftApiErrorMessages.TooBig(nameof(take), take.Value.ToString(), MaxPageSize.ToString()),
+                    Message = HftApiErrorMessages.TooBig(nameof(take), take.Value.ToString(), Constants.MaxPageSize.ToString()),
                     FieldName = nameof(take)
                 };
             }
