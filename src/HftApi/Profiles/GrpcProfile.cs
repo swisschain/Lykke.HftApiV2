@@ -61,7 +61,10 @@ namespace HftApi.Profiles
                 .ForMember(d => d.FilledVolume, o => o.MapFrom(x => x.Volume - x.RemainingVolume))
                 .ForMember(d => d.Cost, o => o.MapFrom(x => x.FilledVolume * x.Price));
 
-            CreateMap<Trade, Lykke.HftApi.ApiContract.Trade>(MemberList.Destination);
+            CreateMap<Trade, Lykke.HftApi.ApiContract.Trade>(MemberList.Destination)
+                .ForMember(d => d.BaseVolume, o => o.MapFrom(x => Math.Abs(x.BaseVolume)))
+                .ForMember(d => d.QuoteVolume, o => o.MapFrom(x => Math.Abs(x.QuoteVolume)))
+                .ForMember(d => d.Side, o => o.MapFrom(x => x.BaseVolume < 0 ? Side.Sell : Side.Buy));
 
             CreateMap<TradeFee, Lykke.HftApi.ApiContract.TradeFee>(MemberList.Destination);
 
@@ -104,7 +107,10 @@ namespace HftApi.Profiles
                 .ForMember(d => d.Cost, o => o.MapFrom(x => x.FilledVolume * x.Price));
 
             CreateMap<TradeEntity, Lykke.HftApi.ApiContract.Trade>(MemberList.Destination)
-                .ForMember(d => d.Timestamp, o => o.MapFrom(x => x.CreatedAt));
+                .ForMember(d => d.Timestamp, o => o.MapFrom(x => x.CreatedAt))
+                .ForMember(d => d.BaseVolume, o => o.MapFrom(x => Math.Abs(x.BaseVolume)))
+                .ForMember(d => d.QuoteVolume, o => o.MapFrom(x => Math.Abs(x.QuoteVolume)))
+                .ForMember(d => d.Side, o => o.MapFrom(x => x.BaseVolume < 0 ? Side.Sell : Side.Buy));
 
             CreateMap<CancelMode, Lykke.HftApi.ApiContract.CancelMode>();
             CreateMap<OrderAction, Side>();

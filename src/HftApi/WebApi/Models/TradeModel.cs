@@ -10,11 +10,18 @@ namespace HftApi.WebApi.Models
         public string AssetPairId { get; set; }
         public string OrderId { get; set; }
         public string Role { get; set; }
+        public TradeSide Side { get;set; }
         public decimal Price { get; set; }
         public decimal BaseVolume { get; set; }
         public decimal QuoteVolume { get; set; }
         public string BaseAssetId { get; set; }
         public string QuoteAssetId { get; set; }
         public TradeFee Fee { get; set; }
+    }
+
+    public enum TradeSide
+    {
+        Buy,
+        Sell
     }
 }

@@ -201,12 +201,13 @@ message Trade {
     string assetPairId = 3;
     string orderId = 4;
     string role = 5;
-    string price = 6;
-    string baseVolume = 7;
-    string quoteVolume = 8;
-    string baseAssetId = 9;
-    string quoteAssetId = 10;
-    TradeFee fee = 11;
+    Side side = 6;
+    string price = 7;
+    string baseVolume = 8;
+    string quoteVolume = 9;
+    string baseAssetId = 10;
+    string quoteAssetId = 11;
+    TradeFee fee = 12;
 }
 
 message TradeFee {

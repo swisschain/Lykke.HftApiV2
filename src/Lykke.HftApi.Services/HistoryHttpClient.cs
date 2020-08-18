@@ -167,8 +167,8 @@ namespace Lykke.HftApi.Services
                 OrderId = trade.OrderId.ToString(),
                 Role = trade.Role.ToString(),
                 Price = trade.Price,
-                BaseVolume = Math.Abs(trade.BaseVolume),
-                QuoteVolume = Math.Abs(trade.QuotingVolume),
+                BaseVolume = trade.BaseVolume,
+                QuoteVolume = trade.QuotingVolume,
                 BaseAssetId = trade.BaseAssetId,
                 QuoteAssetId = trade.QuotingAssetId,
                 Fee = trade.FeeSize != null && (!string.IsNullOrEmpty(trade.FeeAssetId))

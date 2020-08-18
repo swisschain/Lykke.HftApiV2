@@ -68,18 +68,15 @@ namespace HftApi.Worker.RabbitSubscribers
 
             await _orderWriter.BulkInsertOrReplaceAsync(orders);
 
-            Task.Run(async () =>
-            {
-                var ordersToRemove = orders
-                    .Where(x => x.Status == OrderStatus.Matched.ToString() ||
-                        x.Status == OrderStatus.Cancelled.ToString() ||
-                        x.Status == OrderStatus.Rejected.ToString()).ToList();
+            var ordersToRemove = orders
+                .Where(x => x.Status == OrderStatus.Matched.ToString() ||
+                            x.Status == OrderStatus.Cancelled.ToString() ||
+                            x.Status == OrderStatus.Rejected.ToString()).ToList();
 
-                foreach (var order in ordersToRemove)
-                {
-                    await _orderWriter.DeleteAsync(order.WalletId, order.Id);
-                }
-            });
+            foreach (var order in ordersToRemove)
+            {
+                await _orderWriter.DeleteAsync(order.WalletId, order.Id);
+            }
         }
 
         public void Dispose()

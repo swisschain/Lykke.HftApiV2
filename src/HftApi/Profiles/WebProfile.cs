@@ -19,8 +19,14 @@ namespace HftApi.Profiles
                 : 0m);
             CreateMap<OrderEntity, OrderModel>(MemberList.Destination);
             CreateMap<Order, OrderModel>(MemberList.Destination);
-            CreateMap<Trade, TradeModel>(MemberList.Destination);
-            CreateMap<TradeEntity, TradeModel>(MemberList.Destination);
+            CreateMap<Trade, TradeModel>(MemberList.Destination)
+                .ForMember(d => d.BaseVolume, o => o.MapFrom(x => Math.Abs(x.BaseVolume)))
+                .ForMember(d => d.QuoteVolume, o => o.MapFrom(x => Math.Abs(x.QuoteVolume)))
+                .ForMember(d => d.Side, o => o.MapFrom(x => x.BaseVolume < 0 ? TradeSide.Sell : TradeSide.Buy));
+            CreateMap<TradeEntity, TradeModel>(MemberList.Destination)
+                .ForMember(d => d.BaseVolume, o => o.MapFrom(x => Math.Abs(x.BaseVolume)))
+                .ForMember(d => d.QuoteVolume, o => o.MapFrom(x => Math.Abs(x.QuoteVolume)))
+                .ForMember(d => d.Side, o => o.MapFrom(x => x.BaseVolume < 0 ? TradeSide.Sell : TradeSide.Buy));
             CreateMap<TickerEntity, TickerModel>(MemberList.Destination);
             CreateMap<Orderbook, OrderbookModel>(MemberList.Destination);
             CreateMap<VolumePrice, VolumePriceModel>(MemberList.Destination);
