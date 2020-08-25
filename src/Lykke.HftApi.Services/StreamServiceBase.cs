@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Common;
+using Common.Log;
 using Lykke.Common.Log;
 using Lykke.HftApi.Domain;
 
@@ -14,9 +15,11 @@ namespace Lykke.HftApi.Services
         private readonly List<StreamData<T>> _streamList = new List<StreamData<T>>();
         private readonly TimerTrigger _checkTimer;
         private readonly TimerTrigger _pingTimer;
+        private readonly ILog _log;
 
         public StreamServiceBase(ILogFactory logFactory, bool needPing = false)
         {
+            _log = logFactory.CreateLog(this);
             _checkTimer = new TimerTrigger($"StreamService<{nameof(T)}>", TimeSpan.FromSeconds(10), logFactory);
             _checkTimer.Triggered += CheckStreams;
             _checkTimer.Start();
@@ -39,7 +42,7 @@ namespace Lykke.HftApi.Services
             return data;
         }
 
-        public void WriteToStream(T data, string key = null)
+        public Task WriteToStreamAsync(T data, string key = null)
         {
             var items = string.IsNullOrEmpty(key)
                 ? _streamList.ToArray()
@@ -47,16 +50,19 @@ namespace Lykke.HftApi.Services
 
             items = items.Where(x => !x.CancelationToken?.IsCancellationRequested ?? true).ToArray();
 
+            var tasks = new List<Task>();
+
             foreach (var streamData in items)
             {
                 var processedData = ProcessDataBeforeSend(data, streamData);
                 streamData.LastSentData = streamData.KeepLastData ? data : null;
-                streamData.Stream.WriteAsync(processedData)
-                    .ContinueWith(t => RemoveStream(streamData), TaskContinuationOptions.OnlyOnFaulted);
+                tasks.Add(WriteStreamAsync(streamData, processedData));
             }
+
+            return Task.WhenAll(tasks);
         }
 
-        public Task RegisterStream(StreamInfo<T> streamInfo, List<T> initData = null)
+        public Task RegisterStreamAsync(StreamInfo<T> streamInfo, List<T> initData = null)
         {
             var data = StreamData<T>.Create(streamInfo, initData);
 
@@ -65,10 +71,9 @@ namespace Lykke.HftApi.Services
             if (initData == null)
                 return data.CompletionTask.Task;
 
-            foreach (var value in initData)
-            {
-                data.Stream.WriteAsync(value);
-            }
+            var tasks = initData.Select(value => WriteStreamAsync(data, value)).ToList();
+
+            Task.WhenAll(tasks).GetAwaiter().GetResult();
 
             return data.CompletionTask.Task;
         }
@@ -121,22 +126,41 @@ namespace Lykke.HftApi.Services
             return Task.CompletedTask;
         }
 
-        private Task Ping(ITimerTrigger timer, TimerTriggeredHandlerArgs args, CancellationToken cancellationtoken)
+        private async Task Ping(ITimerTrigger timer, TimerTriggeredHandlerArgs args, CancellationToken cancellationtoken)
         {
-            foreach (var streamData in _streamList)
+            var tasks = new List<Task>();
+
+            if (_streamList.Count == 0)
+                return;
+
+            for (var i = _streamList.Count - 1; i >= 0; i--)
             {
+                var streamData = _streamList[i];
                 var instance = streamData.LastSentData ?? Activator.CreateInstance<T>();
 
-                try
-                {
-                    var data = ProcessPingDataBeforeSend(instance, streamData);
-                    streamData.Stream.WriteAsync(data)
-                        .ContinueWith(t => RemoveStream(streamData), TaskContinuationOptions.OnlyOnFaulted);
-                }
-                catch {}
+                var data = ProcessPingDataBeforeSend(instance, streamData);
+                tasks.Add(WriteStreamAsync(streamData, data));
             }
 
-            return Task.CompletedTask;
+            if (tasks.Any())
+                await Task.WhenAll(tasks);
+        }
+
+        private async Task WriteStreamAsync(StreamData<T> streamData, T data)
+        {
+            try
+            {
+                await streamData.Stream.WriteAsync(data);
+            }
+            catch (InvalidOperationException)
+            {
+                RemoveStream(streamData);
+            }
+            catch (Exception e)
+            {
+                _log.Error(e, "Can't write to stream", context: streamData.Peer);
+                RemoveStream(streamData);
+            }
         }
     }
 }

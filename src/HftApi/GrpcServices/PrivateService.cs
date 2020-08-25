@@ -527,7 +527,7 @@ namespace HftApi.GrpcServices
 
             var initData = new BalanceUpdate();
             initData.Balances.AddRange(_mapper.Map<List<Balance>>(balances));
-            await _balanceUpdateService.RegisterStream(streamInfo, new List<BalanceUpdate> { initData });
+            await _balanceUpdateService.RegisterStreamAsync(streamInfo, new List<BalanceUpdate> { initData });
         }
 
         public Task GetOrderUpdates(Empty request, IServerStreamWriter<OrderUpdate> responseStream, ServerCallContext context)
@@ -542,7 +542,7 @@ namespace HftApi.GrpcServices
                 Peer = context.Peer
             };
 
-            return _orderUpdateService.RegisterStream(streamInfo);
+            return _orderUpdateService.RegisterStreamAsync(streamInfo);
         }
 
         public override Task GetTradeUpdates(Empty request, IServerStreamWriter<TradeUpdate> responseStream, ServerCallContext context)
@@ -557,7 +557,7 @@ namespace HftApi.GrpcServices
                 Peer = context.Peer
             };
 
-            return _tradeUpdateService.RegisterStream(streamInfo);
+            return _tradeUpdateService.RegisterStreamAsync(streamInfo);
         }
     }
 }

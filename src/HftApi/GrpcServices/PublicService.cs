@@ -243,7 +243,7 @@ namespace HftApi.GrpcServices
                 Keys = request.AssetPairIds.ToArray()
             };
 
-            return _priceStreamService.RegisterStream(streamInfo, prices);
+            return _priceStreamService.RegisterStreamAsync(streamInfo, prices);
         }
 
         public override Task GetTickerUpdates(Empty request, IServerStreamWriter<TickerUpdate> responseStream, ServerCallContext context)
@@ -257,7 +257,7 @@ namespace HftApi.GrpcServices
                 Peer = context.Peer
             };
 
-            return _tickerUpdateService.RegisterStream(streamInfo);
+            return _tickerUpdateService.RegisterStreamAsync(streamInfo);
         }
 
         public override async Task GetOrderbookUpdates(OrderbookUpdatesRequest request,
@@ -286,7 +286,7 @@ namespace HftApi.GrpcServices
                 Peer = context.Peer
             };
 
-            await _orderbookUpdateService.RegisterStream(streamInfo, orderbooks);
+            await _orderbookUpdateService.RegisterStreamAsync(streamInfo, orderbooks);
         }
     }
 }
