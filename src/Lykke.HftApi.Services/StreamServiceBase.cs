@@ -13,6 +13,7 @@ namespace Lykke.HftApi.Services
     public class StreamServiceBase<T> where T : class
     {
         private readonly List<StreamData<T>> _streamList = new List<StreamData<T>>();
+        private readonly ReaderWriterLockSlim _lock = new ReaderWriterLockSlim();
         private readonly TimerTrigger _checkTimer;
         private readonly TimerTrigger _pingTimer;
         private readonly ILog _log;
@@ -44,9 +45,20 @@ namespace Lykke.HftApi.Services
 
         public Task WriteToStreamAsync(T data, string key = null)
         {
-            var items = string.IsNullOrEmpty(key)
-                ? _streamList.ToArray()
-                : _streamList.Where(x => x.Keys.Contains(key, StringComparer.InvariantCultureIgnoreCase) || x.Keys.Length == 0).ToArray();
+            StreamData<T>[] items;
+            _lock.EnterReadLock();
+            try
+            {
+                items = string.IsNullOrEmpty(key)
+                    ? _streamList.ToArray()
+                    : _streamList.Where(x =>
+                            x.Keys.Contains(key, StringComparer.InvariantCultureIgnoreCase) || x.Keys.Length == 0)
+                        .ToArray();
+            }
+            finally
+            {
+                _lock.ExitReadLock();
+            }
 
             items = items.Where(x => !x.CancelationToken?.IsCancellationRequested ?? true).ToArray();
 
@@ -62,29 +74,34 @@ namespace Lykke.HftApi.Services
             return Task.WhenAll(tasks);
         }
 
-        public Task RegisterStreamAsync(StreamInfo<T> streamInfo, List<T> initData = null)
+        public async Task<Task> RegisterStreamAsync(StreamInfo<T> streamInfo, List<T> initData = null)
         {
             var data = StreamData<T>.Create(streamInfo, initData);
 
-            _streamList.Add(data);
+            _lock.EnterWriteLock();
+
+            try
+            {
+                _streamList.Add(data);
+            }
+            finally
+            {
+                _lock.ExitWriteLock();
+            }
 
             if (initData == null)
                 return data.CompletionTask.Task;
 
             var tasks = initData.Select(value => WriteStreamAsync(data, value)).ToList();
 
-            Task.WhenAll(tasks).GetAwaiter().GetResult();
+            await Task.WhenAll(tasks);
 
             return data.CompletionTask.Task;
         }
 
         public void Dispose()
         {
-            foreach (var streamInfo in _streamList)
-            {
-                streamInfo.CompletionTask.TrySetResult(1);
-                Console.WriteLine($"Remove stream connect (peer: {streamInfo.Peer}");
-            }
+            CloseAllStreams();
 
             _checkTimer.Stop();
             _checkTimer.Dispose();
@@ -95,28 +112,59 @@ namespace Lykke.HftApi.Services
 
         public void Stop()
         {
-            foreach (var streamInfo in _streamList)
-            {
-                streamInfo.CompletionTask.TrySetResult(1);
-                Console.WriteLine($"Remove stream connect (peer: {streamInfo.Peer})");
-            }
+            CloseAllStreams();
 
             _checkTimer.Stop();
             _pingTimer.Stop();
         }
 
+        private void CloseAllStreams()
+        {
+            _lock.EnterReadLock();
+            try
+            {
+                foreach (var streamInfo in _streamList)
+                {
+                    streamInfo.CompletionTask.TrySetResult(1);
+                    Console.WriteLine($"Remove stream connect (peer: {streamInfo.Peer}");
+                }
+            }
+            finally
+            {
+                _lock.ExitReadLock();
+            }
+        }
+
         private void RemoveStream(StreamData<T> streamData)
         {
-            streamData.CompletionTask.TrySetResult(1);
-            _streamList.Remove(streamData);
+            _lock.EnterWriteLock();
+            try
+            {
+                streamData.CompletionTask.TrySetResult(1);
+                _streamList.Remove(streamData);
+            }
+            finally
+            {
+                _lock.ExitWriteLock();
+            }
+
             Console.WriteLine($"Remove stream connect (peer: {streamData.Peer})");
         }
 
         private Task CheckStreams(ITimerTrigger timer, TimerTriggeredHandlerArgs args, CancellationToken cancellationtoken)
         {
-            var streamsToRemove = _streamList
-                .Where(x => x.CancelationToken.HasValue && x.CancelationToken.Value.IsCancellationRequested)
-                .ToList();
+            List<StreamData<T>> streamsToRemove;
+            _lock.EnterReadLock();
+            try
+            {
+                streamsToRemove = _streamList
+                    .Where(x => x.CancelationToken.HasValue && x.CancelationToken.Value.IsCancellationRequested)
+                    .ToList();
+            }
+            finally
+            {
+                _lock.ExitReadLock();
+            }
 
             foreach (var streamData in streamsToRemove)
             {
