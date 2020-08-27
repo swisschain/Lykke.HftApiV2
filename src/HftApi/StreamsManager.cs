@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using AutoMapper;
 using HftApi.Common.Domain.MyNoSqlEntities;
 using Lykke.HftApi.ApiContract;
@@ -60,53 +61,59 @@ namespace HftApi
         {
             _pricesReader.SubscribeToChanges(prices =>
             {
-                foreach (var price in prices)
-                {
-                    _priceStraem.WriteToStream(_mapper.Map<PriceUpdate>(price), price.AssetPairId);
-                }
+                var tasks = prices.Select(price => _priceStraem.WriteToStreamAsync(_mapper.Map<PriceUpdate>(price), price.AssetPairId)).ToList();
+                Task.WhenAll(tasks).GetAwaiter().GetResult();
             });
 
             _tickerReader.SubscribeToChanges(tickers =>
             {
-                foreach (var ticker in tickers)
-                {
-                    _tickerStream.WriteToStream(_mapper.Map<TickerUpdate>(ticker));
-                }
+                var tasks = tickers.Select(ticker => _tickerStream.WriteToStreamAsync(_mapper.Map<TickerUpdate>(ticker))).ToList();
+                Task.WhenAll(tasks).GetAwaiter().GetResult();
             });
 
             _orderbookReader.SubscribeToChanges(orderbooks =>
             {
+                var tasks = new List<Task>();
+
                 foreach (var orderbook in orderbooks)
                 {
                     var item = _mapper.Map<Orderbook>(orderbook);
                     item.Asks.AddRange(_mapper.Map<List<Orderbook.Types.PriceVolume>>(orderbook.Asks));
                     item.Bids.AddRange(_mapper.Map<List<Orderbook.Types.PriceVolume>>(orderbook.Bids));
-                    _orderbookStream.WriteToStream(item, orderbook.AssetPairId);
+                    tasks.Add(_orderbookStream.WriteToStreamAsync(item, orderbook.AssetPairId));
                 }
+
+                Task.WhenAll(tasks).GetAwaiter().GetResult();
             });
 
             _balanceReader.SubscribeToChanges(balances =>
             {
                 var balancesByWallet = balances.GroupBy(x => x.WalletId);
+                var tasks = new List<Task>();
 
                 foreach (var walletBalanes in balancesByWallet)
                 {
                     var balanceUpdate = new BalanceUpdate();
                     balanceUpdate.Balances.AddRange( _mapper.Map<List<Balance>>(walletBalanes.ToList()));
-                    _balanceStream.WriteToStream(balanceUpdate, walletBalanes.Key);
+                    tasks.Add(_balanceStream.WriteToStreamAsync(balanceUpdate, walletBalanes.Key));
                 }
+
+                Task.WhenAll(tasks).GetAwaiter().GetResult();
             });
 
             _orderReader.SubscribeToChanges(ordersEntities =>
             {
                 var ordersByWallet = ordersEntities.GroupBy(x => x.WalletId);
+                var tasks = new List<Task>();
 
                 foreach (var walletOrders in ordersByWallet)
                 {
                     var orderUpdate = new OrderUpdate();
                     orderUpdate.Orders.AddRange(_mapper.Map<List<Order>>(walletOrders.ToList()));
-                    _orderStream.WriteToStream(orderUpdate, walletOrders.Key);
+                    tasks.Add(_orderStream.WriteToStreamAsync(orderUpdate, walletOrders.Key));
                 }
+
+                Task.WhenAll(tasks).GetAwaiter().GetResult();
             });
 
             Console.WriteLine("Stream services started.");

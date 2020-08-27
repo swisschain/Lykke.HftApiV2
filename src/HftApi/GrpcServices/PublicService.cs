@@ -224,7 +224,7 @@ namespace HftApi.GrpcServices
             return response;
         }
 
-        public override Task GetPriceUpdates(PriceUpdatesRequest request, IServerStreamWriter<PriceUpdate> responseStream, ServerCallContext context)
+        public override async Task GetPriceUpdates(PriceUpdatesRequest request, IServerStreamWriter<PriceUpdate> responseStream, ServerCallContext context)
         {
             Console.WriteLine($"New price stream connect. peer:{context.Peer}");
 
@@ -243,10 +243,11 @@ namespace HftApi.GrpcServices
                 Keys = request.AssetPairIds.ToArray()
             };
 
-            return _priceStreamService.RegisterStream(streamInfo, prices);
+            var task = await _priceStreamService.RegisterStreamAsync(streamInfo, prices);
+            await task;
         }
 
-        public override Task GetTickerUpdates(Empty request, IServerStreamWriter<TickerUpdate> responseStream, ServerCallContext context)
+        public override async Task GetTickerUpdates(Empty request, IServerStreamWriter<TickerUpdate> responseStream, ServerCallContext context)
         {
             Console.WriteLine($"New ticker stream connect. peer:{context.Peer}");
 
@@ -257,7 +258,8 @@ namespace HftApi.GrpcServices
                 Peer = context.Peer
             };
 
-            return _tickerUpdateService.RegisterStream(streamInfo);
+            var task = await _tickerUpdateService.RegisterStreamAsync(streamInfo);
+            await task;
         }
 
         public override async Task GetOrderbookUpdates(OrderbookUpdatesRequest request,
@@ -286,7 +288,8 @@ namespace HftApi.GrpcServices
                 Peer = context.Peer
             };
 
-            await _orderbookUpdateService.RegisterStream(streamInfo, orderbooks);
+            var task = await _orderbookUpdateService.RegisterStreamAsync(streamInfo, orderbooks);
+            await task;
         }
     }
 }

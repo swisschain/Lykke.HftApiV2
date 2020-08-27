@@ -81,13 +81,17 @@ namespace HftApi.RabbitSubscribers
 
             var tradesByWallet = trades.GroupBy(x => x.WalletId);
 
+            var tasks = new List<Task>();
+
             foreach (var walletTrades in tradesByWallet)
             {
                 var tradeUpdate = new TradeUpdate();
 
                 tradeUpdate.Trades.AddRange(_mapper.Map<List<Lykke.HftApi.ApiContract.Trade>>(walletTrades.ToList()));
-                _tradeStream.WriteToStream(tradeUpdate, walletTrades.Key);
+                tasks.Add(_tradeStream.WriteToStreamAsync(tradeUpdate, walletTrades.Key));
             }
+
+            await Task.WhenAll(tasks);
         }
 
         public void Dispose()
