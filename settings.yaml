@@ -16,6 +16,8 @@ Services:
     settings-key: BalancesServiceUrl
   HftInternalServiceUrl:
     settings-key: HftInternalServiceUrl
+  TradesAdapterServiceUrl:
+    settings-key: TradesAdapterServiceUrl
 Cache:
   AssetsCacheDuration:
     settings-key: Hftv2Service-Cache-AssetsCacheDuration
@@ -56,6 +58,11 @@ RabbitMq:
       types: [RabbitMq]
     ExchangeName:
       settings-key: MatchingEngineSpotEventsExchange
+  PublicTrades:
+    ConnectionString:
+      settings-key: RabbitSpotPricesConnString
+    ExchangeName:
+      settings-key: PublicTradesExchangeName
 MyNoSqlServer:
   ReaderServiceUrl:
     settings-key: MyNoSqlServer-ReaderUrl
@@ -73,6 +80,8 @@ MyNoSqlServer:
     settings-key: MyNoSqlServer-OrdersTableName
   TradesTableName:
     settings-key: MyNoSqlServer-TradesTableName
+  PublicTradesTableName:
+    settings-key: MyNoSqlServer-PublicTradesTableName
 ElasticsearchLogs:
   NodeUrls:
     settings-key: ElasticSearch-NodeUrls

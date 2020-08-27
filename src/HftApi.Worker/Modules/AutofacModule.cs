@@ -47,6 +47,13 @@ namespace HftApi.Worker.Modules
                 .WithParameter("exchangeName", _config.RabbitMq.Orders.ExchangeName)
                 .SingleInstance();
 
+            builder.RegisterType<PublicTradesSubscriber>()
+                .As<IStartable>()
+                .AutoActivate()
+                .WithParameter("connectionString", _config.RabbitMq.PublicTrades.ConnectionString)
+                .WithParameter("exchangeName", _config.RabbitMq.PublicTrades.ExchangeName)
+                .SingleInstance();
+
             builder.Register(ctx =>
             {
                 return new MyNoSqlServer.DataWriter.MyNoSqlServerDataWriter<OrderbookEntity>(() =>
@@ -67,6 +74,13 @@ namespace HftApi.Worker.Modules
                         _config.MyNoSqlServer.WriterServiceUrl,
                     _config.MyNoSqlServer.OrdersTableName);
             }).As<IMyNoSqlServerDataWriter<OrderEntity>>().SingleInstance();
+
+            builder.Register(ctx =>
+            {
+                return new MyNoSqlServer.DataWriter.MyNoSqlServerDataWriter<PublicTradeEntity>(() =>
+                        _config.MyNoSqlServer.WriterServiceUrl,
+                    _config.MyNoSqlServer.PublicTradesTableName);
+            }).As<IMyNoSqlServerDataWriter<PublicTradeEntity>>().SingleInstance();
         }
     }
 }

@@ -150,6 +150,9 @@ namespace HftApi.Profiles
                 .ForMember(d => d.QuoteVolume, o => o.MapFrom(x => x.QuotingVolume))
                 .ForMember(d => d.QuoteAssetId, o => o.MapFrom(x => x.QuotingAssetId))
                 .ForMember(d => d.Fee, o => o.Ignore());
+
+            CreateMap<PublicTradeEntity, PublicTrade>(MemberList.Destination);
+            CreateMap<Lykke.Service.TradesAdapter.AutorestClient.Models.Trade, PublicTrade>();
         }
     }
 }

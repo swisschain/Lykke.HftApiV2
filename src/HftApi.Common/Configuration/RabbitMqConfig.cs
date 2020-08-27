@@ -6,6 +6,7 @@ namespace HftApi.Common.Configuration
         public RabbitMqConnection Orderbooks { get; set; }
         public RabbitMqConnection Balances { get; set; }
         public RabbitMqConnection Orders { get; set; }
+        public RabbitMqConnection PublicTrades { get; set; }
     }
 
     public class RabbitMqConnection

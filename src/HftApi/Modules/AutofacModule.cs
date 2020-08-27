@@ -8,6 +8,7 @@ using Lykke.Exchange.Api.MarketData.Contract;
 using Lykke.HftApi.Domain.Services;
 using Lykke.HftApi.Services;
 using Lykke.Service.HftInternalService.Client;
+using Lykke.Service.TradesAdapter.Client;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.Redis;
 using Microsoft.Extensions.Logging;
@@ -109,6 +110,11 @@ namespace HftApi.Modules
                 new MyNoSqlReadRepository<OrderEntity>(ctx.Resolve<MyNoSqlTcpClient>(), _config.MyNoSqlServer.OrdersTableName)
             ).As<IMyNoSqlServerDataReader<OrderEntity>>().SingleInstance();
 
+            builder.Register(ctx =>
+                new MyNoSqlReadRepository<PublicTradeEntity>(ctx.Resolve<MyNoSqlTcpClient>(),
+                    _config.MyNoSqlServer.PublicTradesTableName)
+            ).As<IMyNoSqlServerDataReader<PublicTradeEntity>>().SingleInstance();
+
             builder.RegisterType<PricesStreamService>()
                 .WithParameter(TypedParameter.From(true))
                 .AsSelf()
@@ -133,6 +139,10 @@ namespace HftApi.Modules
                 .WithParameter(TypedParameter.From(true))
                 .AsSelf()
                 .SingleInstance();
+            builder.RegisterType<PublicTradesStreamService>()
+                .WithParameter(TypedParameter.From(true))
+                .AsSelf()
+                .SingleInstance();
             builder.RegisterType<StreamsManager>().AsSelf().SingleInstance();
 
             builder.RegisterType<TradesSubscriber>()
@@ -142,6 +152,12 @@ namespace HftApi.Modules
                 .WithParameter("exchangeName", _config.RabbitMq.Orders.ExchangeName)
                 .SingleInstance();
 
+            builder.Register(ctx =>
+                    new TradesAdapterClient(_config.Services.TradesAdapterServiceUrl,
+                        ctx.Resolve<ILogFactory>().CreateLog(nameof(TradesAdapterClient)))
+                )
+                .As<ITradesAdapterClient>()
+                .SingleInstance();
         }
     }
 }

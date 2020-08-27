@@ -12,6 +12,7 @@ using Lykke.HftApi.ApiContract;
 using Lykke.HftApi.Domain;
 using Lykke.HftApi.Domain.Services;
 using Lykke.HftApi.Services;
+using Lykke.Service.TradesAdapter.Client;
 using MyNoSqlServer.Abstractions;
 
 namespace HftApi.GrpcServices
@@ -22,9 +23,11 @@ namespace HftApi.GrpcServices
         private readonly IAssetsService _assetsService;
         private readonly IOrderbooksService _orderbooksService;
         private readonly MarketDataService.MarketDataServiceClient _marketDataClient;
+        private readonly ITradesAdapterClient _tradesAdapterClient;
         private readonly PricesStreamService _priceStreamService;
         private readonly TickersStreamService _tickerUpdateService;
         private readonly OrderbookStreamService _orderbookUpdateService;
+        private readonly PublicTradesStreamService _publicTradesStreamService;
         private readonly ValidationService _validationService;
         private readonly IMyNoSqlServerDataReader<TickerEntity> _tickersReader;
         private readonly IMyNoSqlServerDataReader<PriceEntity> _pricesReader;
@@ -34,9 +37,11 @@ namespace HftApi.GrpcServices
             IAssetsService assetsService,
             IOrderbooksService orderbooksService,
             MarketDataService.MarketDataServiceClient marketDataClient,
+            ITradesAdapterClient tradesAdapterClient,
             PricesStreamService priceStreamService,
             TickersStreamService tickerUpdateService,
             OrderbookStreamService orderbookUpdateService,
+            PublicTradesStreamService publicTradesStreamService,
             ValidationService validationService,
             IMyNoSqlServerDataReader<TickerEntity> tickersReader,
             IMyNoSqlServerDataReader<PriceEntity> pricesReader,
@@ -46,9 +51,11 @@ namespace HftApi.GrpcServices
             _assetsService = assetsService;
             _orderbooksService = orderbooksService;
             _marketDataClient = marketDataClient;
+            _tradesAdapterClient = tradesAdapterClient;
             _priceStreamService = priceStreamService;
             _tickerUpdateService = tickerUpdateService;
             _orderbookUpdateService = orderbookUpdateService;
+            _publicTradesStreamService = publicTradesStreamService;
             _validationService = validationService;
             _tickersReader = tickersReader;
             _pricesReader = pricesReader;
@@ -289,6 +296,31 @@ namespace HftApi.GrpcServices
             };
 
             var task = await _orderbookUpdateService.RegisterStreamAsync(streamInfo, orderbooks);
+            await task;
+        }
+
+        public override async Task GetPublicTradeUpdates(PublicTradesUpdatesRequest request,
+            IServerStreamWriter<PublicTradeUpdate> responseStream,
+            ServerCallContext context)
+        {
+            Console.WriteLine($"New public trades stream connect. peer:{context.Peer}");
+
+            var data = await _tradesAdapterClient.GetTradesByAssetPairIdAsync(request.AssetPairId, 0, 50);
+
+            var trades = _mapper.Map<List<PublicTrade>>(data.Records);
+
+            var initData = new PublicTradeUpdate();
+            initData.Trades.AddRange(trades);
+
+            var streamInfo = new StreamInfo<PublicTradeUpdate>
+            {
+                Stream = responseStream,
+                CancelationToken = context.CancellationToken,
+                Keys = new [] {request.AssetPairId},
+                Peer = context.Peer
+            };
+
+            var task = await _publicTradesStreamService.RegisterStreamAsync(streamInfo, new List<PublicTradeUpdate>{initData});
             await task;
         }
     }
