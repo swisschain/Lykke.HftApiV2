@@ -21,13 +21,11 @@ namespace HftApi
         private readonly IMyNoSqlServerDataReader<OrderbookEntity> _orderbookReader;
         private readonly IMyNoSqlServerDataReader<BalanceEntity> _balanceReader;
         private readonly IMyNoSqlServerDataReader<OrderEntity> _orderReader;
-        private readonly IMyNoSqlServerDataReader<PublicTradeEntity> _publicTradesReader;
         private readonly PricesStreamService _priceStraem;
         private readonly TickersStreamService _tickerStream;
         private readonly OrderbookStreamService _orderbookStream;
         private readonly BalancesStreamService _balanceStream;
         private readonly OrdersStreamService _orderStream;
-        private readonly PublicTradesStreamService _publicTradesStream;
         private readonly IMapper _mapper;
 
         public StreamsManager(
@@ -37,13 +35,11 @@ namespace HftApi
             IMyNoSqlServerDataReader<OrderbookEntity> orderbookReader,
             IMyNoSqlServerDataReader<BalanceEntity> balanceReader,
             IMyNoSqlServerDataReader<OrderEntity> orderReader,
-            IMyNoSqlServerDataReader<PublicTradeEntity> publicTradesReader,
             PricesStreamService priceStraem,
             TickersStreamService tickerStream,
             OrderbookStreamService orderbookStream,
             BalancesStreamService balanceStream,
             OrdersStreamService orderStream,
-            PublicTradesStreamService publicTradesStream,
             IMapper mapper
             )
         {
@@ -53,13 +49,11 @@ namespace HftApi
             _orderbookReader = orderbookReader;
             _balanceReader = balanceReader;
             _orderReader = orderReader;
-            _publicTradesReader = publicTradesReader;
             _priceStraem = priceStraem;
             _tickerStream = tickerStream;
             _orderbookStream = orderbookStream;
             _balanceStream = balanceStream;
             _orderStream = orderStream;
-            _publicTradesStream = publicTradesStream;
             _mapper = mapper;
         }
 
@@ -117,21 +111,6 @@ namespace HftApi
                     var orderUpdate = new OrderUpdate();
                     orderUpdate.Orders.AddRange(_mapper.Map<List<Order>>(walletOrders.ToList()));
                     tasks.Add(_orderStream.WriteToStreamAsync(orderUpdate, walletOrders.Key));
-                }
-
-                Task.WhenAll(tasks).GetAwaiter().GetResult();
-            });
-
-            _publicTradesReader.SubscribeToChanges(trades =>
-            {
-                var tradesByAssetId = trades.GroupBy(x => x.AssetPairId);
-                var tasks = new List<Task>();
-
-                foreach (var tradeByAsset in tradesByAssetId)
-                {
-                    var tradesUpdate = new PublicTradeUpdate();
-                    tradesUpdate.Trades.AddRange( _mapper.Map<List<PublicTrade>>(tradeByAsset.ToList()));
-                    tasks.Add(_publicTradesStream.WriteToStreamAsync(tradesUpdate, tradeByAsset.Key));
                 }
 
                 Task.WhenAll(tasks).GetAwaiter().GetResult();

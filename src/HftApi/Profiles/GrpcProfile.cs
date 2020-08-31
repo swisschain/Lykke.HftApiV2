@@ -151,8 +151,10 @@ namespace HftApi.Profiles
                 .ForMember(d => d.QuoteAssetId, o => o.MapFrom(x => x.QuotingAssetId))
                 .ForMember(d => d.Fee, o => o.Ignore());
 
-            CreateMap<PublicTradeEntity, PublicTrade>(MemberList.Destination);
-            CreateMap<Lykke.Service.TradesAdapter.AutorestClient.Models.Trade, PublicTrade>();
+            CreateMap<Lykke.Service.TradesAdapter.Contract.Trade, PublicTrade>(MemberList.Destination)
+                .ForMember(d => d.Side, o => o.MapFrom(x => x.Action));
+            CreateMap<Lykke.Service.TradesAdapter.AutorestClient.Models.Trade, PublicTrade>()
+                .ForMember(d => d.Side, o => o.MapFrom(x => x.Action));
         }
     }
 }

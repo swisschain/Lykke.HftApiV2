@@ -16,6 +16,8 @@
     <PackageReference Include="Lykke.Exchange.Api.MarketData.Contract" Version="1.1.2" />
     <PackageReference Include="Lykke.MatchingEngineConnector" Version="8.6.0" />
     <PackageReference Include="Lykke.Service.HftInternalService.Client" Version="2.1.1" />
+    <PackageReference Include="Lykke.Service.TradesAdapter.Client" Version="1.0.2" />
+    <PackageReference Include="Lykke.Service.TradesAdapter.Contract" Version="1.0.1" />
     <PackageReference Include="MyNoSqlServer.DataReader" Version="1.0.1" />
     <PackageReference Include="MyNoSqlServer.DataWriter" Version="1.0.1" />
     <PackageReference Include="Swisschain.LykkeLog.Adapter" Version="1.1.0" />

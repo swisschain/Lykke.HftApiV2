@@ -110,11 +110,6 @@ namespace HftApi.Modules
                 new MyNoSqlReadRepository<OrderEntity>(ctx.Resolve<MyNoSqlTcpClient>(), _config.MyNoSqlServer.OrdersTableName)
             ).As<IMyNoSqlServerDataReader<OrderEntity>>().SingleInstance();
 
-            builder.Register(ctx =>
-                new MyNoSqlReadRepository<PublicTradeEntity>(ctx.Resolve<MyNoSqlTcpClient>(),
-                    _config.MyNoSqlServer.PublicTradesTableName)
-            ).As<IMyNoSqlServerDataReader<PublicTradeEntity>>().SingleInstance();
-
             builder.RegisterType<PricesStreamService>()
                 .WithParameter(TypedParameter.From(true))
                 .AsSelf()
@@ -157,6 +152,13 @@ namespace HftApi.Modules
                         ctx.Resolve<ILogFactory>().CreateLog(nameof(TradesAdapterClient)))
                 )
                 .As<ITradesAdapterClient>()
+                .SingleInstance();
+
+            builder.RegisterType<PublicTradesSubscriber>()
+                .As<IStartable>()
+                .AutoActivate()
+                .WithParameter("connectionString", _config.RabbitMq.PublicTrades.ConnectionString)
+                .WithParameter("exchangeName", _config.RabbitMq.PublicTrades.ExchangeName)
                 .SingleInstance();
         }
     }

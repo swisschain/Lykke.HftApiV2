@@ -10,6 +10,5 @@ namespace HftApi.Common.Configuration
         public string BalancesTableName { get; set; }
         public string OrdersTableName { get; set; }
         public string TradesTableName { get; set; }
-        public string PublicTradesTableName { get; set; }
     }
 }

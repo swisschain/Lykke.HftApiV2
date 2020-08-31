@@ -44,12 +44,6 @@ namespace HftApi.Worker.Profiles
                 .ForMember(d => d.QuoteVolume, o => o.MapFrom(x => x.QuotingVolume))
                 .ForMember(d => d.QuoteAssetId, o => o.MapFrom(x => x.QuotingAssetId))
                 .ForMember(d => d.Fee, o => o.Ignore());
-
-            CreateMap<Lykke.Service.TradesAdapter.Contract.Trade, PublicTradeEntity>(MemberList.Destination)
-                .ForMember(d => d.PartitionKey, o => o.MapFrom(x => x.AssetPairId))
-                .ForMember(d => d.RowKey, o => o.MapFrom(x => x.Id))
-                .ForMember(d => d.TimeStamp, o => o.Ignore())
-                .ForMember(d => d.Expires, o => o.Ignore());
         }
     }
 }

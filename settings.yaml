@@ -80,8 +80,6 @@ MyNoSqlServer:
     settings-key: MyNoSqlServer-OrdersTableName
   TradesTableName:
     settings-key: MyNoSqlServer-TradesTableName
-  PublicTradesTableName:
-    settings-key: MyNoSqlServer-PublicTradesTableName
 ElasticsearchLogs:
   NodeUrls:
     settings-key: ElasticSearch-NodeUrls
