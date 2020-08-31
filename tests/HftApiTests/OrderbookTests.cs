@@ -101,5 +101,51 @@ namespace HftApiTests
             Assert.Equal(0.2m, update.Bids[2].Volume);
             Assert.Equal(49.12345m, update.Bids[2].Price);
         }
+
+        [Fact]
+        public void Test_OrderbookUpdates_SamePrice()
+        {
+            var oldOrderbook = new Orderbook
+            {
+                AssetPairId = "LKK1YLKK",
+                Timestamp = DateTime.UtcNow,
+                Asks = new List<VolumePrice>(),
+                Bids = new List<VolumePrice>
+                {
+                    new VolumePrice(50m, 0.962m)
+                }
+            };
+
+            var newOrderbook = new Orderbook
+            {
+                AssetPairId = "LKK1YLKK",
+                Timestamp = DateTime.UtcNow,
+                Asks = new List<VolumePrice>(),
+                Bids = new List<VolumePrice>
+                {
+                    new VolumePrice(50m, 0.962m),
+                    new VolumePrice(50m, 0.962m)
+                }
+            };
+
+            var exprectedOrderbook = new Orderbook
+            {
+                AssetPairId = "LKK1YLKK",
+                Timestamp = DateTime.UtcNow,
+                Asks = new List<VolumePrice>(),
+                Bids = new List<VolumePrice>
+                {
+                    new VolumePrice(100m, 0.962m)
+                }
+            };
+
+            var update = _service.GetOrderbookUpdates(oldOrderbook, newOrderbook);
+
+            Assert.Equal(exprectedOrderbook.Asks.Count, update.Asks.Count);
+            Assert.Equal(exprectedOrderbook.Bids.Count, update.Bids.Count);
+
+            Assert.Equal(exprectedOrderbook.Bids[0].Volume, update.Bids[0].Volume);
+            Assert.Equal(exprectedOrderbook.Bids[0].Price, update.Bids[0].Price);
+        }
     }
 }

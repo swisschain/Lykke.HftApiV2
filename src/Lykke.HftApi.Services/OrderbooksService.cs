@@ -82,18 +82,30 @@ namespace Lykke.HftApi.Services
         private List<VolumePrice> MergeLevels(List<VolumePrice> oldLevels, List<VolumePrice> newLevels)
         {
             var result = new List<VolumePrice>();
+            var aggregatedOldLevels = new List<VolumePrice>();
+            var aggregatedNewLevels = new List<VolumePrice>();
 
-            foreach (var level in oldLevels)
+            foreach (var group in oldLevels.GroupBy(x => x.Price))
             {
-                var existingLevel = newLevels.FirstOrDefault(x => x.Price == level.Price);
+                aggregatedOldLevels.Add(new VolumePrice(group.Sum(x => x.Volume), group.Key));
+            }
+
+            foreach (var group in newLevels.GroupBy(x => x.Price))
+            {
+                aggregatedNewLevels.Add(new VolumePrice(group.Sum(x => x.Volume), group.Key));
+            }
+
+            foreach (var level in aggregatedOldLevels)
+            {
+                var existingLevel = aggregatedNewLevels.FirstOrDefault(x => x.Price == level.Price);
 
                 if (existingLevel == null)
                     result.Add(new VolumePrice(0, level.Price));
             }
 
-            foreach (var level in newLevels)
+            foreach (var level in aggregatedNewLevels)
             {
-                var existingLevel = oldLevels.FirstOrDefault(x => x.Price == level.Price && x.Volume == level.Volume);
+                var existingLevel = aggregatedOldLevels.FirstOrDefault(x => x.Price == level.Price && x.Volume == level.Volume);
 
                 if (existingLevel == null)
                     result.Add(level);
