@@ -62,6 +62,15 @@ namespace HftApi.GrpcServices
             _mapper = mapper;
         }
 
+        public override async Task<PublicTradeUpdate> GetPublicTrades(PublicTradesRequest request, ServerCallContext context)
+        {
+            var data = await _tradesAdapterClient.GetTradesByAssetPairIdAsync(request.AssetPairId, request.Offset, request.Take);
+
+            var result = new PublicTradeUpdate();
+            result.Trades.AddRange(_mapper.Map<List<PublicTrade>>(data.Records));
+            return result;
+        }
+
         public override async Task<AssetPairsResponse> GetAssetPairs(Empty request, ServerCallContext context)
         {
             var assetPairs = await _assetsService.GetAllAssetPairsAsync();

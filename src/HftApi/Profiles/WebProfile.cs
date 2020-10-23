@@ -37,6 +37,7 @@ namespace HftApi.Profiles
             CreateMap<MarketSlice, PriceModel>(MemberList.Destination)
                 .ForMember(d => d.Timestamp, o => o.MapFrom(x => DateTime.UtcNow));
             CreateMap<Lykke.Service.TradesAdapter.AutorestClient.Models.Trade, PublicTradeModel>(MemberList.Destination)
+                .ForMember(d => d.Timestamp, o => o.MapFrom(x => x.DateTime))
                 .ForMember(d => d.Side, o => o.MapFrom(x => x.Action == Lykke.Service.TradesAdapter.AutorestClient.Models.TradeAction.Buy ? TradeSide.Buy : TradeSide.Sell));
         }
     }
