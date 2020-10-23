@@ -5,6 +5,7 @@ using HftApi.Common.Domain.MyNoSqlEntities;
 using HftApi.WebApi.Models;
 using Lykke.Exchange.Api.MarketData;
 using Lykke.HftApi.Domain.Entities;
+using Trade = Lykke.HftApi.Domain.Entities.Trade;
 
 namespace HftApi.Profiles
 {
@@ -35,6 +36,8 @@ namespace HftApi.Profiles
             CreateMap<PriceEntity, PriceModel>(MemberList.Destination);
             CreateMap<MarketSlice, PriceModel>(MemberList.Destination)
                 .ForMember(d => d.Timestamp, o => o.MapFrom(x => DateTime.UtcNow));
+            CreateMap<Lykke.Service.TradesAdapter.AutorestClient.Models.Trade, PublicTradeModel>(MemberList.Destination)
+                .ForMember(d => d.Side, o => o.MapFrom(x => x.Action == Lykke.Service.TradesAdapter.AutorestClient.Models.TradeAction.Buy ? TradeSide.Buy : TradeSide.Sell));
         }
     }
 }

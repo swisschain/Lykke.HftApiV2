@@ -7,6 +7,7 @@ using HftApi.WebApi.Models;
 using Lykke.HftApi.Domain.Exceptions;
 using Lykke.HftApi.Services;
 using Lykke.MatchingEngine.Connector.Models.Common;
+using Lykke.Service.TradesAdapter.Client;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -20,16 +21,19 @@ namespace HftApi.WebApi
     {
         private readonly ValidationService _validationService;
         private readonly HistoryHttpClient _historyClient;
+        private readonly ITradesAdapterClient _tradesAdapterClient;
         private readonly IMapper _mapper;
 
         public TradesController(
             ValidationService validationService,
             HistoryHttpClient historyClient,
+            ITradesAdapterClient tradesAdapterClient,
             IMapper mapper
             )
         {
             _validationService = validationService;
             _historyClient = historyClient;
+            _tradesAdapterClient = tradesAdapterClient;
             _mapper = mapper;
         }
 
@@ -72,6 +76,23 @@ namespace HftApi.WebApi
         {
             var trades = await _historyClient.GetOrderTradesAsync(User.GetWalletId(), orderId);
             return Ok(ResponseModel<IReadOnlyCollection<TradeModel>>.Ok(_mapper.Map<IReadOnlyCollection<TradeModel>>(trades)));
+        }
+
+        /// <summary>
+        /// Get last public trades
+        /// </summary>
+        /// <remarks>Get last trades for specific asset pair.</remarks>
+        [AllowAnonymous]
+        [HttpGet("public/{assetPairId}")]
+        [ProducesResponseType(typeof(ResponseModel<IReadOnlyCollection<PublicTradeModel>>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetPublicTrades(string assetPairId,
+            [FromQuery]int? offset = 0,
+            [FromQuery]int? take = 100
+            )
+        {
+            var data = await _tradesAdapterClient.GetTradesByAssetPairIdAsync(assetPairId, offset ?? 0, take ?? 100);
+
+            return Ok(ResponseModel<IReadOnlyCollection<PublicTradeModel>>.Ok(_mapper.Map<IReadOnlyCollection<PublicTradeModel>>(data.Records)));
         }
     }
 }
