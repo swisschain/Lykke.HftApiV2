@@ -59,19 +59,19 @@ namespace HftApi
 
         public void Start()
         {
-            _pricesReader.SubscribeToChanges(prices =>
+            _pricesReader.SubscribeToUpdateEvents(prices =>
             {
                 var tasks = prices.Select(price => _priceStraem.WriteToStreamAsync(_mapper.Map<PriceUpdate>(price), price.AssetPairId)).ToList();
                 Task.WhenAll(tasks).GetAwaiter().GetResult();
-            });
+            }, deleted => { });
 
-            _tickerReader.SubscribeToChanges(tickers =>
+            _tickerReader.SubscribeToUpdateEvents(tickers =>
             {
                 var tasks = tickers.Select(ticker => _tickerStream.WriteToStreamAsync(_mapper.Map<TickerUpdate>(ticker))).ToList();
                 Task.WhenAll(tasks).GetAwaiter().GetResult();
-            });
+            }, deleted => { });
 
-            _orderbookReader.SubscribeToChanges(orderbooks =>
+            _orderbookReader.SubscribeToUpdateEvents(orderbooks =>
             {
                 var tasks = new List<Task>();
 
@@ -84,9 +84,9 @@ namespace HftApi
                 }
 
                 Task.WhenAll(tasks).GetAwaiter().GetResult();
-            });
+            }, deleted => { });
 
-            _balanceReader.SubscribeToChanges(balances =>
+            _balanceReader.SubscribeToUpdateEvents(balances =>
             {
                 var balancesByWallet = balances.GroupBy(x => x.WalletId);
                 var tasks = new List<Task>();
@@ -99,9 +99,9 @@ namespace HftApi
                 }
 
                 Task.WhenAll(tasks).GetAwaiter().GetResult();
-            });
+            }, deleted => { });
 
-            _orderReader.SubscribeToChanges(ordersEntities =>
+            _orderReader.SubscribeToUpdateEvents(ordersEntities =>
             {
                 var ordersByWallet = ordersEntities.GroupBy(x => x.WalletId);
                 var tasks = new List<Task>();
@@ -114,7 +114,7 @@ namespace HftApi
                 }
 
                 Task.WhenAll(tasks).GetAwaiter().GetResult();
-            });
+            }, deleted => { });
 
             Console.WriteLine("Stream services started.");
         }

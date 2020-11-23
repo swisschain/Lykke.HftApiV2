@@ -4,9 +4,8 @@ using MyNoSqlServer.Abstractions;
 
 namespace HftApi.Common.Domain.MyNoSqlEntities
 {
-    public class OrderbookEntity : IMyNoSqlEntity
+    public class OrderbookEntity : IMyNoSqlDbEntity
     {
-
         public OrderbookEntity()
         {
         }
@@ -15,7 +14,7 @@ namespace HftApi.Common.Domain.MyNoSqlEntities
         {
             PartitionKey = GetPk();
             RowKey = assetPairId;
-            TimeStamp = DateTime.UtcNow;
+            CreatedAt = DateTime.UtcNow;
             AssetPairId = assetPairId;
         }
         public string AssetPairId { get; set; }
@@ -24,7 +23,7 @@ namespace HftApi.Common.Domain.MyNoSqlEntities
         public DateTime CreatedAt { get; set; }
         public string PartitionKey { get; set; }
         public string RowKey { get; set; }
-        public DateTime TimeStamp { get; set; }
+        public string TimeStamp { get; set; }
         public DateTime? Expires { get; set; }
         public static string GetPk() => "Orderbook";
     }

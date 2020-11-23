@@ -53,7 +53,7 @@ namespace HftApi.Worker.RabbitSubscribers
             var entity = await _orderbookWriter.GetAsync(OrderbookEntity.GetPk(), orderbookMessage.AssetPair)
                           ?? new OrderbookEntity(orderbookMessage.AssetPair)
                           {
-                              CreatedAt = orderbookMessage.Timestamp,
+                              CreatedAt = orderbookMessage.Timestamp
                           };
 
             entity.CreatedAt = orderbookMessage.Timestamp;

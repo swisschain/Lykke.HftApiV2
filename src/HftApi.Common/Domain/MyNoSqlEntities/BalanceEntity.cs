@@ -3,7 +3,7 @@ using MyNoSqlServer.Abstractions;
 
 namespace HftApi.Common.Domain.MyNoSqlEntities
 {
-    public class BalanceEntity : IMyNoSqlEntity
+    public class BalanceEntity : IMyNoSqlDbEntity
     {
         public BalanceEntity() {}
 
@@ -23,7 +23,7 @@ namespace HftApi.Common.Domain.MyNoSqlEntities
 
         public string PartitionKey { get; set; }
         public string RowKey { get; set; }
-        public DateTime TimeStamp { get; set; }
+        public string TimeStamp { get; set; }
         public DateTime? Expires { get; set; }
     }
 }
