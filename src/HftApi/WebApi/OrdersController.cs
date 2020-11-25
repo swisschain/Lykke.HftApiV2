@@ -31,21 +31,18 @@ namespace HftApi.WebApi
         private readonly HistoryHttpClient _historyClient;
         private readonly ValidationService _validationService;
         private readonly IMatchingEngineClient _matchingEngineClient;
-        private readonly IMyNoSqlServerDataReader<OrderEntity> _ordersReader;
         private readonly IMapper _mapper;
 
         public OrdersController(
             HistoryHttpClient historyClient,
             ValidationService validationService,
             IMatchingEngineClient matchingEngineClient,
-            IMyNoSqlServerDataReader<OrderEntity> ordersReader,
             IMapper mapper
             )
         {
             _historyClient = historyClient;
             _validationService = validationService;
             _matchingEngineClient = matchingEngineClient;
-            _ordersReader = ordersReader;
             _mapper = mapper;
         }
 
@@ -221,10 +218,8 @@ namespace HftApi.WebApi
             if (result != null)
                 throw HftApiException.Create(result.Code, result.Message).AddField(result.FieldName);
 
-            var statuses = new List<string> {OrderStatus.Placed.ToString(), OrderStatus.PartiallyMatched.ToString()};
-
-            var orders = _ordersReader.Get(User.GetWalletId(), offset ?? 0, take ?? 100,
-                x => (string.IsNullOrEmpty(assetPairId) || x.AssetPairId == assetPairId) && statuses.Contains(x.Status));
+            var orders = await _historyClient.GetOrdersByWalletAsync(User.GetWalletId(), assetPairId,
+                new [] { OrderStatus.Placed, OrderStatus.PartiallyMatched }, null, false, offset, take);
 
             var ordersModel = _mapper.Map<IReadOnlyCollection<OrderModel>>(orders);
 

@@ -108,10 +108,6 @@ namespace HftApi.Modules
                 new MyNoSqlReadRepository<BalanceEntity>(ctx.Resolve<MyNoSqlTcpClient>(), _config.MyNoSqlServer.BalancesTableName)
             ).As<IMyNoSqlServerDataReader<BalanceEntity>>().SingleInstance();
 
-            builder.Register(ctx =>
-                new MyNoSqlReadRepository<OrderEntity>(ctx.Resolve<MyNoSqlTcpClient>(), _config.MyNoSqlServer.OrdersTableName)
-            ).As<IMyNoSqlServerDataReader<OrderEntity>>().SingleInstance();
-
             builder.RegisterType<PricesStreamService>()
                 .WithParameter(TypedParameter.From(true))
                 .AsSelf()

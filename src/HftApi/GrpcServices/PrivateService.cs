@@ -36,7 +36,6 @@ namespace HftApi.GrpcServices
         private readonly BalancesStreamService _balanceUpdateService;
         private readonly OrdersStreamService _orderUpdateService;
         private readonly TradesStreamService _tradeUpdateService;
-        private readonly IMyNoSqlServerDataReader<OrderEntity> _ordersReader;
         private readonly IMapper _mapper;
 
         public PrivateService(
@@ -47,7 +46,6 @@ namespace HftApi.GrpcServices
             BalancesStreamService balanceUpdateService,
             OrdersStreamService orderUpdateService,
             TradesStreamService tradeUpdateService,
-            IMyNoSqlServerDataReader<OrderEntity> ordersReader,
             IMapper mapper
             )
         {
@@ -58,7 +56,6 @@ namespace HftApi.GrpcServices
             _balanceUpdateService = balanceUpdateService;
             _orderUpdateService = orderUpdateService;
             _tradeUpdateService = tradeUpdateService;
-            _ordersReader = ordersReader;
             _mapper = mapper;
         }
 
@@ -306,13 +303,11 @@ namespace HftApi.GrpcServices
                 };
             }
 
-            var statuses = new List<string> {OrderStatus.Placed.ToString(), OrderStatus.PartiallyMatched.ToString()};
-
             if (request.Take == 0)
                 request.Take = Constants.MaxPageSize;
 
-            var orders = _ordersReader.Get(context.GetHttpContext().User.GetWalletId(), request.Offset, request.Take,
-                x => (string.IsNullOrEmpty(request.AssetPairId) || x.AssetPairId == request.AssetPairId) && statuses.Contains(x.Status));
+            var orders = await _historyClient.GetOrdersByWalletAsync(context.GetHttpContext().User.GetWalletId(), request.AssetPairId,
+                new [] { OrderStatus.Placed, OrderStatus.PartiallyMatched }, null, false, request.Offset, request.Take);
 
             var res = new OrdersResponse();
             res.Payload.AddRange(_mapper.Map<List<Order>>(orders));
@@ -527,7 +522,7 @@ namespace HftApi.GrpcServices
 
             var initData = new BalanceUpdate();
             initData.Balances.AddRange(_mapper.Map<List<Balance>>(balances));
-            //TODO: need to await returned task for stream to be opened
+            //need to await returned task for stream to be opened
             var task = await _balanceUpdateService.RegisterStreamAsync(streamInfo, new List<BalanceUpdate> { initData });
             await task;
         }
