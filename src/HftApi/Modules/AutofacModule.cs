@@ -83,9 +83,11 @@ namespace HftApi.Modules
                 .AsSelf()
                 .SingleInstance();
 
+            var reconnectTimeoutInSec = Environment.GetEnvironmentVariable("NOSQL_PING_INTERVAL") ?? "15";
+
             builder.Register(ctx =>
             {
-                var client = new MyNoSqlTcpClient(() => _config.MyNoSqlServer.ReaderServiceUrl, $"{ApplicationInformation.AppName}-{Environment.MachineName}");
+                var client = new MyNoSqlTcpClient(() => _config.MyNoSqlServer.ReaderServiceUrl, $"{ApplicationInformation.AppName}-{Environment.MachineName}", int.Parse(reconnectTimeoutInSec));
                 client.Start();
                 return client;
             }).AsSelf().SingleInstance();
