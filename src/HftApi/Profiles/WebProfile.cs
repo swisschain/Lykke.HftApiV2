@@ -28,12 +28,14 @@ namespace HftApi.Profiles
                 .ForMember(d => d.BaseVolume, o => o.MapFrom(x => Math.Abs(x.BaseVolume)))
                 .ForMember(d => d.QuoteVolume, o => o.MapFrom(x => Math.Abs(x.QuoteVolume)))
                 .ForMember(d => d.Side, o => o.MapFrom(x => x.BaseVolume < 0 ? TradeSide.Sell : TradeSide.Buy));
-            CreateMap<TickerEntity, TickerModel>(MemberList.Destination);
+            CreateMap<TickerEntity, TickerModel>(MemberList.Destination)
+                .ForMember(d => d.Timestamp, o => o.MapFrom(x => x.UpdatedDt));
             CreateMap<Orderbook, OrderbookModel>(MemberList.Destination);
             CreateMap<VolumePrice, VolumePriceModel>(MemberList.Destination);
             CreateMap<MarketSlice, TickerModel>(MemberList.Destination)
                 .ForMember(d => d.Timestamp, o => o.MapFrom(x => DateTime.UtcNow));
-            CreateMap<PriceEntity, PriceModel>(MemberList.Destination);
+            CreateMap<PriceEntity, PriceModel>(MemberList.Destination)
+                .ForMember(d => d.Timestamp, o => o.MapFrom(x => x.UpdatedDt));
             CreateMap<MarketSlice, PriceModel>(MemberList.Destination)
                 .ForMember(d => d.Timestamp, o => o.MapFrom(x => DateTime.UtcNow));
             CreateMap<Lykke.Service.TradesAdapter.AutorestClient.Models.Trade, PublicTradeModel>(MemberList.Destination)
