@@ -300,7 +300,7 @@ namespace HftApi.GrpcServices
             {
                 Stream = responseStream,
                 CancelationToken = context.CancellationToken,
-                Keys = new [] {request.AssetPairId},
+                Keys = string.IsNullOrEmpty(request.AssetPairId) ? Array.Empty<string>() : new [] {request.AssetPairId},
                 Peer = context.Peer
             };
 
