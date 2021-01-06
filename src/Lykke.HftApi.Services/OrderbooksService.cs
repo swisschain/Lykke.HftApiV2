@@ -40,7 +40,7 @@ namespace Lykke.HftApi.Services
         {
             var orderbooks = new List<Orderbook>();
 
-            if (assetPairId == null)
+            if (string.IsNullOrEmpty(assetPairId))
             {
                 var assetPairs = await _assetsService.GetAllAssetPairsAsync();
 
