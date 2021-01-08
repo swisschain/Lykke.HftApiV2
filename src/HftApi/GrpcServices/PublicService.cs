@@ -283,8 +283,24 @@ namespace HftApi.GrpcServices
             ServerCallContext context)
         {
             Console.WriteLine($"New orderbook stream connect. peer:{context.Peer}");
+            var assetPairIds = new List<string>();
 
-            var data = await _orderbooksService.GetAsync(request.AssetPairId);
+            if (!string.IsNullOrEmpty(request.AssetPairId))
+            {
+                assetPairIds.Add(request.AssetPairId);
+            }
+            else
+            {
+                assetPairIds = request.AssetPairIds?.ToList() ?? new List<string>();
+            }
+
+            var data = await _orderbooksService.GetAsync();
+
+            if (assetPairIds.Any())
+            {
+                data = data.Where(x => assetPairIds.Contains(x.AssetPairId, StringComparer.InvariantCultureIgnoreCase))
+                    .ToList();
+            }
 
             var orderbooks = new List<Orderbook>();
 
@@ -300,7 +316,7 @@ namespace HftApi.GrpcServices
             {
                 Stream = responseStream,
                 CancelationToken = context.CancellationToken,
-                Keys = string.IsNullOrEmpty(request.AssetPairId) ? Array.Empty<string>() : new [] {request.AssetPairId},
+                Keys = assetPairIds.ToArray(),
                 Peer = context.Peer
             };
 
