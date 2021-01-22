@@ -160,7 +160,7 @@ namespace Lykke.HftApi.Services
             {
                 Id = order.Id.ToString(),
                 Timestamp = order.CreateDt.ToDateTime(),
-                LastTradeTimestamp = order.MatchDt.ToDateTime(),
+                LastTradeTimestamp = order.MatchDt?.ToDateTime(),
                 Status = order.Status.ToString(),
                 AssetPairId = order.AssetPairId,
                 Type = order.Type.ToString(),
