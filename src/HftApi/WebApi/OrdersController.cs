@@ -1,9 +1,9 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Antares.Service.History.GrpcContract.Common;
 using AutoMapper;
-using HftApi.Common.Domain.MyNoSqlEntities;
 using HftApi.Extensions;
 using HftApi.WebApi.Models;
 using HftApi.WebApi.Models.Request;
@@ -14,11 +14,9 @@ using Lykke.HftApi.Services;
 using Lykke.MatchingEngine.Connector.Abstractions.Services;
 using Lykke.MatchingEngine.Connector.Models.Api;
 using Lykke.MatchingEngine.Connector.Models.Common;
-using Lykke.Service.History.Contracts.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using MyNoSqlServer.Abstractions;
 using MarketOrderResponse = HftApi.WebApi.Models.Response.MarketOrderResponse;
 
 namespace HftApi.WebApi
