@@ -170,7 +170,7 @@ namespace HftApi
                 client.BaseAddress = new Uri(Config.Services.AssetsServiceUrl);
             });
 
-            services.AddSingleton(new HistoryGrpcClient(Config.Services.HistoryServiceUrl));
+            services.AddSingleton<IHistoryGrpcClient>(new HistoryGrpcClient(Config.Services.HistoryServiceUrl));
             services.AddTransient<HistoryWrapperClient>();
 
             services.AddHttpClient<BalanceHttpClient>(client =>
