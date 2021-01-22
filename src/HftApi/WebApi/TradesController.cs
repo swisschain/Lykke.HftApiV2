@@ -20,13 +20,13 @@ namespace HftApi.WebApi
     public class TradesController : ControllerBase
     {
         private readonly ValidationService _validationService;
-        private readonly HistoryHttpClient _historyClient;
+        private readonly HistoryWrapperClient _historyClient;
         private readonly ITradesAdapterClient _tradesAdapterClient;
         private readonly IMapper _mapper;
 
         public TradesController(
             ValidationService validationService,
-            HistoryHttpClient historyClient,
+            HistoryWrapperClient historyClient,
             ITradesAdapterClient tradesAdapterClient,
             IMapper mapper
             )

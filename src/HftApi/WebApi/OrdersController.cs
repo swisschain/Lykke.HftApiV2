@@ -1,9 +1,9 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Antares.Service.History.GrpcContract.Common;
 using AutoMapper;
-using HftApi.Common.Domain.MyNoSqlEntities;
 using HftApi.Extensions;
 using HftApi.WebApi.Models;
 using HftApi.WebApi.Models.Request;
@@ -14,11 +14,9 @@ using Lykke.HftApi.Services;
 using Lykke.MatchingEngine.Connector.Abstractions.Services;
 using Lykke.MatchingEngine.Connector.Models.Api;
 using Lykke.MatchingEngine.Connector.Models.Common;
-using Lykke.Service.History.Contracts.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using MyNoSqlServer.Abstractions;
 using MarketOrderResponse = HftApi.WebApi.Models.Response.MarketOrderResponse;
 
 namespace HftApi.WebApi
@@ -28,13 +26,13 @@ namespace HftApi.WebApi
     [Route("api/orders")]
     public class OrdersController : ControllerBase
     {
-        private readonly HistoryHttpClient _historyClient;
+        private readonly HistoryWrapperClient _historyClient;
         private readonly ValidationService _validationService;
         private readonly IMatchingEngineClient _matchingEngineClient;
         private readonly IMapper _mapper;
 
         public OrdersController(
-            HistoryHttpClient historyClient,
+            HistoryWrapperClient historyClient,
             ValidationService validationService,
             IMatchingEngineClient matchingEngineClient,
             IMapper mapper
