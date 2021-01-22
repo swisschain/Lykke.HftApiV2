@@ -11,12 +11,12 @@
     </ItemGroup>
 
     <ItemGroup>
+      <PackageReference Include="Antares.Service.History.GrpcClient" Version="1.0.0-beta.4" />
       <PackageReference Include="Autofac" Version="5.2.0" />
       <PackageReference Include="AutoMapper" Version="9.0.0" />
       <PackageReference Include="Grpc.AspNetCore" Version="2.29.0" />
       <PackageReference Include="Lykke.MatchingEngineConnector" Version="8.6.0" />
       <PackageReference Include="Lykke.Service.HftInternalService.Client" Version="2.1.1" />
-      <PackageReference Include="Lykke.Service.History.Contracts" Version="1.0.3" />
       <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="3.1.4" />
       <PackageReference Include="Microsoft.Extensions.Http" Version="3.1.4" />
       <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />

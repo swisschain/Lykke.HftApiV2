@@ -28,13 +28,13 @@ namespace HftApi.WebApi
     [Route("api/orders")]
     public class OrdersController : ControllerBase
     {
-        private readonly HistoryHttpClient _historyClient;
+        private readonly HistoryWrapperClient _historyClient;
         private readonly ValidationService _validationService;
         private readonly IMatchingEngineClient _matchingEngineClient;
         private readonly IMapper _mapper;
 
         public OrdersController(
-            HistoryHttpClient historyClient,
+            HistoryWrapperClient historyClient,
             ValidationService validationService,
             IMatchingEngineClient matchingEngineClient,
             IMapper mapper

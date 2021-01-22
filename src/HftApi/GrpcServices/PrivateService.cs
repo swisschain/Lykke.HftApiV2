@@ -1,8 +1,9 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
+using Antares.Service.History.GrpcContract.Common;
 using AutoMapper;
 using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
@@ -16,7 +17,6 @@ using Lykke.HftApi.Services;
 using Lykke.MatchingEngine.Connector.Abstractions.Services;
 using Lykke.MatchingEngine.Connector.Models.Api;
 using Lykke.MatchingEngine.Connector.Models.Common;
-using Lykke.Service.History.Contracts.Enums;
 using Microsoft.AspNetCore.Authorization;
 using MyNoSqlServer.Abstractions;
 using BulkLimitOrderResponse = Lykke.HftApi.ApiContract.BulkLimitOrderResponse;
@@ -29,7 +29,7 @@ namespace HftApi.GrpcServices
     [UsedImplicitly]
     public class PrivateService : Lykke.HftApi.ApiContract.PrivateService.PrivateServiceBase
     {
-        private readonly HistoryHttpClient _historyClient;
+        private readonly HistoryWrapperClient _historyClient;
         private readonly IBalanceService _balanceService;
         private readonly ValidationService _validationService;
         private readonly IMatchingEngineClient _matchingEngineClient;
@@ -39,7 +39,7 @@ namespace HftApi.GrpcServices
         private readonly IMapper _mapper;
 
         public PrivateService(
-            HistoryHttpClient historyClient,
+            HistoryWrapperClient historyClient,
             IBalanceService balanceService,
             ValidationService validationService,
             IMatchingEngineClient matchingEngineClient,

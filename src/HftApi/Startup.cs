@@ -3,6 +3,7 @@ using System.Globalization;
 using System.IO;
 using System.Reflection;
 using System.Text;
+using Antares.Service.History.GrpcClient;
 using Autofac;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
@@ -169,10 +170,8 @@ namespace HftApi
                 client.BaseAddress = new Uri(Config.Services.AssetsServiceUrl);
             });
 
-            services.AddHttpClient<HistoryHttpClient>(client =>
-            {
-                client.BaseAddress = new Uri(Config.Services.HistoryServiceUrl);
-            });
+            services.AddSingleton(new HistoryGrpcClient(Config.Services.HistoryServiceUrl));
+            services.AddTransient<HistoryWrapperClient>();
 
             services.AddHttpClient<BalanceHttpClient>(client =>
             {
