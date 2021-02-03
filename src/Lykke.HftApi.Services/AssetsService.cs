@@ -62,16 +62,21 @@ namespace Lykke.HftApi.Services
             var assetPairs = assetPairsTask.Result.ToList();
             var assets = assetsTask.Result;
 
+            var result = new List<AssetPair>();
+
             foreach (var assetPair in assetPairs)
             {
                 var baseAsset = assets.FirstOrDefault(x => x.AssetId == assetPair.BaseAssetId);
                 var quoteAsset = assets.FirstOrDefault(x => x.AssetId == assetPair.QuoteAssetId);
+                if (baseAsset == null || quoteAsset == null)
+                    continue;
 
-                assetPair.BaseAssetAccuracy = baseAsset?.Accuracy ?? 0;
-                assetPair.QuoteAssetAccuracy = quoteAsset?.Accuracy ?? 0;
+                assetPair.BaseAssetAccuracy = baseAsset.Accuracy;
+                assetPair.QuoteAssetAccuracy = quoteAsset.Accuracy;
+                result.Add(assetPair);
             }
 
-            return assetPairs;
+            return result;
         }
 
         public void Start()
