@@ -124,7 +124,7 @@ namespace Lykke.HftApi.Services
                 Id = orderId
             });
 
-            return order.Item.ToDomain();
+            return order?.Item?.ToDomain();
         }
     }
 

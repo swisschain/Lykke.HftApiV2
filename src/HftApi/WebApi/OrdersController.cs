@@ -195,7 +195,12 @@ namespace HftApi.WebApi
         public async Task<IActionResult> GetOrder(string orderId)
         {
             var order = await _historyClient.GetOrderAsync(orderId);
+
+            if (order == null)
+                throw HftApiException.Create(HftApiErrorCode.ItemNotFound, HftApiErrorMessages.OrderNotFound).AddField(orderId);
+
             var orderModel = _mapper.Map<OrderModel>(order);
+
             return Ok(ResponseModel<OrderModel>.Ok(orderModel));
         }
 
