@@ -198,7 +198,7 @@ namespace HftApi.GrpcServices
                 Id = x.Id,
                 Price = x.Price.ToString(CultureInfo.InvariantCulture),
                 Volume = x.Volume.ToString(CultureInfo.InvariantCulture),
-                Error = _mapper.Map<ErrorCode>(x.Status.ToHftApiError())
+                Error = _mapper.Map<ErrorCode>(x.Status.ToHftApiError().code)
             }));
 
             return bulkResponse;
