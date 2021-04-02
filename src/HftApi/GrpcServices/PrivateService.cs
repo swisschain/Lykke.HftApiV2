@@ -7,7 +7,6 @@ using Antares.Service.History.GrpcContract.Common;
 using AutoMapper;
 using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
-using HftApi.Common.Domain.MyNoSqlEntities;
 using HftApi.Extensions;
 using JetBrains.Annotations;
 using Lykke.HftApi.ApiContract;
@@ -18,7 +17,6 @@ using Lykke.MatchingEngine.Connector.Abstractions.Services;
 using Lykke.MatchingEngine.Connector.Models.Api;
 using Lykke.MatchingEngine.Connector.Models.Common;
 using Microsoft.AspNetCore.Authorization;
-using MyNoSqlServer.Abstractions;
 using BulkLimitOrderResponse = Lykke.HftApi.ApiContract.BulkLimitOrderResponse;
 using LimitOrderResponse = Lykke.HftApi.ApiContract.LimitOrderResponse;
 using MarketOrderResponse = Lykke.HftApi.ApiContract.MarketOrderResponse;
@@ -151,7 +149,7 @@ namespace HftApi.GrpcServices
                     Price = Convert.ToDouble(item.Price),
                     Volume = Convert.ToDouble(item.Volume),
                     OrderAction = _mapper.Map<OrderAction>(item.Side),
-                    OldId = item.OldId
+                    OldId = string.IsNullOrEmpty(item.OldId) ? null : item.OldId
                 };
 
                 orders.Add(order);
