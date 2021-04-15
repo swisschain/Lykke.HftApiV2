@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using Autofac;
+using Common.Log;
 using HftApi.Common.Domain.MyNoSqlEntities;
 using HftApi.Worker.RabbitSubscribers.Messages;
 using JetBrains.Annotations;
@@ -19,6 +20,7 @@ namespace HftApi.Worker.RabbitSubscribers
         private readonly IMyNoSqlServerDataWriter<OrderbookEntity> _orderbookWriter;
         private readonly ILogFactory _logFactory;
         private RabbitMqSubscriber<OrderbookMessage> _subscriber;
+        private readonly ILog _log;
 
         public OrderbooksSubscriber(
             string connectionString,
@@ -30,6 +32,7 @@ namespace HftApi.Worker.RabbitSubscribers
             _exchangeName = exchangeName;
             _orderbookWriter = orderbookWriter;
             _logFactory = logFactory;
+            _log = logFactory.CreateLog(this);
         }
 
         public void Start()
@@ -50,11 +53,20 @@ namespace HftApi.Worker.RabbitSubscribers
 
         private async Task ProcessMessageAsync(OrderbookMessage orderbookMessage)
         {
-            var entity = await _orderbookWriter.GetAsync(OrderbookEntity.GetPk(), orderbookMessage.AssetPair)
-                          ?? new OrderbookEntity(orderbookMessage.AssetPair)
-                          {
-                              CreatedAt = orderbookMessage.Timestamp
-                          };
+            OrderbookEntity orderbook = null;
+            try
+            {
+                orderbook = await _orderbookWriter.GetAsync(OrderbookEntity.GetPk(), orderbookMessage.AssetPair);
+            }
+            catch (Exception ex)
+            {
+                _log.Warning($"Can't get orderbook from mynosql for assetPair = {orderbookMessage.AssetPair}", ex);
+            }
+
+            var entity = orderbook ?? new OrderbookEntity(orderbookMessage.AssetPair)
+              {
+                  CreatedAt = orderbookMessage.Timestamp
+              };
 
             entity.CreatedAt = orderbookMessage.Timestamp;
             var prices = orderbookMessage.IsBuy ? entity.Bids : entity.Asks;
