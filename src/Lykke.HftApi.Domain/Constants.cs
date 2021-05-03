@@ -2,6 +2,6 @@ namespace Lykke.HftApi.Domain
 {
     public static class Constants
     {
-        public const int MaxPageSize = 100;
+        public const int MaxPageSize = 1000;
     }
 }
