@@ -10,6 +10,7 @@ namespace Lykke.HftApi.Domain
         RuntimeError = 1001,
         ItemNotFound = 1100,
         InvalidField = 1101,
+        ActionForbidden = 1102,
         //ME errors
         MeBadRequest = 2000,
         MeLowBalance = 2001,

@@ -7,7 +7,12 @@ using Lykke.Common.Log;
 using Lykke.Exchange.Api.MarketData.Contract;
 using Lykke.HftApi.Domain.Services;
 using Lykke.HftApi.Services;
+using Lykke.Service.ClientAccount.Client;
+using Lykke.Service.ClientDialogs.Client;
 using Lykke.Service.HftInternalService.Client;
+using Lykke.Service.Kyc.Abstractions.Services;
+using Lykke.Service.Kyc.Client;
+using Lykke.Service.Operations.Client;
 using Lykke.Service.TradesAdapter.Client;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.Redis;
@@ -92,6 +97,9 @@ namespace HftApi.Modules
                 return client;
             }).AsSelf().SingleInstance();
 
+            builder.RegisterInstance(_config.FeeSettings)
+                .AsSelf();
+
             builder.Register(ctx =>
                 new MyNoSqlReadRepository<TickerEntity>(ctx.Resolve<MyNoSqlTcpClient>(), _config.MyNoSqlServer.TickersTableName)
             ).As<IMyNoSqlServerDataReader<TickerEntity>>().SingleInstance();
@@ -137,6 +145,12 @@ namespace HftApi.Modules
                 .AsSelf()
                 .SingleInstance();
             builder.RegisterType<StreamsManager>().AsSelf().SingleInstance();
+            builder.RegisterType<SiriusWalletsService>()
+                .As<ISiriusWalletsService>()
+                .WithParameter(TypedParameter.From(_config.Services.SiriusApiServiceClient.BrokerAccountId))
+                .WithParameter(TypedParameter.From(_config.Services.SiriusApiServiceClient.WalletsActiveRetryCount))
+                .WithParameter(TypedParameter.From(_config.Services.SiriusApiServiceClient.WaitForActiveWalletsTimeout))
+                .SingleInstance();
 
             builder.RegisterType<TradesSubscriber>()
                 .As<IStartable>()
@@ -151,6 +165,20 @@ namespace HftApi.Modules
                 )
                 .As<ITradesAdapterClient>()
                 .SingleInstance();
+            
+            builder.Register(x => new KycStatusServiceClient(_config.Services.KycServiceClient, x.Resolve<ILogFactory>()))
+                .As<IKycStatusService>()
+                .SingleInstance();
+            
+            builder.RegisterClientAccountClient(_config.Services.ClientAccountServiceUrl);
+            
+            builder.RegisterOperationsClient(_config.Services.OperationsServiceUrl);
+            
+            builder.RegisterClientDialogsClient(_config.Services.ClientDialogsServiceUrl);
+            
+            builder.RegisterInstance(
+                new Swisschain.Sirius.Api.ApiClient.ApiClient(_config.Services.SiriusApiServiceClient.GrpcServiceUrl, _config.Services.SiriusApiServiceClient.ApiKey)
+            ).As<Swisschain.Sirius.Api.ApiClient.IApiClient>();
 
             builder.RegisterType<PublicTradesSubscriber>()
                 .As<IStartable>()

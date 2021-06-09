@@ -10,5 +10,7 @@
         public MeConfig MatchingEngine { get; set; }
         public RabbitMqConfig RabbitMq { get; set; }
         public MyNoSqlConfig MyNoSqlServer { get; set; }
+        public SagasRabbitMq SagasRabbitMq { set; get; }
+        public TargetClientIdFeeSettings FeeSettings { set; get; }
     }
 }

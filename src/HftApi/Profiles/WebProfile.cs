@@ -1,11 +1,17 @@
 using System;
 using System.Globalization;
+using Antares.Service.History.GrpcContract.Common;
 using AutoMapper;
+using AutoMapper.Extensions.EnumMapping;
 using HftApi.Common.Domain.MyNoSqlEntities;
+using HftApi.Profiles.Converters;
 using HftApi.WebApi.Models;
 using Lykke.Exchange.Api.MarketData;
 using Lykke.HftApi.Domain.Entities;
+using Microsoft.AspNetCore.JsonPatch.Operations;
+using Swisschain.Sirius.Api.ApiContract.Account;
 using Trade = Lykke.HftApi.Domain.Entities.Trade;
+using TradeModel = HftApi.WebApi.Models.TradeModel;
 
 namespace HftApi.Profiles
 {
@@ -43,6 +49,30 @@ namespace HftApi.Profiles
                 .ForMember(d => d.Side, o => o.MapFrom(x => x.Action == Lykke.Service.TradesAdapter.AutorestClient.Models.TradeAction.Buy ? TradeSide.Buy : TradeSide.Sell));
 
             CreateMap<Balance, BalanceModel>(MemberList.Destination);
+
+            CreateMap<Lykke.Service.Operations.Contracts.OperationStatus, WithdrawalState>()
+                .ConvertUsingEnumMapping(x =>
+                    x.MapValue(Lykke.Service.Operations.Contracts.OperationStatus.Created,
+                            WithdrawalState.InProgress)
+                        .MapValue(Lykke.Service.Operations.Contracts.OperationStatus.Accepted,
+                            WithdrawalState.InProgress)
+                        .MapValue(Lykke.Service.Operations.Contracts.OperationStatus.Completed,
+                            WithdrawalState.Completed)
+                        .MapValue(Lykke.Service.Operations.Contracts.OperationStatus.Confirmed,
+                            WithdrawalState.InProgress)
+                        .MapValue(Lykke.Service.Operations.Contracts.OperationStatus.Corrupted,
+                            WithdrawalState.Failed)
+                        .MapValue(Lykke.Service.Operations.Contracts.OperationStatus.Failed,
+                            WithdrawalState.Failed));
+            CreateMap<Lykke.Service.Operations.Contracts.OperationModel, WithdrawalModel>(MemberList.Destination)
+                .ForMember(x => x.WithdrawalId, x => x.MapFrom(y => y.Id))
+                .ForMember(x => x.Created, x => x.MapFrom(y => y.Created))
+                .ForMember(x => x.State, x => x.MapFrom(y => y.Status));
+            
+            CreateMap<HistoryResponseItem, OperationModel>(MemberList.Destination)
+                .ConvertUsing(new OperationModelConverter());
+
+            CreateMap<DepositWallet, DepositAddressModel>();
         }
     }
 }

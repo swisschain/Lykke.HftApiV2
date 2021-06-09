@@ -115,6 +115,7 @@ namespace HftApi
         {
             builder.RegisterModule(new AutofacModule(Config));
             builder.RegisterModule(new AutoMapperModule());
+            builder.RegisterModule(new CqrsModule(Config.SagasRabbitMq));
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IHostApplicationLifetime applicationLifetime)

@@ -28,6 +28,15 @@ namespace Lykke.HftApi.Services
             return GetAllAssetsFromCacheAsync();
         }
 
+        public async Task<IReadOnlyList<Asset>> GetAllAssetsAsync(string clientId)
+        {
+            var allAssets = await GetAllAssetsFromCacheAsync();
+
+            var availableAssets = await _client.GetAssetsAvailableForClientAsync(clientId);
+
+            return allAssets.Where(x => availableAssets.Contains(x.AssetId)).ToList();
+        }
+
         public async Task<Asset> GetAssetByIdAsync(string assetId)
         {
             var assets = await GetAllAssetsFromCacheAsync();
