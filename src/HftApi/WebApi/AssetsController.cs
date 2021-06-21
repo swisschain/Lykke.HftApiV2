@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using HftApi.WebApi.Models;
-using Lykke.HftApi.Domain.Entities;
+using Lykke.HftApi.Domain.Entities.Assets;
 using Lykke.HftApi.Domain.Exceptions;
 using Lykke.HftApi.Domain.Services;
 using Lykke.HftApi.Services;

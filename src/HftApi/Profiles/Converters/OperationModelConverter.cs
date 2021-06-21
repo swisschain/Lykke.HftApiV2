@@ -2,6 +2,7 @@
 using Antares.Service.History.GrpcContract.Common;
 using AutoMapper;
 using HftApi.WebApi.Models;
+using HftApi.WebApi.Models.Operations;
 
 namespace HftApi.Profiles.Converters
 {

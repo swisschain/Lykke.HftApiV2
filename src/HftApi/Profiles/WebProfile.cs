@@ -6,8 +6,12 @@ using AutoMapper.Extensions.EnumMapping;
 using HftApi.Common.Domain.MyNoSqlEntities;
 using HftApi.Profiles.Converters;
 using HftApi.WebApi.Models;
+using HftApi.WebApi.Models.DepositAddresses;
+using HftApi.WebApi.Models.Operations;
+using HftApi.WebApi.Models.Withdrawals;
 using Lykke.Exchange.Api.MarketData;
 using Lykke.HftApi.Domain.Entities;
+using Lykke.HftApi.Domain.Entities.DepositWallets;
 using Microsoft.AspNetCore.JsonPatch.Operations;
 using Swisschain.Sirius.Api.ApiContract.Account;
 using Trade = Lykke.HftApi.Domain.Entities.Trade;
@@ -65,9 +69,7 @@ namespace HftApi.Profiles
                         .MapValue(Lykke.Service.Operations.Contracts.OperationStatus.Failed,
                             WithdrawalState.Failed));
             CreateMap<Lykke.Service.Operations.Contracts.OperationModel, WithdrawalModel>(MemberList.Destination)
-                .ForMember(x => x.WithdrawalId, x => x.MapFrom(y => y.Id))
-                .ForMember(x => x.Created, x => x.MapFrom(y => y.Created))
-                .ForMember(x => x.State, x => x.MapFrom(y => y.Status));
+                .ConvertUsing(new WithdrawalModelConverter());
             
             CreateMap<HistoryResponseItem, OperationModel>(MemberList.Destination)
                 .ConvertUsing(new OperationModelConverter());

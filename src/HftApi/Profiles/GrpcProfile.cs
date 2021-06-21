@@ -10,7 +10,6 @@ using Lykke.HftApi.ApiContract;
 using Lykke.HftApi.Domain;
 using Lykke.HftApi.Domain.Entities;
 using Lykke.MatchingEngine.Connector.Models.Common;
-using Asset = Lykke.HftApi.Domain.Entities.Asset;
 using AssetPair = Lykke.HftApi.Domain.Entities.AssetPair;
 using Balance = Lykke.HftApi.Domain.Entities.Balance;
 using CancelMode = Lykke.MatchingEngine.Connector.Models.Api.CancelMode;

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Lykke.HftApi.Domain.Entities;
+using Lykke.HftApi.Domain.Entities.Assets;
 
 namespace Lykke.HftApi.Domain.Services
 {

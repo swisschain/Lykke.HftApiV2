@@ -1,4 +1,4 @@
-﻿namespace HftApi.WebApi.Models
+﻿namespace HftApi.WebApi.Models.Operations
 {
     public class OperationModel
     {
@@ -7,11 +7,5 @@
         public decimal TotalAmount { set; get; }
         public decimal Fee { set; get; }
         public OperationType Type { set; get; }
-    }
-
-    public enum OperationType
-    {
-        Withdrawal,
-        Deposit
     }
 }

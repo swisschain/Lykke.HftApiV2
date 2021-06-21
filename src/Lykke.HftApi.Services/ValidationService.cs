@@ -1,3 +1,4 @@
+using System;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
@@ -173,8 +174,18 @@ namespace Lykke.HftApi.Services
             return null;
         }
 
-        public async Task<ValidationResult> ValidateWithdrawalRequestAsync(string assetId, decimal volume)
+        public async Task<ValidationResult> ValidateWithdrawalRequestAsync(Guid withdrawalId, string assetId, decimal volume)
         {
+            if (withdrawalId == Guid.Empty)
+            {
+                return new ValidationResult
+                {
+                    Code = HftApiErrorCode.InvalidField,
+                    Message = HftApiErrorMessages.MustBeOtherThan(nameof(withdrawalId), Guid.Empty.ToString()),
+                    FieldName = nameof(withdrawalId)
+                };
+            }
+            
             if (volume <= 0)
             {
                 return new ValidationResult

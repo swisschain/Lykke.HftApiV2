@@ -38,17 +38,24 @@ namespace HftApi.Modules
                 {
                     var logFactory = ctx.Resolve<ILogFactory>();
                     
-                    var messagingEngine = new MessagingEngine(logFactory.CreateLog(nameof(MessagingEngine)),
+                    var messagingEngine = new MessagingEngine(
+                        logFactory,
                         new TransportResolver(new Dictionary<string, TransportInfo>
                         {
-                            {"RabbitMq", new TransportInfo(rabbitMqSettings.Endpoint.ToString(), rabbitMqSettings.UserName, rabbitMqSettings.Password, "None", "RabbitMq")}
+                            {
+                                "RabbitMq",
+                                new TransportInfo(rabbitMqSettings.Endpoint.ToString(),
+                                    rabbitMqSettings.UserName,
+                                    rabbitMqSettings.Password,
+                                    "None",
+                                    "RabbitMq")
+                            }
                         }),
-                        new RabbitMqTransportFactory());
+                        new RabbitMqTransportFactory(logFactory));
                     
                     const string defaultPipeline = "commands";
-                    const string defaultRoute = "self";
 
-                    var engine = new CqrsEngine(logFactory.CreateLog(nameof(CqrsEngine)),
+                    var engine = new CqrsEngine(logFactory,
                         ctx.Resolve<IDependencyResolver>(),
                         messagingEngine,
                         new DefaultEndpointProvider(),

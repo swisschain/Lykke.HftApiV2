@@ -1,7 +1,7 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
-namespace HftApi.WebApi.Models
+namespace HftApi.WebApi.Models.DepositAddresses
 {
     public class DepositAddressModel
     {
@@ -10,13 +10,5 @@ namespace HftApi.WebApi.Models
         public string AddressExtension { get; set; }
         [JsonConverter(typeof(StringEnumConverter))]
         public DepositAddressState State { set; get; }
-    }
-
-    public enum DepositAddressState
-    {
-        NotFound,
-        Creating,
-        Active,
-        Blocked
     }
 }

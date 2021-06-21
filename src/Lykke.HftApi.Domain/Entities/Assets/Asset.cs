@@ -1,4 +1,6 @@
-namespace Lykke.HftApi.Domain.Entities
+using Lykke.HftApi.Domain.Entities.Assets;
+
+namespace Lykke.HftApi.Domain.Entities.Assets
 {
     public class Asset
     {
@@ -22,24 +24,5 @@ namespace Lykke.HftApi.Domain.Entities
         public BlockchainIntegrationType BlockchainIntegrationType { set; get; }
         public bool BlockchainDepositEnabled { set; get; }
         public bool IsDisabled { set; get; }
-    }
-    
-    public enum BlockchainIntegrationType
-    {
-        None,
-        Bil,
-        Sirius,
-    }
-    
-    public enum AssetType
-    {
-        Erc20Token,
-    }
-    
-    public enum Blockchain
-    {
-        None,
-        Bitcoin,
-        Ethereum,
     }
 }

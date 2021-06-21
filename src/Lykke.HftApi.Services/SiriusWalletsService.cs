@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Common.Log;
 using Lykke.Common.Log;
 using Lykke.HftApi.Domain.Entities;
+using Lykke.HftApi.Domain.Entities.DepositWallets;
 using Lykke.HftApi.Domain.Services;
 using Swisschain.Sirius.Api.ApiClient;
 using Swisschain.Sirius.Api.ApiContract.Account;
@@ -171,7 +172,7 @@ namespace Lykke.HftApi.Services
             }
             else
             {
-                var message = $"Unknown State for Account {account.Id}";
+                var message = $"Unknown State for Account {account.Id}: {account.State.ToString()}";
                 _log.Warning(nameof(GetWalletAddressAsync),
                     message,
                     context: new

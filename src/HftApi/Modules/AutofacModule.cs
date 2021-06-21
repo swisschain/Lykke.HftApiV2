@@ -166,7 +166,9 @@ namespace HftApi.Modules
                 .As<ITradesAdapterClient>()
                 .SingleInstance();
             
+#pragma warning disable 618
             builder.Register(x => new KycStatusServiceClient(_config.Services.KycServiceClient, x.Resolve<ILogFactory>()))
+#pragma warning restore 618
                 .As<IKycStatusService>()
                 .SingleInstance();
             

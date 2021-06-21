@@ -14,6 +14,7 @@ using HftApi.Middleware;
 using HftApi.Modules;
 using Lykke.HftApi.Domain.Services;
 using Lykke.HftApi.Services;
+using Lykke.HftApi.Services.AssetsClient;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;

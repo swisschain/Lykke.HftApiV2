@@ -1,4 +1,4 @@
-﻿namespace Lykke.HftApi.Domain.Entities
+﻿namespace Lykke.HftApi.Domain.Entities.DepositWallets
 {
     public class DepositWallet
     {
@@ -6,13 +6,5 @@
         public string BaseAddress { get; set; }
         public string AddressExtension { get; set; }
         public DepositWalletState State { set; get; }
-    }
-
-    public enum DepositWalletState
-    {
-        NotFound,
-        Creating,
-        Active,
-        Blocked
     }
 }

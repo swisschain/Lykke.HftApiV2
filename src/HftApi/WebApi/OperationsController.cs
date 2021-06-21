@@ -10,11 +10,12 @@ using AutoMapper;
 using HftApi.Common.Configuration;
 using HftApi.Extensions;
 using HftApi.WebApi.Models;
+using HftApi.WebApi.Models.DepositAddresses;
 using HftApi.WebApi.Models.Request;
-using HftApi.WebApi.Models.Response;
+using HftApi.WebApi.Models.Withdrawals;
 using Lykke.Cqrs;
 using Lykke.HftApi.Domain;
-using Lykke.HftApi.Domain.Entities;
+using Lykke.HftApi.Domain.Entities.Assets;
 using Lykke.HftApi.Domain.Exceptions;
 using Lykke.HftApi.Domain.Services;
 using Lykke.HftApi.Services;
@@ -30,6 +31,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Rest;
 using Newtonsoft.Json.Linq;
+using BlockchainIntegrationType = Lykke.HftApi.Domain.Entities.Assets.BlockchainIntegrationType;
 using OperationModel = Lykke.Service.Operations.Contracts.OperationModel;
 using OperationType = Lykke.Service.Operations.Contracts.OperationType;
 
@@ -87,7 +89,7 @@ namespace HftApi.WebApi
         /// <param name="offset"></param>
         /// <param name="take"></param>
         [HttpGet]
-        [ProducesResponseType(typeof(ResponseModel<List<Models.OperationModel>>), (int) HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(ResponseModel<List<Models.Operations.OperationModel>>), (int) HttpStatusCode.OK)]
         public async Task<IActionResult> GetOperationsHistoryAsync(
             [FromQuery]int offset = 0,
             [FromQuery]int take = 100)
@@ -107,7 +109,7 @@ namespace HftApi.WebApi
                 }
             });
             
-            return Ok(ResponseModel<List<Models.OperationModel>>.Ok(_mapper.Map<List<Models.OperationModel>>(history.Items.ToList())));
+            return Ok(ResponseModel<List<Models.Operations.OperationModel>>.Ok(_mapper.Map<List<Models.Operations.OperationModel>>(history.Items.ToList())));
         }
         
         /// <summary>
@@ -142,30 +144,32 @@ namespace HftApi.WebApi
         /// <summary>
         /// Create Withdrawal
         /// </summary>
+        /// <param name="withdrawalId">Id of the Withdrawal</param>
         /// <param name="request"></param>
         /// <returns></returns>
         [HttpPost]
-        [Route("withdrawals")]
+        [Route("withdrawals/{withdrawalId}")]
         [ProducesResponseType(typeof(ResponseModel<Guid>), (int)HttpStatusCode.OK)]
-        public async Task<IActionResult> CreateWithdrawalAsync([FromBody] CreateWithdrawalRequest request)
+        public async Task<IActionResult> CreateWithdrawalAsync([FromRoute] Guid withdrawalId, [FromBody] CreateWithdrawalRequest request)
         {
-            var result = await _validationService.ValidateWithdrawalRequestAsync(request.AssetId, request.Volume);
+            var result = await _validationService.ValidateWithdrawalRequestAsync(withdrawalId, request.AssetId, request.Volume);
 
             if (result != null)
                 throw HftApiException.Create(result.Code, result.Message)
                     .AddField(result.FieldName);
             
             var asset = await _assetsService.GetAssetByIdAsync(request.AssetId);
+            
+            if(asset.BlockchainIntegrationType != BlockchainIntegrationType.Sirius)
+                throw HftApiException.Create(HftApiErrorCode.ActionForbidden, "Asset unavailable");
 
             var balances = await _balanceService.GetBalancesAsync(User.GetWalletId());
             var cashoutSettings = await _clientAccountClient.ClientSettings.GetCashOutBlockSettingsAsync(User.GetClientId());
             var kycStatus = await _kycStatusService.GetKycStatusAsync(User.GetClientId());
 
-            var operationId = Guid.NewGuid();
-
             var cashoutCommand = new CreateCashoutCommand
             {
-                OperationId = operationId,
+                OperationId = withdrawalId,
                 WalletId = User.GetWalletId(),
                 DestinationAddress = request.DestinationAddress,
                 DestinationAddressExtension = request.DestinationAddressExtension,
@@ -214,13 +218,13 @@ namespace HftApi.WebApi
 
             _cqrsEngine.SendCommand(cashoutCommand, "hft-api", OperationsBoundedContext.Name);
 
-            return Ok(ResponseModel<Guid>.Ok(operationId));
+            return Ok(ResponseModel<Guid>.Ok(withdrawalId));
         }
         
         /// <summary>
         /// Get Withdrawal by Id
         /// </summary>
-        /// <param name="withdrawalId"></param>
+        /// <param name="withdrawalId">Id of the Withdrawal</param>
         /// <returns></returns>
         [HttpGet]
         [Route("withdrawals/{withdrawalId}")]
@@ -265,7 +269,14 @@ namespace HftApi.WebApi
 
                 var assetsAvailableToClient = await _assetsService.GetAllAssetsAsync(User.GetClientId());
 
-                if (assetsAvailableToClient.SingleOrDefault(x => x.AssetId == assetId) == null)
+                if (assetsAvailableToClient.SingleOrDefault(x => x.AssetId == assetId) == null || asset.BlockchainIntegrationType != BlockchainIntegrationType.Sirius)
+                    throw HftApiException.Create(HftApiErrorCode.ActionForbidden, "Asset unavailable");
+            }
+            else
+            {
+                var allAssets = await _assetsService.GetAllAssetsAsync();
+                
+                if(allAssets.All(x => x.BlockchainIntegrationType != BlockchainIntegrationType.Sirius))
                     throw HftApiException.Create(HftApiErrorCode.ActionForbidden, "Asset unavailable");
             }
 
