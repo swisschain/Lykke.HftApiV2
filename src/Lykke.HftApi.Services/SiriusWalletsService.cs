@@ -262,7 +262,7 @@ namespace Lykke.HftApi.Services
 
             if (payload != null)
             {
-                return Guid.Parse(payload);
+                operationId = Guid.Parse(payload);
             }
             
             var asset = await _assetsService.GetAssetByIdAsync(assetId);
