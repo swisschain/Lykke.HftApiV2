@@ -1,11 +1,20 @@
 using System;
 using System.Globalization;
+using Antares.Service.History.GrpcContract.Common;
 using AutoMapper;
+using AutoMapper.Extensions.EnumMapping;
 using HftApi.Common.Domain.MyNoSqlEntities;
 using HftApi.WebApi.Models;
+using HftApi.WebApi.Models.DepositAddresses;
+using HftApi.WebApi.Models.Operations;
+using HftApi.WebApi.Models.Withdrawals;
 using Lykke.Exchange.Api.MarketData;
 using Lykke.HftApi.Domain.Entities;
+using Lykke.HftApi.Domain.Entities.DepositWallets;
+using Lykke.HftApi.Domain.Entities.OperationsHistory;
+using Lykke.HftApi.Domain.Entities.Withdrawals;
 using Trade = Lykke.HftApi.Domain.Entities.Trade;
+using TradeModel = HftApi.WebApi.Models.TradeModel;
 
 namespace HftApi.Profiles
 {
@@ -43,6 +52,12 @@ namespace HftApi.Profiles
                 .ForMember(d => d.Side, o => o.MapFrom(x => x.Action == Lykke.Service.TradesAdapter.AutorestClient.Models.TradeAction.Buy ? TradeSide.Buy : TradeSide.Sell));
 
             CreateMap<Balance, BalanceModel>(MemberList.Destination);
+
+            CreateMap<OperationHistoricRecord, OperationModel>(MemberList.Destination);
+
+            CreateMap<DepositWallet, DepositAddressModel>(MemberList.Destination);
+            
+            CreateMap<Withdrawal, WithdrawalModel>(MemberList.Destination);
         }
     }
 }

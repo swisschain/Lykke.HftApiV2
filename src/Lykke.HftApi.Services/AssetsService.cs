@@ -5,8 +5,10 @@ using System.Threading.Tasks;
 using Autofac;
 using Lykke.HftApi.Domain;
 using Lykke.HftApi.Domain.Entities;
+using Lykke.HftApi.Domain.Entities.Assets;
 using Lykke.HftApi.Domain.Exceptions;
 using Lykke.HftApi.Domain.Services;
+using Lykke.HftApi.Services.AssetsClient;
 
 namespace Lykke.HftApi.Services
 {
@@ -26,6 +28,15 @@ namespace Lykke.HftApi.Services
         public Task<IReadOnlyList<Asset>> GetAllAssetsAsync()
         {
             return GetAllAssetsFromCacheAsync();
+        }
+
+        public async Task<IReadOnlyList<Asset>> GetAllAssetsAsync(string clientId)
+        {
+            var allAssets = await GetAllAssetsFromCacheAsync();
+
+            var availableAssets = await _client.GetAssetsAvailableForClientAsync(clientId);
+
+            return allAssets.Where(x => availableAssets.Contains(x.AssetId)).ToList();
         }
 
         public async Task<Asset> GetAssetByIdAsync(string assetId)

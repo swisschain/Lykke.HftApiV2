@@ -1,5 +1,8 @@
 DocumentationUrl:
   settings-key: Hftv2Service-DocumentationUrl
+Db:
+  DataConnString:
+    settings-key: Hftv2Service-Db-DataConnString
 Auth:
   JwtSecret:
     settings-key: Hftv2Service-Auth-JwtSecret
@@ -18,6 +21,22 @@ Services:
     settings-key: HftInternalServiceUrl
   TradesAdapterServiceUrl:
     settings-key: TradesAdapterServiceUrl
+  OperationsServiceUrl:
+    settings-key: OperationsServiceUrl
+  ClientAccountServiceUrl:
+    settings-key: ClientAccountServiceUrl
+  KycServiceClient:
+    ServiceUri:
+      settings-key: KycServiceUrl
+    ApiKey:
+      settings-key: KycService-ApiKey
+  SiriusApiServiceClient:
+    GrpcServiceUrl:
+      settings-key: SiriusApi-ServiceUrl
+    ApiKey:
+      settings-key: SiriusApi-ApiKey
+    BrokerAccountId:
+      settings-key: SiriusApi-BrokerAccountId
 Cache:
   AssetsCacheDuration:
     settings-key: Hftv2Service-Cache-AssetsCacheDuration
@@ -63,6 +82,13 @@ RabbitMq:
       settings-key: RabbitSpotPricesConnString
     ExchangeName:
       settings-key: PublicTradesExchangeName
+SagasRabbitMq:
+  RabbitConnectionString:
+    settings-key: RabbitSagas
+    types: [RabbitMq]
+FeeSettings:
+  Cashout:
+    settings-key: Hftv2Service-FeeSettings-WithdrawalFeeDestinationClientId
 MyNoSqlServer:
   ReaderServiceUrl:
     settings-key: MyNoSqlServer-ReaderUrl

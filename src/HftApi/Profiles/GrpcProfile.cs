@@ -9,8 +9,9 @@ using Lykke.Exchange.Api.MarketData;
 using Lykke.HftApi.ApiContract;
 using Lykke.HftApi.Domain;
 using Lykke.HftApi.Domain.Entities;
+using Lykke.HftApi.Domain.Entities.DepositWallets;
+using Lykke.HftApi.Domain.Entities.OperationsHistory;
 using Lykke.MatchingEngine.Connector.Models.Common;
-using Asset = Lykke.HftApi.Domain.Entities.Asset;
 using AssetPair = Lykke.HftApi.Domain.Entities.AssetPair;
 using Balance = Lykke.HftApi.Domain.Entities.Balance;
 using CancelMode = Lykke.MatchingEngine.Connector.Models.Api.CancelMode;
@@ -40,7 +41,7 @@ namespace HftApi.Profiles
 
             CreateMap<AssetPair, Lykke.HftApi.ApiContract.AssetPair>(MemberList.Destination);
 
-            CreateMap<Asset, Lykke.HftApi.ApiContract.Asset>(MemberList.Destination);
+            CreateMap<Lykke.HftApi.Domain.Entities.Assets.Asset, Lykke.HftApi.ApiContract.Asset>(MemberList.Destination);
 
             CreateMap<Orderbook, Lykke.HftApi.ApiContract.Orderbook>(MemberList.Destination);
 
@@ -155,6 +156,12 @@ namespace HftApi.Profiles
                 .ForMember(d => d.Side, o => o.MapFrom(x => x.Action));
             CreateMap<Lykke.Service.TradesAdapter.AutorestClient.Models.Trade, PublicTrade>()
                 .ForMember(d => d.Side, o => o.MapFrom(x => x.Action));
+            
+            CreateMap<OperationHistoricRecord, OperationHistory>(MemberList.Destination)
+                .ForMember(x => x.TotalVolume, x => x.MapFrom(y => y.TotalVolume));
+
+            CreateMap<DepositWallet, DepositAddress>(MemberList.Destination)
+                .ForMember(x => x.State, x => x.MapFrom(y => y.State.ToString()));
         }
     }
 }

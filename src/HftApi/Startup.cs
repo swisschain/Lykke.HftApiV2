@@ -14,6 +14,8 @@ using HftApi.Middleware;
 using HftApi.Modules;
 using Lykke.HftApi.Domain.Services;
 using Lykke.HftApi.Services;
+using Lykke.HftApi.Services.AssetsClient;
+using Lykke.SettingsReader;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
@@ -32,12 +34,14 @@ namespace HftApi
     public sealed class Startup
     {
         public IConfiguration ConfigRoot { get; }
-        public AppConfig Config { get; }
+        public IReloadingManagerWithConfiguration<AppConfig> Config;
 
         public Startup(IConfiguration configuration)
         {
             ConfigRoot = configuration;
-            Config = ConfigRoot.Get<AppConfig>();
+#pragma warning disable 618
+            Config = ConfigRoot.LoadSettings<AppConfig>();
+#pragma warning restore 618
         }
 
         public void ConfigureServices(IServiceCollection services)
@@ -65,7 +69,7 @@ namespace HftApi
 
             services.AddSwaggerGen(c =>
             {
-                c.SwaggerDoc("v2", new OpenApiInfo { Title = "Lykke Trading API", Description = $"Lykke trading API. See documentation <a target='_blank' href='{Config.DocumentationUrl}'>here</a>", Version = "v2" });
+                c.SwaggerDoc("v2", new OpenApiInfo { Title = "Lykke Trading API", Description = $"Lykke trading API. See documentation <a target='_blank' href='{Config.CurrentValue.DocumentationUrl}'>here</a>", Version = "v2" });
                 c.EnableXmsEnumExtension();
                 c.MakeResponseValueTypesRequired();
                 c.AddJwtBearerAuthorization();
@@ -100,10 +104,10 @@ namespace HftApi
                     x.TokenValidationParameters = new TokenValidationParameters
                     {
                         ValidateIssuerSigningKey = true,
-                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(Config.Auth.JwtSecret)),
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(Config.CurrentValue.Auth.JwtSecret)),
                         ValidateIssuer = false,
                         ValidateAudience = true,
-                        ValidAudience = Config.Auth.LykkeAud,
+                        ValidAudience = Config.CurrentValue.Auth.LykkeAud,
                         ValidateLifetime = true
                     };
                 });
@@ -115,6 +119,7 @@ namespace HftApi
         {
             builder.RegisterModule(new AutofacModule(Config));
             builder.RegisterModule(new AutoMapperModule());
+            builder.RegisterModule(new CqrsModule(Config.CurrentValue.SagasRabbitMq));
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IHostApplicationLifetime applicationLifetime)
@@ -163,19 +168,19 @@ namespace HftApi
 
         private void ConfigureServicesExt(IServiceCollection services)
         {
-            services.AddSingleton(Config.Auth);
+            services.AddSingleton(Config.CurrentValue.Auth);
             services.AddMemoryCache();
             services.AddHttpClient<AssetsHttpClient>(client =>
             {
-                client.BaseAddress = new Uri(Config.Services.AssetsServiceUrl);
+                client.BaseAddress = new Uri(Config.CurrentValue.Services.AssetsServiceUrl);
             });
 
-            services.AddSingleton<IHistoryGrpcClient>(new HistoryGrpcClient(Config.Services.HistoryServiceUrl));
+            services.AddSingleton<IHistoryGrpcClient>(new HistoryGrpcClient(Config.CurrentValue.Services.HistoryServiceUrl));
             services.AddTransient<HistoryWrapperClient>();
 
             services.AddHttpClient<BalanceHttpClient>(client =>
             {
-                client.BaseAddress = new Uri(Config.Services.BalancesServiceUrl);
+                client.BaseAddress = new Uri(Config.CurrentValue.Services.BalancesServiceUrl);
             });
 
             services.AddSingleton<ICacheService, CacheService>();
