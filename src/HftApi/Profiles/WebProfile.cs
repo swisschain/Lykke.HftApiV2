@@ -15,7 +15,6 @@ using Lykke.HftApi.Domain.Entities.OperationsHistory;
 using Lykke.HftApi.Domain.Entities.Withdrawals;
 using Trade = Lykke.HftApi.Domain.Entities.Trade;
 using TradeModel = HftApi.WebApi.Models.TradeModel;
-using WithdrawalState = HftApi.WebApi.Models.Withdrawals.WithdrawalState;
 
 namespace HftApi.Profiles
 {
@@ -57,8 +56,7 @@ namespace HftApi.Profiles
             CreateMap<OperationHistoricRecord, OperationModel>(MemberList.Destination);
 
             CreateMap<DepositWallet, DepositAddressModel>(MemberList.Destination);
-
-            CreateMap<Lykke.HftApi.Domain.Entities.Withdrawals.WithdrawalState, WithdrawalState>();
+            
             CreateMap<Withdrawal, WithdrawalModel>(MemberList.Destination);
         }
     }

@@ -256,11 +256,13 @@ namespace Lykke.HftApi.Services
             if (validationResult != null)
                 throw HftApiException.Create(validationResult.Code, validationResult.Message).AddField(validationResult.FieldName);
 
-            var payload = await _idempotencyService.CreateEntityOrGetPayload(uniqueRequestId);
+            var operationId = Guid.NewGuid();
+            
+            var payload = await _idempotencyService.CreateEntityOrGetPayload(uniqueRequestId, operationId.ToString());
 
             if (payload != null)
             {
-                return JsonConvert.DeserializeObject<Guid>(payload);
+                return Guid.Parse(payload);
             }
             
             var asset = await _assetsService.GetAssetByIdAsync(assetId);
@@ -271,8 +273,6 @@ namespace Lykke.HftApi.Services
             var balances = await _balanceService.GetBalancesAsync(walletId);
             var cashoutSettings = await _clientAccountClient.ClientSettings.GetCashOutBlockSettingsAsync(clientId);
             var kycStatus = await _kycStatusService.GetKycStatusAsync(clientId);
-
-            var operationId = Guid.NewGuid();
 
             var cashoutCommand = new CreateCashoutCommand
             {
@@ -324,8 +324,6 @@ namespace Lykke.HftApi.Services
             };
 
             _cqrsEngine.SendCommand(cashoutCommand, "hft-api", OperationsBoundedContext.Name);
-
-            await _idempotencyService.UpdatePayload(uniqueRequestId, operationId.ToJson());
             
             return operationId;
         }

@@ -1,5 +1,8 @@
 DocumentationUrl:
   settings-key: Hftv2Service-DocumentationUrl
+Db:
+  DataConnString:
+    settings-key: Hftv2Service-Db-DataConnString
 Auth:
   JwtSecret:
     settings-key: Hftv2Service-Auth-JwtSecret

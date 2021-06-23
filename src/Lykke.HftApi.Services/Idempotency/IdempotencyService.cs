@@ -12,9 +12,9 @@ namespace Lykke.HftApi.Services.Idempotency
             _tableStorage = tableStorage;
         }
 
-        public async Task<string> CreateEntityOrGetPayload(string requestId)
+        public async Task<string> CreateEntityOrGetPayload(string requestId, string payload)
         {
-            var entity = IdempotentEntity.Build(requestId);
+            var entity = IdempotentEntity.Build(requestId, payload);
             
             var createdNow = await _tableStorage.CreateIfNotExistsAsync(entity);
 
@@ -28,13 +28,6 @@ namespace Lykke.HftApi.Services.Idempotency
 
                 return entity.Payload;
             }
-        }
-
-        public async Task UpdatePayload(string requestId, string payload)
-        {
-            var entity = IdempotentEntity.Build(requestId, payload);
-
-            await _tableStorage.InsertOrMergeAsync(entity);
         }
     }
 }

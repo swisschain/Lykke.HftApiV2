@@ -12,8 +12,5 @@ namespace HftApi.WebApi.Models.Withdrawals
         public string DestinationAddress { set; get; }
         public string DestinationAddressExtension { set; get; }
         public DateTime Created { get; set; }
-        
-        [JsonConverter(typeof(StringEnumConverter))]
-        public WithdrawalState State { set; get; }
     }
 }

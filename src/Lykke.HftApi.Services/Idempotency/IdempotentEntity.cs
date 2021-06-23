@@ -8,7 +8,7 @@ namespace Lykke.HftApi.Services.Idempotency
         public static string GetRowKey(string referenceId) => referenceId;
         public string Payload { set; get; }
 
-        public static IdempotentEntity Build(string referenceId, string payload=default)
+        public static IdempotentEntity Build(string referenceId, string payload)
         {
             return new IdempotentEntity
             {
