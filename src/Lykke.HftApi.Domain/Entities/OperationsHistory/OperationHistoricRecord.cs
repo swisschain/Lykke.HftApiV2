@@ -1,8 +1,8 @@
 ﻿using System;
 
-namespace HftApi.WebApi.Models.Operations
+namespace Lykke.HftApi.Domain.Entities.OperationsHistory
 {
-    public class OperationModel
+    public class OperationHistoricRecord
     {
         public string HistoricalId { set; get; }
         public string AssetId { set; get; }
@@ -10,5 +10,6 @@ namespace HftApi.WebApi.Models.Operations
         public decimal Fee { set; get; }
         public OperationType Type { set; get; }
         public DateTime Timestamp { set; get; }
+        public string BlockchainHash { set; get; }
     }
 }

@@ -5,10 +5,12 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Antares.Service.History.GrpcClient;
 using Antares.Service.History.GrpcContract.Common;
+using Antares.Service.History.GrpcContract.History;
 using Antares.Service.History.GrpcContract.Orders;
 using Antares.Service.History.GrpcContract.Trades;
 using Google.Protobuf.WellKnownTypes;
 using Lykke.HftApi.Domain.Entities;
+using Lykke.HftApi.Domain.Entities.OperationsHistory;
 using Lykke.MatchingEngine.Connector.Models.Common;
 
 namespace Lykke.HftApi.Services
@@ -126,10 +128,61 @@ namespace Lykke.HftApi.Services
 
             return order?.Item?.ToDomain();
         }
+
+        public async Task<IReadOnlyCollection<OperationHistoricRecord>> GetOperationsHistoryAsync(
+            string walletId,
+            int? offset = 0,
+            int? limit = 100)
+        {
+            var history = await _historyGrpcClient.History.GetHistoryAsync(new HistoryGetHistoryRequest
+            {
+                WalletId = walletId,
+                Type =
+                {
+                    HistoryType.CashIn,
+                    HistoryType.CashOut
+                },
+                Pagination = new PaginationInt32
+                {
+                    Offset = offset ?? 0,
+                    Limit = limit ?? 10
+                }
+            });
+
+            return history.Items.Select(x => x.OperationHistoryToDomain()).ToList();
+        }
     }
 
     public static class Converter
     {
+        public static OperationHistoricRecord OperationHistoryToDomain(this HistoryResponseItem source)
+        {
+            var result = new OperationHistoricRecord();
+            
+            if (source.CashIn != null)
+            {
+                result.HistoricalId = source.Id;
+                result.Timestamp = source.Timestamp.ToDateTime();
+                result.AssetId = source.CashIn.AssetId;
+                result.Type = OperationType.Deposit;
+                result.TotalVolume = Math.Abs(source.CashIn.Volume);
+                result.Fee = source.CashIn.FeeSize ?? 0m;
+                result.BlockchainHash = source.CashIn.BlockchainHash;
+            }
+            else
+            {
+                result.HistoricalId = source.Id;
+                result.Timestamp = source.Timestamp.ToDateTime();
+                result.AssetId = source.CashOut.AssetId;
+                result.Type = OperationType.Withdrawal;
+                result.TotalVolume = Math.Abs(source.CashOut.Volume);
+                result.Fee = source.CashOut.FeeSize ?? 0m;
+                result.BlockchainHash = source.CashOut.BlockchainHash;
+            }
+
+            return result;
+        }
+        
         public static Trade TradeToDomain(this HistoryResponseItem trade)
         {
             return new Trade
@@ -171,5 +224,7 @@ namespace Lykke.HftApi.Services
                 Trades = trades ?? Array.Empty<Trade>()
             };
         }
+        
+        
     }
 }

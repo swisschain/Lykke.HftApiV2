@@ -8,9 +8,12 @@ using AutoMapper;
 using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using HftApi.Extensions;
+using HftApi.WebApi.Models.Withdrawals;
 using JetBrains.Annotations;
 using Lykke.HftApi.ApiContract;
 using Lykke.HftApi.Domain;
+using Lykke.HftApi.Domain.Entities.OperationsHistory;
+using Lykke.HftApi.Domain.Exceptions;
 using Lykke.HftApi.Domain.Services;
 using Lykke.HftApi.Services;
 using Lykke.MatchingEngine.Connector.Abstractions.Services;
@@ -34,6 +37,7 @@ namespace HftApi.GrpcServices
         private readonly BalancesStreamService _balanceUpdateService;
         private readonly OrdersStreamService _orderUpdateService;
         private readonly TradesStreamService _tradeUpdateService;
+        private readonly ISiriusWalletsService _siriusWalletsService;
         private readonly IMapper _mapper;
 
         public PrivateService(
@@ -44,6 +48,7 @@ namespace HftApi.GrpcServices
             BalancesStreamService balanceUpdateService,
             OrdersStreamService orderUpdateService,
             TradesStreamService tradeUpdateService,
+            ISiriusWalletsService siriusWalletsService,
             IMapper mapper
             )
         {
@@ -54,6 +59,7 @@ namespace HftApi.GrpcServices
             _balanceUpdateService = balanceUpdateService;
             _orderUpdateService = orderUpdateService;
             _tradeUpdateService = tradeUpdateService;
+            _siriusWalletsService = siriusWalletsService;
             _mapper = mapper;
         }
 
@@ -555,6 +561,100 @@ namespace HftApi.GrpcServices
 
             var task = await _tradeUpdateService.RegisterStreamAsync(streamInfo);
             await task;
+        }
+
+        public override async Task<GetOperationsHistoryResponse> GetOperationsHistory(GetOperationsHistoryRequest request, ServerCallContext context)
+        {
+            var history = await _historyClient.GetOperationsHistoryAsync(
+                context.GetHttpContext().User.GetWalletId(),
+                request.Offset,
+                request.Take);
+
+            var response = new GetOperationsHistoryResponse();
+            response.Operations.AddRange(_mapper.Map<List<OperationHistory>>(history));
+            return response;
+        }
+
+        public override async Task<CreateDepositAddressesResponse> CreateDepositAddresses(Empty request, ServerCallContext context)
+        {
+            try
+            {
+                await _siriusWalletsService.CheckDepositPreconditionsAsync(context.GetHttpContext().User.GetClientId());
+
+                await _siriusWalletsService.CreateWalletAsync(
+                    context.GetHttpContext().User.GetClientId(),
+                    context.GetHttpContext().User.GetWalletId());
+
+                return new CreateDepositAddressesResponse();
+            }
+            catch (HftApiException e)
+            {
+                return new CreateDepositAddressesResponse
+                {
+                    Error = new Error
+                    {
+                        Code = _mapper.Map<ErrorCode>(e.ErrorCode),
+                        Message = e.Message
+                    }
+                };
+            }
+        }
+
+        public override async Task<GetDepositAddressResponse> GetDepositAddress(GetDepositAddressRequest request, ServerCallContext context)
+        {
+            try
+            {
+                var asset = await _siriusWalletsService.CheckDepositPreconditionsAsync(request.AssetId);
+
+                var depositWallet = await _siriusWalletsService.GetWalletAddressAsync(
+                    context.GetHttpContext().User.GetClientId(), 
+                    context.GetHttpContext().User.GetWalletId(),
+                    asset.SiriusAssetId);
+
+                return new GetDepositAddressResponse
+                {
+                    Payload = _mapper.Map<DepositAddress>(depositWallet)
+                };
+            }
+            catch (HftApiException e)
+            {
+                return new GetDepositAddressResponse
+                {
+                    Error = new Error
+                    {
+                        Code = _mapper.Map<ErrorCode>(e.ErrorCode),
+                        Message = e.Message
+                    }
+                };
+            }
+        }
+
+        public override async Task<CreateWithdrawalResponse> CreateWithdrawal(CreateWithdrawalRequest request, ServerCallContext context)
+        {
+            try
+            {
+                var result = await _siriusWalletsService.CreateWithdrawalAsync(
+                    request.RequestId,
+                    context.GetHttpContext().User.GetClientId(),
+                    context.GetHttpContext().User.GetWalletId(),
+                    request.AssetId,
+                    decimal.Parse(request.Volume),
+                    request.DestinationAddress,
+                    request.DestinationAddressExtension);
+
+                return new CreateWithdrawalResponse {Payload = result.ToString()};
+            }
+            catch (HftApiException e)
+            {
+                return new CreateWithdrawalResponse
+                {
+                    Error = new Error
+                    {
+                        Code = _mapper.Map<ErrorCode>(e.ErrorCode),
+                        Message = e.Message
+                    }
+                };
+            }
         }
     }
 }

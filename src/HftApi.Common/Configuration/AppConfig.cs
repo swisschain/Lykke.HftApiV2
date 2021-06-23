@@ -2,6 +2,7 @@
 {
     public class AppConfig
     {
+        public DbSettings Db { set; get; }
         public string DocumentationUrl { get; set; }
         public AuthConfig Auth { get; set; }
         public ServicesConfig Services { get; set; }

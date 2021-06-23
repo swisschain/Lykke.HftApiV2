@@ -1,10 +1,11 @@
 ﻿using System;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
+using Swisschain.Sirius.Api.ApiContract.Withdrawal;
 
-namespace HftApi.WebApi.Models.Withdrawals
+namespace Lykke.HftApi.Domain.Entities.Withdrawals
 {
-    public class WithdrawalModel
+    public class Withdrawal
     {
         public Guid Id { get; set; }
         public string AssetId { set; get; }

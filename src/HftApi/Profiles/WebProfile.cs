@@ -4,7 +4,6 @@ using Antares.Service.History.GrpcContract.Common;
 using AutoMapper;
 using AutoMapper.Extensions.EnumMapping;
 using HftApi.Common.Domain.MyNoSqlEntities;
-using HftApi.Profiles.Converters;
 using HftApi.WebApi.Models;
 using HftApi.WebApi.Models.DepositAddresses;
 using HftApi.WebApi.Models.Operations;
@@ -12,10 +11,11 @@ using HftApi.WebApi.Models.Withdrawals;
 using Lykke.Exchange.Api.MarketData;
 using Lykke.HftApi.Domain.Entities;
 using Lykke.HftApi.Domain.Entities.DepositWallets;
-using Microsoft.AspNetCore.JsonPatch.Operations;
-using Swisschain.Sirius.Api.ApiContract.Account;
+using Lykke.HftApi.Domain.Entities.OperationsHistory;
+using Lykke.HftApi.Domain.Entities.Withdrawals;
 using Trade = Lykke.HftApi.Domain.Entities.Trade;
 using TradeModel = HftApi.WebApi.Models.TradeModel;
+using WithdrawalState = HftApi.WebApi.Models.Withdrawals.WithdrawalState;
 
 namespace HftApi.Profiles
 {
@@ -54,27 +54,12 @@ namespace HftApi.Profiles
 
             CreateMap<Balance, BalanceModel>(MemberList.Destination);
 
-            CreateMap<Lykke.Service.Operations.Contracts.OperationStatus, WithdrawalState>()
-                .ConvertUsingEnumMapping(x =>
-                    x.MapValue(Lykke.Service.Operations.Contracts.OperationStatus.Created,
-                            WithdrawalState.InProgress)
-                        .MapValue(Lykke.Service.Operations.Contracts.OperationStatus.Accepted,
-                            WithdrawalState.InProgress)
-                        .MapValue(Lykke.Service.Operations.Contracts.OperationStatus.Completed,
-                            WithdrawalState.Completed)
-                        .MapValue(Lykke.Service.Operations.Contracts.OperationStatus.Confirmed,
-                            WithdrawalState.InProgress)
-                        .MapValue(Lykke.Service.Operations.Contracts.OperationStatus.Corrupted,
-                            WithdrawalState.Failed)
-                        .MapValue(Lykke.Service.Operations.Contracts.OperationStatus.Failed,
-                            WithdrawalState.Failed));
-            CreateMap<Lykke.Service.Operations.Contracts.OperationModel, WithdrawalModel>(MemberList.Destination)
-                .ConvertUsing(new WithdrawalModelConverter());
-            
-            CreateMap<HistoryResponseItem, OperationModel>(MemberList.Destination)
-                .ConvertUsing(new OperationModelConverter());
+            CreateMap<OperationHistoricRecord, OperationModel>(MemberList.Destination);
 
-            CreateMap<DepositWallet, DepositAddressModel>();
+            CreateMap<DepositWallet, DepositAddressModel>(MemberList.Destination);
+
+            CreateMap<Lykke.HftApi.Domain.Entities.Withdrawals.WithdrawalState, WithdrawalState>();
+            CreateMap<Withdrawal, WithdrawalModel>(MemberList.Destination);
         }
     }
 }
