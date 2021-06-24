@@ -14,7 +14,7 @@ Services:
   MarketDataGrpcServiceUrl:
     settings-key: MarketDataGrpcServiceUrl
   HistoryServiceUrl:
-    settings-key: HistoryServiceGrpcUrl
+    settings-key: HistoryServiceUrl
   BalancesServiceUrl:
     settings-key: BalancesServiceUrl
   HftInternalServiceUrl:
