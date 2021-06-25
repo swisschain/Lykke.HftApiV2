@@ -82,7 +82,7 @@ namespace HftApi.WebApi
         [ProducesResponseType(typeof(ResponseModel<DepositAddressModel>), (int) HttpStatusCode.OK)]
         public async Task<IActionResult> GetCryptosDepositAddress([FromRoute] string assetId)
         {
-            var asset = await _siriusWalletsService.CheckDepositPreconditionsAsync(assetId);
+            var asset = await _siriusWalletsService.CheckDepositPreconditionsAsync(User.GetClientId(), assetId);
 
             var depositWallet =
                 await _siriusWalletsService.GetWalletAddressAsync(User.GetClientId(),

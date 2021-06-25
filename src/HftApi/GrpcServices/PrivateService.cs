@@ -604,7 +604,7 @@ namespace HftApi.GrpcServices
         {
             try
             {
-                var asset = await _siriusWalletsService.CheckDepositPreconditionsAsync(request.AssetId);
+                var asset = await _siriusWalletsService.CheckDepositPreconditionsAsync(context.GetHttpContext().User.GetClientId(), request.AssetId);
 
                 var depositWallet = await _siriusWalletsService.GetWalletAddressAsync(
                     context.GetHttpContext().User.GetClientId(), 
