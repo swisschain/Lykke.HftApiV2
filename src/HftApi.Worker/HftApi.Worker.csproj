@@ -12,6 +12,7 @@
     <PackageReference Include="AutoMapper" Version="10.1.1" />
     <PackageReference Include="JetBrains.Annotations" Version="2020.1.0" />
     <PackageReference Include="Lykke.Common.ApiLibrary" Version="3.1.1" />
+    <PackageReference Include="Lykke.Logs" Version="7.4.0" />
     <PackageReference Include="Lykke.MatchingEngineConnector" Version="8.6.0" />
     <PackageReference Include="MyNoSqlServer.DataWriter" Version="1.2.6" />
     <PackageReference Include="Swisschain.LykkeLog.Adapter" Version="1.1.0" />
