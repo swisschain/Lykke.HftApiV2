@@ -25,6 +25,8 @@ Services:
     settings-key: OperationsServiceUrl
   ClientAccountServiceUrl:
     settings-key: ClientAccountServiceUrl
+  ClientDialogsServiceUrl:
+    settings-key: ClientDialogsServiceUrl
   KycServiceClient:
     ServiceUri:
       settings-key: KycServiceUrl
