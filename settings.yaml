@@ -14,7 +14,7 @@ Services:
   MarketDataGrpcServiceUrl:
     settings-key: MarketDataGrpcServiceUrl
   HistoryServiceUrl:
-    settings-key: HistoryServiceUrl
+    settings-key: HistoryGrpcServiceUrl
   BalancesServiceUrl:
     settings-key: BalancesServiceUrl
   HftInternalServiceUrl:
@@ -89,7 +89,7 @@ SagasRabbitMq:
     settings-key: RabbitSagas
     types: [RabbitMq]
 FeeSettings:
-  Cashout:
+  WithdrawalFeeDestinationClientId:
     settings-key: Hftv2Service-FeeSettings-WithdrawalFeeDestinationClientId
 MyNoSqlServer:
   ReaderServiceUrl:
