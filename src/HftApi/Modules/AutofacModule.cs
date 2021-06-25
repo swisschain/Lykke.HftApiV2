@@ -2,6 +2,7 @@ using System;
 using Autofac;
 using AzureStorage;
 using AzureStorage.Tables;
+using Common.Log;
 using HftApi.Common.Configuration;
 using HftApi.Common.Domain.MyNoSqlEntities;
 using HftApi.RabbitSubscribers;
@@ -18,6 +19,7 @@ using Lykke.Service.Kyc.Client;
 using Lykke.Service.Operations.Client;
 using Lykke.Service.TradesAdapter.Client;
 using Lykke.SettingsReader;
+using Lykke.SettingsReader.ReloadingManager;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.Redis;
 using Microsoft.Extensions.Logging;
@@ -30,9 +32,9 @@ namespace HftApi.Modules
 {
     public class AutofacModule : Module
     {
-        private readonly IReloadingManagerWithConfiguration<AppConfig> _config;
+        private readonly AppConfig _config;
 
-        public AutofacModule(IReloadingManagerWithConfiguration<AppConfig> config)
+        public AutofacModule(AppConfig config)
         {
             _config = config;
         }
@@ -40,20 +42,20 @@ namespace HftApi.Modules
         protected override void Load(ContainerBuilder builder)
         {
             builder.RegisterType<AssetsService>()
-                .WithParameter(TypedParameter.From(_config.CurrentValue.Cache.AssetsCacheDuration))
+                .WithParameter(TypedParameter.From(_config.Cache.AssetsCacheDuration))
                 .As<IAssetsService>()
                 .As<IStartable>()
                 .AutoActivate();
 
             builder.RegisterType<OrderbooksService>()
                 .As<IOrderbooksService>()
-                .WithParameter(TypedParameter.From(_config.CurrentValue.Redis.OrderBooksCacheKeyPattern))
+                .WithParameter(TypedParameter.From(_config.Redis.OrderBooksCacheKeyPattern))
                 .SingleInstance();
 
             var cache = new RedisCache(new RedisCacheOptions
             {
-                Configuration = _config.CurrentValue.Redis.RedisConfiguration,
-                InstanceName = _config.CurrentValue.Redis.InstanceName
+                Configuration = _config.Redis.RedisConfiguration,
+                InstanceName = _config.Redis.InstanceName
             });
 
             builder.RegisterInstance(cache)
@@ -61,7 +63,7 @@ namespace HftApi.Modules
                 .SingleInstance();
 
             builder.RegisterMarketDataClient(new MarketDataServiceClientSettings{
-                GrpcServiceUrl = _config.CurrentValue.Services.MarketDataGrpcServiceUrl});
+                GrpcServiceUrl = _config.Services.MarketDataGrpcServiceUrl});
 
             builder.Register(ctx =>
             {
@@ -69,16 +71,16 @@ namespace HftApi.Modules
                 return logger.ToLykke();
             }).As<ILogFactory>();
 
-            builder.RegisterMeClient(_config.CurrentValue.MatchingEngine.GetIpEndPoint());
+            builder.RegisterMeClient(_config.MatchingEngine.GetIpEndPoint());
 
             builder.RegisterType<KeyUpdateSubscriber>()
                 .As<IStartable>()
                 .AutoActivate()
-                .WithParameter("connectionString", _config.CurrentValue.RabbitMq.HftInternal.ConnectionString)
-                .WithParameter("exchangeName", _config.CurrentValue.RabbitMq.HftInternal.ExchangeName)
+                .WithParameter("connectionString", _config.RabbitMq.HftInternal.ConnectionString)
+                .WithParameter("exchangeName", _config.RabbitMq.HftInternal.ExchangeName)
                 .SingleInstance();
 
-            builder.RegisterHftInternalClient(_config.CurrentValue.Services.HftInternalServiceUrl);
+            builder.RegisterHftInternalClient(_config.Services.HftInternalServiceUrl);
 
             builder.RegisterType<TokenService>()
                 .As<ITokenService>()
@@ -100,28 +102,28 @@ namespace HftApi.Modules
 
             builder.Register(ctx =>
             {
-                var client = new MyNoSqlTcpClient(() => _config.CurrentValue.MyNoSqlServer.ReaderServiceUrl, $"{ApplicationInformation.AppName}-{Environment.MachineName}", int.Parse(reconnectTimeoutInSec));
+                var client = new MyNoSqlTcpClient(() => _config.MyNoSqlServer.ReaderServiceUrl, $"{ApplicationInformation.AppName}-{Environment.MachineName}", int.Parse(reconnectTimeoutInSec));
                 client.Start();
                 return client;
             }).AsSelf().SingleInstance();
 
-            builder.RegisterInstance(_config.CurrentValue.FeeSettings)
+            builder.RegisterInstance(_config.FeeSettings)
                 .AsSelf();
 
             builder.Register(ctx =>
-                new MyNoSqlReadRepository<TickerEntity>(ctx.Resolve<MyNoSqlTcpClient>(), _config.CurrentValue.MyNoSqlServer.TickersTableName)
+                new MyNoSqlReadRepository<TickerEntity>(ctx.Resolve<MyNoSqlTcpClient>(), _config.MyNoSqlServer.TickersTableName)
             ).As<IMyNoSqlServerDataReader<TickerEntity>>().SingleInstance();
 
             builder.Register(ctx =>
-                new MyNoSqlReadRepository<PriceEntity>(ctx.Resolve<MyNoSqlTcpClient>(), _config.CurrentValue.MyNoSqlServer.PricesTableName)
+                new MyNoSqlReadRepository<PriceEntity>(ctx.Resolve<MyNoSqlTcpClient>(), _config.MyNoSqlServer.PricesTableName)
             ).As<IMyNoSqlServerDataReader<PriceEntity>>().SingleInstance();
 
             builder.Register(ctx =>
-                new MyNoSqlReadRepository<OrderbookEntity>(ctx.Resolve<MyNoSqlTcpClient>(), _config.CurrentValue.MyNoSqlServer.OrderbooksTableName)
+                new MyNoSqlReadRepository<OrderbookEntity>(ctx.Resolve<MyNoSqlTcpClient>(), _config.MyNoSqlServer.OrderbooksTableName)
             ).As<IMyNoSqlServerDataReader<OrderbookEntity>>().SingleInstance();
 
             builder.Register(ctx =>
-                new MyNoSqlReadRepository<BalanceEntity>(ctx.Resolve<MyNoSqlTcpClient>(), _config.CurrentValue.MyNoSqlServer.BalancesTableName)
+                new MyNoSqlReadRepository<BalanceEntity>(ctx.Resolve<MyNoSqlTcpClient>(), _config.MyNoSqlServer.BalancesTableName)
             ).As<IMyNoSqlServerDataReader<BalanceEntity>>().SingleInstance();
 
             builder.RegisterType<PricesStreamService>()
@@ -155,50 +157,51 @@ namespace HftApi.Modules
             builder.RegisterType<StreamsManager>().AsSelf().SingleInstance();
             builder.RegisterType<SiriusWalletsService>()
                 .As<ISiriusWalletsService>()
-                .WithParameter(TypedParameter.From(_config.CurrentValue.Services.SiriusApiServiceClient.BrokerAccountId))
-                .WithParameter(TypedParameter.From(_config.CurrentValue.Services.SiriusApiServiceClient.WalletsActiveRetryCount))
-                .WithParameter(TypedParameter.From(_config.CurrentValue.Services.SiriusApiServiceClient.WaitForActiveWalletsTimeout))
+                .WithParameter(TypedParameter.From(_config.Services.SiriusApiServiceClient.BrokerAccountId))
+                .WithParameter(TypedParameter.From(_config.Services.SiriusApiServiceClient.WalletsActiveRetryCount))
+                .WithParameter(TypedParameter.From(_config.Services.SiriusApiServiceClient.WaitForActiveWalletsTimeout))
                 .SingleInstance();
 
             builder.RegisterType<TradesSubscriber>()
                 .As<IStartable>()
                 .AutoActivate()
-                .WithParameter("connectionString", _config.CurrentValue.RabbitMq.Orders.ConnectionString)
-                .WithParameter("exchangeName", _config.CurrentValue.RabbitMq.Orders.ExchangeName)
+                .WithParameter("connectionString", _config.RabbitMq.Orders.ConnectionString)
+                .WithParameter("exchangeName", _config.RabbitMq.Orders.ExchangeName)
                 .SingleInstance();
 
             builder.Register(ctx =>
-                    new TradesAdapterClient(_config.CurrentValue.Services.TradesAdapterServiceUrl,
+                    new TradesAdapterClient(_config.Services.TradesAdapterServiceUrl,
                         ctx.Resolve<ILogFactory>().CreateLog(nameof(TradesAdapterClient)))
                 )
                 .As<ITradesAdapterClient>()
                 .SingleInstance();
             
 #pragma warning disable 618
-            builder.Register(x => new KycStatusServiceClient(_config.CurrentValue.Services.KycServiceClient, x.Resolve<ILogFactory>()))
+            builder.Register(x => new KycStatusServiceClient(_config.Services.KycServiceClient, x.Resolve<ILogFactory>()))
 #pragma warning restore 618
                 .As<IKycStatusService>()
                 .SingleInstance();
             
-            builder.RegisterClientAccountClient(_config.CurrentValue.Services.ClientAccountServiceUrl);
+            builder.RegisterClientAccountClient(_config.Services.ClientAccountServiceUrl);
             
-            builder.RegisterOperationsClient(_config.CurrentValue.Services.OperationsServiceUrl);
+            builder.RegisterOperationsClient(_config.Services.OperationsServiceUrl);
             
-            builder.RegisterClientDialogsClient(_config.CurrentValue.Services.ClientDialogsServiceUrl);
+            builder.RegisterClientDialogsClient(_config.Services.ClientDialogsServiceUrl);
             
             builder.RegisterInstance(
-                new Swisschain.Sirius.Api.ApiClient.ApiClient(_config.CurrentValue.Services.SiriusApiServiceClient.GrpcServiceUrl, _config.CurrentValue.Services.SiriusApiServiceClient.ApiKey)
+                new Swisschain.Sirius.Api.ApiClient.ApiClient(_config.Services.SiriusApiServiceClient.GrpcServiceUrl, _config.Services.SiriusApiServiceClient.ApiKey)
             ).As<Swisschain.Sirius.Api.ApiClient.IApiClient>();
 
             builder.RegisterType<PublicTradesSubscriber>()
                 .As<IStartable>()
                 .AutoActivate()
-                .WithParameter("connectionString", _config.CurrentValue.RabbitMq.PublicTrades.ConnectionString)
-                .WithParameter("exchangeName", _config.CurrentValue.RabbitMq.PublicTrades.ExchangeName)
+                .WithParameter("connectionString", _config.RabbitMq.PublicTrades.ConnectionString)
+                .WithParameter("exchangeName", _config.RabbitMq.PublicTrades.ExchangeName)
                 .SingleInstance();
+
             
             builder.Register(ctx =>
-                AzureTableStorage<IdempotentEntity>.Create(_config.Nested(x => x.Db.DataConnString),
+                AzureTableStorage<IdempotentEntity>.Create(ConstantReloadingManager.From(_config.Db.DataConnString),
                     "HftApiIdempotency", ctx.Resolve<ILogFactory>())
             ).As<INoSQLTableStorage<IdempotentEntity>>().SingleInstance();
         }
