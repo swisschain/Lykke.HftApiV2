@@ -266,9 +266,9 @@ message GetDepositAddressResponse {
 }
 
 message DepositAddress {
-    string address = 1;
-    string baseAddress = 2;
-  google.protobuf.StringValue addressExtension = 3;
+    google.protobuf.StringValue address = 1;
+    google.protobuf.StringValue baseAddress = 2;
+    google.protobuf.StringValue addressExtension = 3;
     string state = 4;
 }
 
