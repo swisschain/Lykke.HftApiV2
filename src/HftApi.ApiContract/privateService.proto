@@ -274,11 +274,10 @@ message DepositAddress {
 
 message CreateWithdrawalRequest {
     string requestId = 1;
-    string withdrawalId = 2;
-    string assetId = 3;
-    string volume = 4;
-    string destinationAddress = 5;
-    google.protobuf.StringValue destinationAddressExtension = 6;
+    string assetId = 2;
+    string volume = 3;
+    string destinationAddress = 4;
+    google.protobuf.StringValue destinationAddressExtension = 5;
 }
 
 message CreateWithdrawalResponse {
