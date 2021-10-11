@@ -161,6 +161,7 @@ namespace HftApi
             {
                 c.SwaggerEndpoint("../../api/v2/swagger.json", "API V2");
                 c.RoutePrefix = "swagger/ui";
+                c.EnableDeepLinking();
             });
         }
 
