@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using AutoMapper;
 using HftApi.WebApi.Models;
@@ -42,7 +42,7 @@ namespace HftApi.WebApi
             if (result != null)
                 throw HftApiException.Create(result.Code, result.Message).AddField(result.FieldName);
 
-            var orderbooks = await _orderbooksService.GetAsync(assetPairId, depth);
+            var orderbooks = await _orderbooksService.GetAsync(new[] { assetPairId }, depth);
             return Ok(ResponseModel<IReadOnlyCollection<OrderbookModel>>.Ok(_mapper.Map<IReadOnlyCollection<OrderbookModel>>(orderbooks)));
         }
     }

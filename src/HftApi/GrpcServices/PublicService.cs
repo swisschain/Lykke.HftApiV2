@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -164,7 +164,7 @@ namespace HftApi.GrpcServices
                 };
             }
 
-            var orderbooks = await _orderbooksService.GetAsync(request.AssetPairId, request.Depth);
+            var orderbooks = await _orderbooksService.GetAsync(new[] { request.AssetPairId }, request.Depth);
 
             var result = new OrderbookResponse();
 
@@ -294,13 +294,7 @@ namespace HftApi.GrpcServices
                 assetPairIds = request.AssetPairIds?.ToList() ?? new List<string>();
             }
 
-            var data = await _orderbooksService.GetAsync();
-
-            if (assetPairIds.Any())
-            {
-                data = data.Where(x => assetPairIds.Contains(x.AssetPairId, StringComparer.InvariantCultureIgnoreCase))
-                    .ToList();
-            }
+            var data = await _orderbooksService.GetAsync(assetPairIds);
 
             var orderbooks = new List<Orderbook>();
 

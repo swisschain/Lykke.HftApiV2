@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -36,34 +36,29 @@ namespace Lykke.HftApi.Services
             _mapper = mapper;
         }
 
-        public async Task<IReadOnlyCollection<Orderbook>> GetAsync(string assetPairId = null, int? depth = null)
+        public async Task<IReadOnlyCollection<Orderbook>> GetAsync(IEnumerable<string> assetPairIds, int? depth = null)
         {
             var orderbooks = new List<Orderbook>();
 
-            if (string.IsNullOrEmpty(assetPairId))
+            if (!assetPairIds.Any())
             {
                 var assetPairs = await _assetsService.GetAllAssetPairsAsync();
-
-                var results = await Task.WhenAll(assetPairs.Select(pair => GetOrderbookAsync(pair.AssetPairId)));
-
-                orderbooks = results.ToList();
-            }
-            else
-            {
-                var orderbook = await GetOrderbookAsync(assetPairId);
-                orderbooks.Add(orderbook);
+                assetPairIds = assetPairs.Select(p => p.AssetPairId);
             }
 
-            if (depth.HasValue && depth.Value > 0)
-            {
-                foreach (var orderbook in orderbooks)
-                {
-                    if (orderbook.Bids.Any())
-                        orderbook.Bids = orderbook.Bids.Take(depth.Value).ToList();
+            var results = await Task.WhenAll(assetPairIds.Select(pairId => GetOrderbookAsync(pairId)));
+            orderbooks = results.ToList();
 
-                    if (orderbook.Asks.Any())
-                        orderbook.Asks = orderbook.Asks.Take(depth.Value).ToList();
-                }
+            if (!depth.HasValue || depth.Value <= 0)
+                return orderbooks;
+
+            foreach (var orderbook in orderbooks)
+            {
+                if (orderbook.Bids.Any())
+                    orderbook.Bids = orderbook.Bids.Take(depth.Value).ToList();
+
+                if (orderbook.Asks.Any())
+                    orderbook.Asks = orderbook.Asks.Take(depth.Value).ToList();
             }
 
             return orderbooks;
