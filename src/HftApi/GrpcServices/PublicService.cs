@@ -291,7 +291,7 @@ namespace HftApi.GrpcServices
             }
             else
             {
-                assetPairIds = request.AssetPairIds?.ToList() ?? new List<string>();
+                assetPairIds = request.AssetPairIds?.Distinct().ToList() ?? new List<string>();
             }
 
             var data = await _orderbooksService.GetAsync(assetPairIds);
