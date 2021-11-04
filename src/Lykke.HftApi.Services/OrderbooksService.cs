@@ -38,16 +38,18 @@ namespace Lykke.HftApi.Services
 
         public async Task<IReadOnlyCollection<Orderbook>> GetAsync(IEnumerable<string> assetPairIds, int? depth = null)
         {
-            var orderbooks = new List<Orderbook>();
-
             if (!assetPairIds.Any())
             {
                 var assetPairs = await _assetsService.GetAllAssetPairsAsync();
                 assetPairIds = assetPairs.Select(p => p.AssetPairId);
             }
 
-            var results = await Task.WhenAll(assetPairIds.Select(pairId => GetOrderbookAsync(pairId)));
-            orderbooks = results.ToList();
+            var orderbooks = new List<Orderbook>();
+            foreach (var assetPairId in assetPairIds)
+            {
+                var orderbook = await GetOrderbookAsync(assetPairId);
+                orderbooks.Add(orderbook);
+            }
 
             if (!depth.HasValue || depth.Value <= 0)
                 return orderbooks;
