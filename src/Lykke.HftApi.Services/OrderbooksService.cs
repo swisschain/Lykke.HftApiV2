@@ -44,12 +44,8 @@ namespace Lykke.HftApi.Services
                 assetPairIds = assetPairs.Select(p => p.AssetPairId);
             }
 
-            var orderbooks = new List<Orderbook>();
-            foreach (var assetPairId in assetPairIds)
-            {
-                var orderbook = await GetOrderbookAsync(assetPairId);
-                orderbooks.Add(orderbook);
-            }
+            var results = await Task.WhenAll(assetPairIds.Select(pairId => GetOrderbookAsync(pairId)));
+            var orderbooks = results.ToList();
 
             if (!depth.HasValue || depth.Value <= 0)
                 return orderbooks;
