@@ -171,8 +171,6 @@ namespace HftApi.GrpcServices
             foreach (var orderbook in orderbooks)
             {
                 var resOrderBook = _mapper.Map<Orderbook>(orderbook);
-                resOrderBook.Asks.AddRange(_mapper.Map<List<Orderbook.Types.PriceVolume>>(orderbook.Asks));
-                resOrderBook.Bids.AddRange(_mapper.Map<List<Orderbook.Types.PriceVolume>>(orderbook.Bids));
                 result.Payload.Add(resOrderBook);
             }
 
@@ -301,8 +299,6 @@ namespace HftApi.GrpcServices
             foreach (var item in data)
             {
                 var orderbook = _mapper.Map<Orderbook>(item);
-                orderbook.Asks.AddRange(_mapper.Map<List<Orderbook.Types.PriceVolume>>(item.Asks));
-                orderbook.Bids.AddRange(_mapper.Map<List<Orderbook.Types.PriceVolume>>(item.Bids));
                 orderbooks.Add(orderbook);
             }
 
