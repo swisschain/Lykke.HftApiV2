@@ -72,6 +72,7 @@ namespace Lykke.HftApi.Services.AssetsClient
                         LowVolumeAmount = x.LowVolumeAmount,
                         LykkeEntityId = x.LykkeEntityId,
                         SiriusAssetId = x.SiriusAssetId,
+                        SiriusBlockchainId = x.SiriusBlockchainId,
                         BlockchainIntegrationType = blockchainIntegrationType,
                         IsDisabled = x.IsDisabled,
                         BlockchainDepositEnabled = x.BlockchainDepositEnabled

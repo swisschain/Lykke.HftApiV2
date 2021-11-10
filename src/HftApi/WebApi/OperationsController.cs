@@ -5,13 +5,10 @@ using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using AutoMapper;
-using HftApi.Common.Configuration;
 using HftApi.Extensions;
 using HftApi.WebApi.Models;
 using HftApi.WebApi.Models.DepositAddresses;
 using HftApi.WebApi.Models.Request;
-using HftApi.WebApi.Models.Withdrawals;
-using Lykke.HftApi.Domain.Exceptions;
 using Lykke.HftApi.Domain.Services;
 using Lykke.HftApi.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -24,18 +21,15 @@ namespace HftApi.WebApi
     [Route("api/operations")]
     public class OperationsController : ControllerBase
     {
-        private readonly ValidationService _validationService;
         private readonly ISiriusWalletsService _siriusWalletsService;
         private readonly HistoryWrapperClient _historyWrapperClient;
         private readonly IMapper _mapper;
 
         public OperationsController(
-            ValidationService validationService,
             ISiriusWalletsService siriusWalletsService,
             HistoryWrapperClient historyWrapperClient,
             IMapper mapper)
         {
-            _validationService = validationService;
             _siriusWalletsService = siriusWalletsService;
             _historyWrapperClient = historyWrapperClient;
             _mapper = mapper;
@@ -75,6 +69,19 @@ namespace HftApi.WebApi
         }
 
         /// <summary>
+        /// Get all Deposit addresses
+        /// </summary>
+        [HttpGet]
+        [Route("deposits/addresses")]
+        [ProducesResponseType(typeof(ResponseModel<DepositAddressModel[]>), (int) HttpStatusCode.OK)]
+        public async Task<IActionResult> GetCryptosDepositAddresses()
+        {
+            var depositWallets = await _siriusWalletsService.GetWalletAddressesAsync(User.GetClientId(), User.GetWalletId());
+
+            return Ok(_mapper.Map<DepositAddressModel[]>(depositWallets));
+        }
+
+        /// <summary>
         /// Get Deposit address for a given Asset
         /// </summary>
         [HttpGet]
@@ -85,11 +92,11 @@ namespace HftApi.WebApi
             var asset = await _siriusWalletsService.CheckDepositPreconditionsAsync(User.GetClientId(), assetId);
 
             var depositWallet =
-                await _siriusWalletsService.GetWalletAddressAsync(User.GetClientId(),
+                await _siriusWalletsService.GetWalletAddressesAsync(User.GetClientId(),
                     User.GetWalletId(),
                     asset.SiriusAssetId);
 
-            return Ok(_mapper.Map<DepositAddressModel>(depositWallet));
+            return Ok(_mapper.Map<DepositAddressModel>(depositWallet.FirstOrDefault()));
         }
 
         /// <summary>

@@ -1,20 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using System.Threading.Tasks;
-using Castle.Core.Internal;
-using Common;
 using Common.Log;
 using HftApi.Common.Configuration;
-using Lykke.Common.ApiLibrary.Exceptions;
 using Lykke.Common.Log;
 using Lykke.Cqrs;
 using Lykke.HftApi.Domain;
-using Lykke.HftApi.Domain.Entities;
 using Lykke.HftApi.Domain.Entities.Assets;
 using Lykke.HftApi.Domain.Entities.DepositWallets;
-using Lykke.HftApi.Domain.Entities.Withdrawals;
 using Lykke.HftApi.Domain.Exceptions;
 using Lykke.HftApi.Domain.Services;
 using Lykke.HftApi.Services.Idempotency;
@@ -22,14 +16,9 @@ using Lykke.Service.ClientAccount.Client;
 using Lykke.Service.ClientDialogs.Client;
 using Lykke.Service.ClientDialogs.Client.Models;
 using Lykke.Service.Kyc.Abstractions.Services;
-using Lykke.Service.Operations.Client;
 using Lykke.Service.Operations.Contracts;
 using Lykke.Service.Operations.Contracts.Cashout;
 using Lykke.Service.Operations.Contracts.Commands;
-using Microsoft.ApplicationInsights;
-using Microsoft.Rest;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using Swisschain.Sirius.Api.ApiClient;
 using Swisschain.Sirius.Api.ApiContract.Account;
 using Swisschain.Sirius.Api.ApiContract.User;
@@ -46,7 +35,6 @@ namespace Lykke.HftApi.Services
         private readonly IClientAccountClient _clientAccountClient;
         private readonly IBalanceService _balanceService;
         private readonly ICqrsEngine _cqrsEngine;
-        private readonly IOperationsClient _operationsClient;
         private readonly TargetClientIdFeeSettings _feeSettings;
         private readonly ValidationService _validationService;
         private readonly IdempotencyService _idempotencyService;
@@ -61,7 +49,6 @@ namespace Lykke.HftApi.Services
             IClientAccountClient clientAccountClient,
             IBalanceService balanceService,
             ICqrsEngine cqrsEngine,
-            IOperationsClient operationsClient,
             TargetClientIdFeeSettings feeSettings,
             ValidationService validationService,
             IdempotencyService idempotencyService,
@@ -75,7 +62,6 @@ namespace Lykke.HftApi.Services
             _clientAccountClient = clientAccountClient;
             _balanceService = balanceService;
             _cqrsEngine = cqrsEngine;
-            _operationsClient = operationsClient;
             _feeSettings = feeSettings;
             _validationService = validationService;
             _idempotencyService = idempotencyService;
@@ -154,8 +140,10 @@ namespace Lykke.HftApi.Services
             }
         }
 
-        public async Task<DepositWallet> GetWalletAddressAsync(string clientId, string walletId, long siriusAssetId)
+        public async Task<List<DepositWallet>> GetWalletAddressesAsync(string clientId, string walletId, long? siriusAssetId = null)
         {
+            var result = new List<DepositWallet>();
+
             var accountSearchResponse = await _siriusApiClient.Accounts.SearchAsync(new AccountSearchRequest
             {
                 BrokerAccountId = _brokerAccountId,
@@ -166,7 +154,7 @@ namespace Lykke.HftApi.Services
             if (accountSearchResponse.ResultCase == AccountSearchResponse.ResultOneofCase.Error)
             {
                 var message = "Error fetching Sirius Account";
-                _log.Warning(nameof(GetWalletAddressAsync),
+                _log.Warning(nameof(GetWalletAddressesAsync),
                     message,
                     context: new
                     {
@@ -177,32 +165,121 @@ namespace Lykke.HftApi.Services
                 throw new Exception(message);
             }
 
-            if(!accountSearchResponse.Body.Items.Any())
+            var assets = (await _assetsService.GetAllAssetsAsync())
+                .Where(x => !string.IsNullOrWhiteSpace(x.SiriusBlockchainId))
+                .ToList();
+
+            var assetById = siriusAssetId.HasValue
+                ? assets.FirstOrDefault(x => x.SiriusAssetId == siriusAssetId.Value)
+                : null;
+
+            if (!accountSearchResponse.Body.Items.Any())
             {
-                return new DepositWallet {State = DepositWalletState.NotFound};
+                if (assetById != null)
+                {
+                    result.Add(new DepositWallet
+                    {
+                        AssetId = assetById.AssetId,
+                        Symbol = assetById.Symbol,
+                        State = DepositWalletState.NotFound
+                    });
+                }
+
+                return result;
             }
 
             var account = accountSearchResponse.Body.Items.Single();
 
-            if (account.State == AccountStateModel.Creating)
+            switch (account.State)
             {
-                return new DepositWallet {State = DepositWalletState.Creating};
-            }
-            else if(account.State == AccountStateModel.Blocked)
-            {
-                return new DepositWallet {State = DepositWalletState.Blocked};
-            } else if (account.State == AccountStateModel.Active)
-            {
-                var accountDetailsResponse = await _siriusApiClient.Accounts.GetDetailsAsync(new AccountGetDetailsRequest
+                case AccountStateModel.Creating:
+                    if (assetById != null)
+                        result.Add(new DepositWallet {AssetId = assetById.AssetId, Symbol = assetById.Symbol, State = DepositWalletState.Creating});
+                    break;
+                case AccountStateModel.Blocked:
+                    if (assetById != null)
+                        result.Add(new DepositWallet {AssetId = assetById.AssetId, Symbol = assetById.Symbol, State = DepositWalletState.Blocked});
+                    break;
+                case AccountStateModel.Active:
                 {
-                    AccountId = account.Id,
-                    AssetId = siriusAssetId
-                });
+                    if (siriusAssetId.HasValue)
+                    {
+                        var accountDetailsResponse = await _siriusApiClient.Accounts.GetDetailsAsync(new AccountGetDetailsRequest
+                        {
+                            AccountId = account.Id,
+                            AssetId = siriusAssetId.Value
+                        });
 
-                if (accountDetailsResponse.ResultCase == AccountGetDetailsResponse.ResultOneofCase.Error)
+                        if (accountDetailsResponse.ResultCase == AccountGetDetailsResponse.ResultOneofCase.Error)
+                        {
+                            var message = "Error fetching Sirius Account details";
+                            _log.Warning(nameof(GetWalletAddressesAsync),
+                                message,
+                                context: new
+                                {
+                                    error = accountSearchResponse.Error,
+                                    walletId,
+                                    clientId
+                                });
+                            throw new Exception(message);
+                        }
+
+                        var asset = assets.FirstOrDefault(a => a.SiriusBlockchainId == accountDetailsResponse.Body.AccountDetail.BlockchainId);
+
+                        result.Add(new DepositWallet
+                        {
+                            AssetId = asset?.AssetId ?? string.Empty,
+                            Symbol = asset?.Symbol ?? string.Empty,
+                            State = DepositWalletState.Active,
+                            Address =
+                                string.IsNullOrEmpty(accountDetailsResponse.Body.AccountDetail.Tag)
+                                    ? accountDetailsResponse.Body.AccountDetail.Address
+                                    : $"{accountDetailsResponse.Body.AccountDetail.Address}+{accountDetailsResponse.Body.AccountDetail.Tag}",
+                            BaseAddress = accountDetailsResponse.Body.AccountDetail.Address,
+                            AddressExtension = accountDetailsResponse.Body.AccountDetail.Tag
+                        });
+                    }
+                    else
+                    {
+                        var accountDetails = await _siriusApiClient.Accounts.SearchDetailsAsync(new AccountDetailsSearchRequest
+                        {
+                            AccountId = account.Id
+                        });
+
+                        if (accountDetails.ResultCase == AccountDetailsSearchResponse.ResultOneofCase.Error)
+                        {
+                            var message = "Error fetching Sirius Accounts details";
+                            _log.Warning(nameof(GetWalletAddressesAsync),
+                                message,
+                                context: new
+                                {
+                                    error = accountSearchResponse.Error,
+                                    walletId,
+                                    clientId
+                                });
+
+                            throw new Exception(message);
+                        }
+
+                        result = accountDetails.Body.Items.Select(x => new DepositWallet
+                        {
+                            AssetId = assets.FirstOrDefault(a => a.SiriusBlockchainId == x.BlockchainId)?.AssetId ?? string.Empty,
+                            Symbol = assets.FirstOrDefault(a => a.SiriusBlockchainId == x.BlockchainId)?.Symbol ?? string.Empty,
+                            State = DepositWalletState.Active,
+                            Address = string.IsNullOrEmpty(x.Tag)
+                                ? x.Address
+                                : $"{x.Address}+{x.Tag}",
+                            BaseAddress = x.Address,
+                            AddressExtension = x.Tag
+                        }).ToList();
+                    }
+
+                    break;
+                }
+                default:
                 {
-                    var message = "Error fetching Sirius Account details";
-                    _log.Warning(nameof(GetWalletAddressAsync),
+                    var message = $"Unknown State for Account {account.Id}: {account.State.ToString()}";
+                    _log.Warning(nameof(GetWalletAddressesAsync),
                         message,
                         context: new
                         {
@@ -212,31 +289,9 @@ namespace Lykke.HftApi.Services
                         });
                     throw new Exception(message);
                 }
+            }
 
-                return new DepositWallet
-                {
-                    State = DepositWalletState.Active,
-                    Address =
-                        string.IsNullOrEmpty(accountDetailsResponse.Body.AccountDetail.Tag)
-                            ? accountDetailsResponse.Body.AccountDetail.Address
-                            : $"{accountDetailsResponse.Body.AccountDetail.Address}+{accountDetailsResponse.Body.AccountDetail.Tag}",
-                    BaseAddress = accountDetailsResponse.Body.AccountDetail.Address,
-                    AddressExtension = accountDetailsResponse.Body.AccountDetail.Tag
-                };
-            }
-            else
-            {
-                var message = $"Unknown State for Account {account.Id}: {account.State.ToString()}";
-                _log.Warning(nameof(GetWalletAddressAsync),
-                    message,
-                    context: new
-                    {
-                        error = accountSearchResponse.Error,
-                        walletId,
-                        clientId
-                    });
-                throw new Exception(message);
-            }
+            return result;
         }
 
         public async Task<Guid> CreateWithdrawalAsync(
@@ -249,7 +304,7 @@ namespace Lykke.HftApi.Services
             string destinationAddressExtension)
         {
             var uniqueRequestId = $"{walletId}_{requestId}";
-            
+
             var validationResult =
                 await _validationService.ValidateWithdrawalRequestAsync(assetId, volume);
 
@@ -257,16 +312,16 @@ namespace Lykke.HftApi.Services
                 throw HftApiException.Create(validationResult.Code, validationResult.Message).AddField(validationResult.FieldName);
 
             var operationId = Guid.NewGuid();
-            
+
             var payload = await _idempotencyService.CreateEntityOrGetPayload(uniqueRequestId, operationId.ToString());
 
             if (payload != null)
             {
                 operationId = Guid.Parse(payload);
             }
-            
+
             var asset = await _assetsService.GetAssetByIdAsync(assetId);
-            
+
             if(asset.BlockchainIntegrationType != BlockchainIntegrationType.Sirius)
                 throw HftApiException.Create(HftApiErrorCode.ActionForbidden, "Asset unavailable");
 
@@ -299,7 +354,7 @@ namespace Lykke.HftApi.Services
                     LowVolumeAmount = (decimal?)asset.LowVolumeAmount ?? 0,
                     LykkeEntityId = asset.LykkeEntityId,
                     SiriusAssetId = asset.SiriusAssetId,
-                    BlockchainIntegrationType = Lykke.Service.Assets.Client.Models.BlockchainIntegrationType.Sirius
+                    BlockchainIntegrationType = Service.Assets.Client.Models.BlockchainIntegrationType.Sirius
                 },
                 Client = new ClientCashoutModel
                 {
@@ -324,14 +379,14 @@ namespace Lykke.HftApi.Services
             };
 
             _cqrsEngine.SendCommand(cashoutCommand, "hft-api", OperationsBoundedContext.Name);
-            
+
             return operationId;
         }
 
         public async Task<Asset> CheckDepositPreconditionsAsync(string clientId, string assetId=default)
         {
             Asset asset = default;
-            
+
             if (!string.IsNullOrWhiteSpace(assetId))
             {
                 asset = await _assetsService.GetAssetByIdAsync(assetId);
@@ -347,7 +402,7 @@ namespace Lykke.HftApi.Services
             else
             {
                 var allAssets = await _assetsService.GetAllAssetsAsync();
-                
+
                 if(allAssets.All(x => x.BlockchainIntegrationType != BlockchainIntegrationType.Sirius))
                     throw HftApiException.Create(HftApiErrorCode.ActionForbidden, "Asset unavailable");
             }

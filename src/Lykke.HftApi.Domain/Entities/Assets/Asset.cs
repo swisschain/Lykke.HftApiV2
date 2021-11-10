@@ -21,6 +21,7 @@ namespace Lykke.HftApi.Domain.Entities.Assets
         public double? LowVolumeAmount { set; get; }
         public string LykkeEntityId { set; get; }
         public long SiriusAssetId { set; get; }
+        public string SiriusBlockchainId { set; get; }
         public BlockchainIntegrationType BlockchainIntegrationType { set; get; }
         public bool BlockchainDepositEnabled { set; get; }
         public bool IsDisabled { set; get; }
