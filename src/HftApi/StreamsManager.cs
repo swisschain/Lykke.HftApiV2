@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -72,8 +72,6 @@ namespace HftApi
                 foreach (var orderbook in orderbooks)
                 {
                     var item = _mapper.Map<Orderbook>(orderbook);
-                    item.Asks.AddRange(_mapper.Map<List<Orderbook.Types.PriceVolume>>(orderbook.Asks));
-                    item.Bids.AddRange(_mapper.Map<List<Orderbook.Types.PriceVolume>>(orderbook.Bids));
                     tasks.Add(_orderbookStream.WriteToStreamAsync(item, orderbook.AssetPairId));
                 }
 
