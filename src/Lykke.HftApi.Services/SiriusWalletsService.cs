@@ -259,17 +259,25 @@ namespace Lykke.HftApi.Services
                             throw new Exception(message);
                         }
 
-                        result = accountDetails.Body.Items.Select(x => new DepositWallet
+                        foreach (var accountItem in accountDetails.Body.Items)
                         {
-                            AssetId = assets.FirstOrDefault(a => a.SiriusBlockchainId == x.BlockchainId)?.AssetId ?? string.Empty,
-                            Symbol = assets.FirstOrDefault(a => a.SiriusBlockchainId == x.BlockchainId)?.Symbol ?? string.Empty,
-                            State = DepositWalletState.Active,
-                            Address = string.IsNullOrEmpty(x.Tag)
-                                ? x.Address
-                                : $"{x.Address}+{x.Tag}",
-                            BaseAddress = x.Address,
-                            AddressExtension = x.Tag
-                        }).ToList();
+                            var asset = assets.FirstOrDefault(a => a.SiriusBlockchainId == accountItem.BlockchainId);
+
+                            if (asset == null)
+                                continue;
+
+                            result.Add(new DepositWallet
+                            {
+                                AssetId = asset.AssetId,
+                                Symbol = asset.Symbol,
+                                State = DepositWalletState.Active,
+                                Address = string.IsNullOrEmpty(accountItem.Tag)
+                                    ? accountItem.Address
+                                    : $"{accountItem.Address}+{accountItem.Tag}",
+                                BaseAddress = accountItem.Address,
+                                AddressExtension = accountItem.Tag
+                            });
+                        }
                     }
 
                     break;
