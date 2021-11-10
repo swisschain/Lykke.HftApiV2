@@ -166,7 +166,7 @@ namespace Lykke.HftApi.Services
             }
 
             var assets = (await _assetsService.GetAllAssetsAsync())
-                .Where(x => x.BlockchainIntegrationType == BlockchainIntegrationType.Sirius && !string.IsNullOrWhiteSpace(x.SiriusBlockchainId))
+                .Where(x => !x.IsDisabled && x.BlockchainIntegrationType == BlockchainIntegrationType.Sirius && !string.IsNullOrWhiteSpace(x.SiriusBlockchainId))
                 .ToList();
 
             var assetById = siriusAssetId.HasValue
