@@ -224,12 +224,10 @@ namespace Lykke.HftApi.Services
                             throw new Exception(message);
                         }
 
-                        var asset = assets.FirstOrDefault(a => a.SiriusBlockchainId == accountDetailsResponse.Body.AccountDetail.BlockchainId);
-
                         result.Add(new DepositWallet
                         {
-                            AssetId = asset?.AssetId ?? string.Empty,
-                            Symbol = asset?.Symbol ?? string.Empty,
+                            AssetId = assetById?.AssetId ?? string.Empty,
+                            Symbol = assetById?.Symbol ?? string.Empty,
                             State = DepositWalletState.Active,
                             Address =
                                 string.IsNullOrEmpty(accountDetailsResponse.Body.AccountDetail.Tag)
