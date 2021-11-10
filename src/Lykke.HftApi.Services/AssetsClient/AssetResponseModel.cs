@@ -23,5 +23,6 @@
         public BlockchainIntegrationTypeResponse BlockchainIntegrationType { set; get; }
         public bool IsDisabled { set; get; }
         public bool BlockchainDepositEnabled { set; get; }
+        public string SiriusBlockchainId { set; get; }
     }
 }

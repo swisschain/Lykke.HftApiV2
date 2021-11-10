@@ -606,19 +606,46 @@ namespace HftApi.GrpcServices
             {
                 var asset = await _siriusWalletsService.CheckDepositPreconditionsAsync(context.GetHttpContext().User.GetClientId(), request.AssetId);
 
-                var depositWallet = await _siriusWalletsService.GetWalletAddressAsync(
-                    context.GetHttpContext().User.GetClientId(), 
+                var depositWallets = await _siriusWalletsService.GetWalletAddressesAsync(
+                    context.GetHttpContext().User.GetClientId(),
                     context.GetHttpContext().User.GetWalletId(),
                     asset.SiriusAssetId);
 
                 return new GetDepositAddressResponse
                 {
-                    Payload = _mapper.Map<DepositAddress>(depositWallet)
+                    Payload = _mapper.Map<DepositAddress>(depositWallets.FirstOrDefault())
                 };
             }
             catch (HftApiException e)
             {
                 return new GetDepositAddressResponse
+                {
+                    Error = new Error
+                    {
+                        Code = _mapper.Map<ErrorCode>(e.ErrorCode),
+                        Message = e.Message
+                    }
+                };
+            }
+        }
+
+        public override async Task<GetDepositAddressesResponse> GetDepositAddresses(Empty request, ServerCallContext context)
+        {
+            try
+            {
+                var depositWallets = await _siriusWalletsService.GetWalletAddressesAsync(
+                    context.GetHttpContext().User.GetClientId(),
+                    context.GetHttpContext().User.GetWalletId());
+
+                var response = new GetDepositAddressesResponse();
+
+                response.Payload.AddRange(_mapper.Map<DepositAddress[]>(depositWallets));
+
+                return response;
+            }
+            catch (HftApiException e)
+            {
+                return new GetDepositAddressesResponse
                 {
                     Error = new Error
                     {
