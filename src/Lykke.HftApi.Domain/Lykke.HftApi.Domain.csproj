@@ -1,13 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>netcoreapp3.1</TargetFramework>
+        <TargetFramework>net5.0</TargetFramework>
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="Grpc.Core.Api" Version="2.38.0" />
+      <PackageReference Include="Grpc.Core.Api" Version="2.41.1" />
       <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
-      <PackageReference Include="Swisschain.Sirius.Api.ApiClient" Version="1.0.0-beta.19" />
+      <PackageReference Include="Swisschain.Sirius.Api.ApiClient" Version="1.0.0-beta.35" />
     </ItemGroup>
 
 </Project>
