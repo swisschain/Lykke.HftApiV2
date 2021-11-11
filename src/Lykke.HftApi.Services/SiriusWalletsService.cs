@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Common.Log;
+using Google.Protobuf.WellKnownTypes;
 using HftApi.Common.Configuration;
 using Lykke.Common.Log;
 using Lykke.Cqrs;
@@ -22,6 +23,7 @@ using Lykke.Service.Operations.Contracts.Commands;
 using Swisschain.Sirius.Api.ApiClient;
 using Swisschain.Sirius.Api.ApiContract.Account;
 using Swisschain.Sirius.Api.ApiContract.User;
+using Swisschain.Sirius.Api.ApiContract.WhitelistItems;
 
 namespace Lykke.HftApi.Services
 {
@@ -96,6 +98,8 @@ namespace Lykke.HftApi.Services
                 string accountRequestId = $"{_brokerAccountId}_{walletId}_account";
                 string userRequestId = $"{clientId}_user";
 
+                _log.Info("Creating user in sirius.", new { clientId, requestId = userRequestId });
+
                 var userCreateResponse = await _siriusApiClient.Users.CreateAsync(new CreateUserRequest
                 {
                     RequestId = userRequestId,
@@ -104,17 +108,12 @@ namespace Lykke.HftApi.Services
 
                 if (userCreateResponse.BodyCase == CreateUserResponse.BodyOneofCase.Error)
                 {
-                    var message = "Error creating User in Sirius";
-                    _log.Warning(nameof(CreateWalletAsync),
-                    message,
-                    context: new
-                    {
-                        error = userCreateResponse.Error,
-                        clientId,
-                        requestId = userRequestId
-                    });
+                    var message = "Error creating user in sirius.";
+                    _log.Warning(message, context: new { error = userCreateResponse.Error, clientId, requestId = userRequestId });
                     throw new Exception(message);
                 }
+
+                _log.Info("Creating account in sirius.", new { clientId, requestId = accountRequestId });
 
                 var createResponse = await _siriusApiClient.Accounts.CreateAsync(new AccountCreateRequest
                 {
@@ -127,15 +126,40 @@ namespace Lykke.HftApi.Services
                 if (createResponse.ResultCase == AccountCreateResponse.ResultOneofCase.Error)
                 {
                     var message = "Error creating user in sirius";
-                    _log.Warning(nameof(CreateWalletAsync),
-                    message,
-                    context: new
-                    {
-                        error = createResponse.Error,
-                        clientId,
-                        requestId = accountRequestId
-                    });
+                    _log.Warning(message, context: new { error = createResponse.Error, clientId, requestId = accountRequestId });
                     throw new Exception(message);
+                }
+
+                var whitelistingRequestId = $"lykke:hft_wallet:{clientId}:{walletId}";
+
+                var whitelistItemCreateResponse = await _siriusApiClient.WhitelistItems.CreateAsync(new WhitelistItemCreateRequest
+                {
+                    Name = "Hft Wallet Whitelist",
+                    Scope = new WhitelistItemScope
+                    {
+                        BrokerAccountId = _brokerAccountId,
+                        AccountId = createResponse.Body.Account.Id,
+                        UserNativeId = clientId,
+                        AccountReferenceId = walletId
+                    },
+                    Details = new WhitelistItemDetails
+                    {
+                        TransactionType = WhitelistTransactionType.Deposit,
+                        TagType = new  NullableWhitelistItemTagType
+                        {
+                            Null = NullValue.NullValue
+                        }
+                    },
+                    Lifespan = new WhitelistItemLifespan
+                    {
+                        StartsAt = Timestamp.FromDateTime(DateTime.UtcNow)
+                    },
+                    RequestId = whitelistingRequestId
+                });
+
+                if (whitelistItemCreateResponse.BodyCase == WhitelistItemCreateResponse.BodyOneofCase.Error)
+                {
+                    _log.Warning("Error creating whitelist item.", context: new { error = whitelistItemCreateResponse.Error, clientId });
                 }
             }
         }

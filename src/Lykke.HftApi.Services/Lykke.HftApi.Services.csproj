@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>netcoreapp3.1</TargetFramework>
+        <TargetFramework>net5.0</TargetFramework>
     </PropertyGroup>
 
     <ItemGroup>
@@ -14,7 +14,7 @@
       <PackageReference Include="Antares.Service.History.GrpcClient" Version="1.0.0-beta.4" />
       <PackageReference Include="Autofac" Version="5.2.0" />
       <PackageReference Include="AutoMapper" Version="10.1.1" />
-      <PackageReference Include="Grpc.AspNetCore" Version="2.29.0" />
+      <PackageReference Include="Grpc.AspNetCore" Version="2.40.0" />
       <PackageReference Include="Lykke.AzureStorage" Version="8.13.4" />
       <PackageReference Include="Lykke.Cqrs" Version="9.0.1" />
       <PackageReference Include="Lykke.MatchingEngineConnector" Version="8.6.0" />
@@ -22,10 +22,10 @@
       <PackageReference Include="Lykke.Service.HftInternalService.Client" Version="2.1.1" />
       <PackageReference Include="Lykke.Service.Operations.Client" Version="3.1.0" />
       <PackageReference Include="Lykke.Service.Operations.Contracts" Version="3.1.1" />
-      <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="3.1.4" />
-      <PackageReference Include="Microsoft.Extensions.Http" Version="3.1.4" />
+      <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="5.0.0" />
+      <PackageReference Include="Microsoft.Extensions.Http" Version="5.0.0" />
       <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
-      <PackageReference Include="Swisschain.Sirius.Api.ApiClient" Version="1.0.0-beta.19" />
+      <PackageReference Include="Swisschain.Sirius.Api.ApiClient" Version="1.0.0-beta.35" />
     </ItemGroup>
 
 </Project>
