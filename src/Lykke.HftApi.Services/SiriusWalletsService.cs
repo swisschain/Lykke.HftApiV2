@@ -134,7 +134,7 @@ namespace Lykke.HftApi.Services
 
                 var whitelistItemCreateResponse = await _siriusApiClient.WhitelistItems.CreateAsync(new WhitelistItemCreateRequest
                 {
-                    Name = "Hft Wallet Whitelist",
+                    Name = "HFT Wallet Deposits Whitelist",
                     Scope = new WhitelistItemScope
                     {
                         BrokerAccountId = _brokerAccountId,
