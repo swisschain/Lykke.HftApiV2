@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using AutoMapper;
 using Google.Protobuf.WellKnownTypes;
@@ -43,8 +43,6 @@ namespace Lykke.HftApi.Services
             Domain.Entities.Orderbook update = _orderbooksService.GetOrderbookUpdates(oldOrderBook, newOrderBook);
 
             var result = _mapper.Map<Orderbook>(update);
-            result.Asks.AddRange(_mapper.Map<List<Orderbook.Types.PriceVolume>>(update.Asks));
-            result.Bids.AddRange(_mapper.Map<List<Orderbook.Types.PriceVolume>>(update.Bids));
 
             if (updateDate)
                 result.Timestamp = Timestamp.FromDateTime(DateTime.UtcNow);
