@@ -139,8 +139,7 @@ namespace Lykke.HftApi.Services
                     {
                         BrokerAccountId = _brokerAccountId,
                         AccountId = createResponse.Body.Account.Id,
-                        UserNativeId = clientId,
-                        AccountReferenceId = walletId
+                        UserNativeId = clientId
                     },
                     Details = new WhitelistItemDetails
                     {
