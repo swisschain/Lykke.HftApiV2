@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http;
 using System.Threading.Tasks;
 using Antares.Service.History.GrpcClient;
 using Antares.Service.History.GrpcContract.Common;
@@ -158,10 +157,10 @@ namespace Lykke.HftApi.Services
         public static OperationHistoricRecord OperationHistoryToDomain(this HistoryResponseItem source)
         {
             var result = new OperationHistoricRecord();
-            
+
             if (source.CashIn != null)
             {
-                result.HistoricalId = source.Id;
+                result.OperationId = source.Id;
                 result.Timestamp = source.Timestamp.ToDateTime();
                 result.AssetId = source.CashIn.AssetId;
                 result.Type = OperationType.Deposit;
@@ -171,7 +170,7 @@ namespace Lykke.HftApi.Services
             }
             else
             {
-                result.HistoricalId = source.Id;
+                result.OperationId = source.Id;
                 result.Timestamp = source.Timestamp.ToDateTime();
                 result.AssetId = source.CashOut.AssetId;
                 result.Type = OperationType.Withdrawal;
@@ -182,7 +181,7 @@ namespace Lykke.HftApi.Services
 
             return result;
         }
-        
+
         public static Trade TradeToDomain(this HistoryResponseItem trade)
         {
             return new Trade
@@ -224,7 +223,5 @@ namespace Lykke.HftApi.Services
                 Trades = trades ?? Array.Empty<Trade>()
             };
         }
-        
-        
     }
 }
