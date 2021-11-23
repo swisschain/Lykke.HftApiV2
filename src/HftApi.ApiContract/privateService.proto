@@ -244,7 +244,7 @@ message GetOperationsHistoryResponse {
 }
 
 message OperationHistory {
-    string historicalId = 1;
+    string operationId = 1;
     string assetId = 2;
     string totalVolume = 3;
     string fee = 4;
