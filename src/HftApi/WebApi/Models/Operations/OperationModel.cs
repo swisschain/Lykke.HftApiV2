@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace HftApi.WebApi.Models.Operations
+﻿namespace HftApi.WebApi.Models.Operations
 {
     public class OperationModel
     {
@@ -9,6 +7,6 @@ namespace HftApi.WebApi.Models.Operations
         public decimal TotalVolume { set; get; }
         public decimal Fee { set; get; }
         public OperationType Type { set; get; }
-        public DateTime Timestamp { set; get; }
+        public long Timestamp { set; get; }
     }
 }

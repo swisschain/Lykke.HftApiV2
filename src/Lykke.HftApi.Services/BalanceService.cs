@@ -2,12 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using AutoMapper;
 using Common;
-using HftApi.Common.Domain.MyNoSqlEntities;
 using Lykke.HftApi.Domain.Entities;
 using Lykke.HftApi.Domain.Services;
-using MyNoSqlServer.Abstractions;
 
 namespace Lykke.HftApi.Services
 {
@@ -15,36 +12,22 @@ namespace Lykke.HftApi.Services
     {
         private readonly IAssetsService _assetsService;
         private readonly BalanceHttpClient _balanceClient;
-        private readonly IMyNoSqlServerDataReader<BalanceEntity> _balancesReader;
-        private readonly IMapper _mapper;
 
         public BalanceService(
             IAssetsService assetsService,
-            BalanceHttpClient balanceClient,
-            IMyNoSqlServerDataReader<BalanceEntity> balancesReader,
-            IMapper mapper
+            BalanceHttpClient balanceClient
             )
         {
             _assetsService = assetsService;
             _balanceClient = balanceClient;
-            _balancesReader = balancesReader;
-            _mapper = mapper;
         }
 
         public async Task<IReadOnlyCollection<Balance>> GetBalancesAsync(string walletId)
         {
             var result = new List<Balance>();
-            var balanceEntities = _balancesReader.Get(walletId);
 
-            if (balanceEntities.Any())
-            {
-                result.AddRange(_mapper.Map<IReadOnlyCollection<Balance>>(balanceEntities));
-            }
-            else
-            {
-                var balances = await _balanceClient.GetBalanceAsync(walletId);
-                result.AddRange(balances);
-            }
+            var balances = await _balanceClient.GetBalanceAsync(walletId);
+            result.AddRange(balances);
 
             await SetBalancesAccuracyAsync(result);
 
