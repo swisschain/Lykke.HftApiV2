@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Common;
 using Common.Log;
 using Google.Protobuf.WellKnownTypes;
 using HftApi.Common.Configuration;
@@ -20,6 +21,8 @@ using Lykke.Service.Kyc.Abstractions.Services;
 using Lykke.Service.Operations.Contracts;
 using Lykke.Service.Operations.Contracts.Cashout;
 using Lykke.Service.Operations.Contracts.Commands;
+using Polly;
+using Polly.Contrib.WaitAndRetry;
 using Swisschain.Sirius.Api.ApiClient;
 using Swisschain.Sirius.Api.ApiContract.Account;
 using Swisschain.Sirius.Api.ApiContract.User;
@@ -41,6 +44,7 @@ namespace Lykke.HftApi.Services
         private readonly ValidationService _validationService;
         private readonly IdempotencyService _idempotencyService;
         private readonly ILog _log;
+        private readonly IEnumerable<TimeSpan> _delay;
 
         public SiriusWalletsService(
             long brokerAccountId,
@@ -68,71 +72,49 @@ namespace Lykke.HftApi.Services
             _validationService = validationService;
             _idempotencyService = idempotencyService;
             _log = logFactory.CreateLog(this);
+
+            _delay = Backoff.DecorrelatedJitterBackoffV2(medianFirstRetryDelay: TimeSpan.FromMilliseconds(100), retryCount: 7, fastFirst: true);
         }
 
         public async Task CreateWalletAsync(string clientId, string walletId)
         {
-            var accountSearchResponse = await _siriusApiClient.Accounts.SearchAsync(new AccountSearchRequest
-            {
-                BrokerAccountId = _brokerAccountId,
-                UserNativeId = clientId,
-                ReferenceId = walletId
-            });
+            var accountSearchResponse = await SearchAccountAsync(clientId, walletId);
 
-            if (accountSearchResponse.ResultCase == AccountSearchResponse.ResultOneofCase.Error)
+            if (accountSearchResponse == null)
             {
-                var message = "Error fetching Sirius Account";
-                _log.Warning(nameof(CreateWalletAsync),
-                    message,
-                    context: new
-                    {
-                        error = accountSearchResponse.Error,
-                        walletId,
-                        clientId
-                    });
+                var message = "Error getting account from sirius.";
+
+                _log.Warning(message, context: new { clientId, walletId });
+
                 throw new Exception(message);
             }
 
-            if (!accountSearchResponse.Body.Items.Any())
+            if (accountSearchResponse.Body.Items.Count == 0)
             {
                 string accountRequestId = $"{_brokerAccountId}_{walletId}_account";
                 string userRequestId = $"{clientId}_user";
 
-                _log.Info("Creating user in sirius.", new { clientId, requestId = userRequestId });
+                var userCreateResponse = await CreateUserAsync(clientId, userRequestId);
 
-                var userCreateResponse = await _siriusApiClient.Users.CreateAsync(new CreateUserRequest
-                {
-                    RequestId = userRequestId,
-                    NativeId = clientId
-                });
-
-                if (userCreateResponse.BodyCase == CreateUserResponse.BodyOneofCase.Error)
+                if (userCreateResponse == null)
                 {
                     var message = "Error creating user in sirius.";
-                    _log.Warning(message, context: new { error = userCreateResponse.Error, clientId, requestId = userRequestId });
+                    _log.Warning(message, context: new { clientId, requestId = userRequestId });
                     throw new Exception(message);
                 }
 
-                _log.Info("Creating account in sirius.", new { clientId, requestId = accountRequestId });
+                var createResponse = await CreateAccountAsync(walletId, userCreateResponse.User.Id, accountRequestId);
 
-                var createResponse = await _siriusApiClient.Accounts.CreateAsync(new AccountCreateRequest
+                if (createResponse == null)
                 {
-                    RequestId = accountRequestId,
-                    BrokerAccountId = _brokerAccountId,
-                    UserId = userCreateResponse.User.Id,
-                    ReferenceId = walletId
-                });
-
-                if (createResponse.ResultCase == AccountCreateResponse.ResultOneofCase.Error)
-                {
-                    var message = "Error creating user in sirius";
-                    _log.Warning(message, context: new { error = createResponse.Error, clientId, requestId = accountRequestId });
+                    var message = "Error creating account in sirius.";
+                    _log.Warning(message, context: new { clientId, requestId = accountRequestId });
                     throw new Exception(message);
                 }
 
-                var whitelistingRequestId = $"lykke:hft_wallet:{clientId}:{walletId}";
+                var whitelistingRequestId = $"lykke:hft:deposit:{clientId}:{walletId}";
 
-                var whitelistItemCreateResponse = await _siriusApiClient.WhitelistItems.CreateAsync(new WhitelistItemCreateRequest
+                var whitelistItemRequest = new WhitelistItemCreateRequest
                 {
                     Name = "HFT Wallet Deposits Whitelist",
                     Scope = new WhitelistItemScope
@@ -144,21 +126,19 @@ namespace Lykke.HftApi.Services
                     Details = new WhitelistItemDetails
                     {
                         TransactionType = WhitelistTransactionType.Deposit,
-                        TagType = new  NullableWhitelistItemTagType
-                        {
-                            Null = NullValue.NullValue
-                        }
+                        TagType = new NullableWhitelistItemTagType { Null = NullValue.NullValue }
                     },
-                    Lifespan = new WhitelistItemLifespan
-                    {
-                        StartsAt = Timestamp.FromDateTime(DateTime.UtcNow)
-                    },
+                    Lifespan = new WhitelistItemLifespan { StartsAt = Timestamp.FromDateTime(DateTime.UtcNow) },
                     RequestId = whitelistingRequestId
-                });
+                };
 
-                if (whitelistItemCreateResponse.BodyCase == WhitelistItemCreateResponse.BodyOneofCase.Error)
+                var whitelistItemCreateResponse = await CreateWhitelistItemAsync(whitelistItemRequest);
+
+                if (whitelistItemCreateResponse == null)
                 {
-                    _log.Warning("Error creating whitelist item.", context: new { error = whitelistItemCreateResponse.Error, clientId });
+                    var message = "Error creating whitelist item.";
+                    _log.Warning(message, context: new { clientId, walletId, requestId = whitelistingRequestId});
+                    throw new Exception(message);
                 }
             }
         }
@@ -167,24 +147,12 @@ namespace Lykke.HftApi.Services
         {
             var result = new List<DepositWallet>();
 
-            var accountSearchResponse = await _siriusApiClient.Accounts.SearchAsync(new AccountSearchRequest
-            {
-                BrokerAccountId = _brokerAccountId,
-                UserNativeId = clientId,
-                ReferenceId = walletId
-            });
+            var accountSearchResponse = await SearchAccountAsync(clientId, walletId);
 
-            if (accountSearchResponse.ResultCase == AccountSearchResponse.ResultOneofCase.Error)
+            if (accountSearchResponse == null)
             {
-                var message = "Error fetching Sirius Account";
-                _log.Warning(nameof(GetWalletAddressesAsync),
-                    message,
-                    context: new
-                    {
-                        error = accountSearchResponse.Error,
-                        walletId,
-                        clientId
-                    });
+                var message = "Error getting account from sirius.";
+                _log.Warning(message, context: new { clientId, walletId });
                 throw new Exception(message);
             }
 
@@ -225,82 +193,33 @@ namespace Lykke.HftApi.Services
                     break;
                 case AccountStateModel.Active:
                 {
-                    if (siriusAssetId.HasValue)
-                    {
-                        var accountDetailsResponse = await _siriusApiClient.Accounts.GetDetailsAsync(new AccountGetDetailsRequest
-                        {
-                            AccountId = account.Id,
-                            AssetId = siriusAssetId.Value
-                        });
+                    var accountDetailsResponse = await SearchAccountDetailsAsync(account.Id, siriusAssetId);
 
-                        if (accountDetailsResponse.ResultCase == AccountGetDetailsResponse.ResultOneofCase.Error)
-                        {
-                            var message = "Error fetching Sirius Account details";
-                            _log.Warning(nameof(GetWalletAddressesAsync),
-                                message,
-                                context: new
-                                {
-                                    error = accountSearchResponse.Error,
-                                    walletId,
-                                    clientId
-                                });
-                            throw new Exception(message);
-                        }
+                    if (accountDetailsResponse == null)
+                    {
+                        var message = "Error getting account details from sirius.";
+                        _log.Warning(message, context: new { clientId, walletId });
+                        throw new Exception(message);
+                    }
+
+                    foreach (var accountItem in accountDetailsResponse.Body.Items)
+                    {
+                        var asset = assets.FirstOrDefault(a => a.SiriusBlockchainId == accountItem.BlockchainId);
+
+                        if (asset == null)
+                            continue;
 
                         result.Add(new DepositWallet
                         {
-                            AssetId = assetById?.AssetId ?? string.Empty,
-                            Symbol = assetById?.Symbol ?? string.Empty,
+                            AssetId = asset.AssetId,
+                            Symbol = asset.Symbol,
                             State = DepositWalletState.Active,
-                            Address =
-                                string.IsNullOrEmpty(accountDetailsResponse.Body.AccountDetail.Tag)
-                                    ? accountDetailsResponse.Body.AccountDetail.Address
-                                    : $"{accountDetailsResponse.Body.AccountDetail.Address}+{accountDetailsResponse.Body.AccountDetail.Tag}",
-                            BaseAddress = accountDetailsResponse.Body.AccountDetail.Address,
-                            AddressExtension = accountDetailsResponse.Body.AccountDetail.Tag
+                            Address = string.IsNullOrEmpty(accountItem.Tag)
+                                ? accountItem.Address
+                                : $"{accountItem.Address}+{accountItem.Tag}",
+                            BaseAddress = accountItem.Address,
+                            AddressExtension = accountItem.Tag
                         });
-                    }
-                    else
-                    {
-                        var accountDetails = await _siriusApiClient.Accounts.SearchDetailsAsync(new AccountDetailsSearchRequest
-                        {
-                            AccountId = account.Id
-                        });
-
-                        if (accountDetails.ResultCase == AccountDetailsSearchResponse.ResultOneofCase.Error)
-                        {
-                            var message = "Error fetching Sirius Accounts details";
-                            _log.Warning(nameof(GetWalletAddressesAsync),
-                                message,
-                                context: new
-                                {
-                                    error = accountSearchResponse.Error,
-                                    walletId,
-                                    clientId
-                                });
-
-                            throw new Exception(message);
-                        }
-
-                        foreach (var accountItem in accountDetails.Body.Items)
-                        {
-                            var asset = assets.FirstOrDefault(a => a.SiriusBlockchainId == accountItem.BlockchainId);
-
-                            if (asset == null)
-                                continue;
-
-                            result.Add(new DepositWallet
-                            {
-                                AssetId = asset.AssetId,
-                                Symbol = asset.Symbol,
-                                State = DepositWalletState.Active,
-                                Address = string.IsNullOrEmpty(accountItem.Tag)
-                                    ? accountItem.Address
-                                    : $"{accountItem.Address}+{accountItem.Tag}",
-                                BaseAddress = accountItem.Address,
-                                AddressExtension = accountItem.Tag
-                            });
-                        }
                     }
 
                     break;
@@ -308,14 +227,7 @@ namespace Lykke.HftApi.Services
                 default:
                 {
                     var message = $"Unknown State for Account {account.Id}: {account.State.ToString()}";
-                    _log.Warning(nameof(GetWalletAddressesAsync),
-                        message,
-                        context: new
-                        {
-                            error = accountSearchResponse.Error,
-                            walletId,
-                            clientId
-                        });
+                    _log.Warning(message, context: new { clientId, walletId });
                     throw new Exception(message);
                 }
             }
@@ -447,6 +359,222 @@ namespace Lykke.HftApi.Services
                 throw HftApiException.Create(HftApiErrorCode.ActionForbidden, "KYC required");
 
             return asset;
+        }
+
+        private async Task<AccountSearchResponse> SearchAccountAsync(string clientId, string walletId = null)
+        {
+            var retryPolicy = Policy
+                .Handle<Exception>(ex =>
+                {
+                    _log.Warning($"Retry on Exception: {ex.Message}.", ex, new { clientId });
+                    return true;
+                })
+                .OrResult<AccountSearchResponse>(response =>
+                    {
+                        if (response.ResultCase == AccountSearchResponse.ResultOneofCase.Error)
+                        {
+                            _log.Warning("Response from sirius.", context: response.ToJson());
+                        }
+
+                        return response.ResultCase == AccountSearchResponse.ResultOneofCase.Error;
+                    }
+                )
+                .WaitAndRetryAsync(_delay);
+
+            try
+            {
+                var result = await retryPolicy.ExecuteAsync(async () => await _siriusApiClient.Accounts.SearchAsync(new AccountSearchRequest
+                {
+                    BrokerAccountId = _brokerAccountId, UserNativeId = clientId, ReferenceId = walletId ?? clientId
+                }));
+
+                if (result.ResultCase != AccountSearchResponse.ResultOneofCase.Error)
+                    return result;
+
+                _log.Error(message: $"Error getting account from sirius: {result.Error.ErrorMessage}.", context: new { clientId, walletId });
+                return null;
+            }
+            catch (Exception ex)
+            {
+                _log.Error(ex, "Error getting account from sirius.", new { clientId });
+                return null;
+            }
+        }
+
+        private async Task<CreateUserResponse> CreateUserAsync(string clientId, string userRequestId)
+        {
+            var retryPolicy = Policy
+                .Handle<Exception>(ex =>
+                {
+                    _log.Warning($"Retry on Exception: {ex.Message}.", ex, new { clientId, requestId = userRequestId });
+                    return true;
+                })
+                .OrResult<CreateUserResponse>(response =>
+                    {
+                        if (response.BodyCase == CreateUserResponse.BodyOneofCase.Error)
+                        {
+                            _log.Warning("Response from sirius.", context: response.ToJson());
+                        }
+
+                        return response.BodyCase == CreateUserResponse.BodyOneofCase.Error;
+                    }
+                )
+                .WaitAndRetryAsync(_delay);
+
+            try
+            {
+                _log.Info("Creating user in sirius.", new { clientId, requestId = userRequestId });
+
+                var result = await retryPolicy.ExecuteAsync(async () => await _siriusApiClient.Users.CreateAsync(
+                    new CreateUserRequest { RequestId = userRequestId, NativeId = clientId }
+                ));
+
+                if (result.BodyCase != CreateUserResponse.BodyOneofCase.Error)
+                    return result;
+
+                _log.Error(message: $"Error creating user in sirius: {result.Error.ErrorMessage}.", context: new { clientId, requestId = userRequestId });
+                return null;
+            }
+            catch (Exception ex)
+            {
+                _log.Error(ex, "Error creating user in sirius.", new { clientId, requestId = userRequestId });
+                return null;
+            }
+        }
+
+        private async Task<AccountCreateResponse> CreateAccountAsync(string walletId, long userId, string accountRequestId)
+        {
+            var retryPolicy = Policy
+                .Handle<Exception>(ex =>
+                {
+                    _log.Warning($"Retry on Exception: {ex.Message}.", ex, new { walletId, userId, requestId = accountRequestId });
+                    return true;
+                })
+                .OrResult<AccountCreateResponse>(response =>
+                    {
+                        if (response.ResultCase == AccountCreateResponse.ResultOneofCase.Error)
+                        {
+                            _log.Warning("Response from sirius.", context: response.ToJson());
+                        }
+
+                        return response.ResultCase == AccountCreateResponse.ResultOneofCase.Error;
+                    }
+                )
+                .WaitAndRetryAsync(_delay);
+
+            try
+            {
+                _log.Info("Creating account in sirius.", new { clientId = walletId, requestId = accountRequestId });
+
+                var result = await retryPolicy.ExecuteAsync(async () => await _siriusApiClient.Accounts.CreateAsync(new AccountCreateRequest
+                    {
+                        RequestId = accountRequestId, BrokerAccountId = _brokerAccountId, UserId = userId, ReferenceId = walletId
+                    }
+                ));
+
+                if (result.ResultCase == AccountCreateResponse.ResultOneofCase.Error)
+                {
+                    _log.Error(message: $"Error creating account in sirius: {result.Error.ErrorMessage}.", context: new { clientId = walletId, userId, requestId = accountRequestId });
+                    return null;
+                }
+
+                _log.Info("Account created in sirius.", new { account = result.Body.Account,
+                    clientId = walletId, requestId = accountRequestId });
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _log.Error(ex, "Error creating account in sirius.", new { clientId = walletId, requestId = accountRequestId });
+                return null;
+            }
+        }
+
+        private async Task<WhitelistItemCreateResponse> CreateWhitelistItemAsync(WhitelistItemCreateRequest request)
+        {
+            var retryPolicy = Policy
+                .Handle<Exception>(ex =>
+                {
+                    _log.Warning($"Retry on Exception: {ex.Message}.", ex, new { requestId = request.RequestId, clientId = request.Scope.UserNativeId, accountId = request.Scope.AccountId });
+                    return true;
+                })
+                .OrResult<WhitelistItemCreateResponse>(response =>
+                    {
+                        if (response.BodyCase == WhitelistItemCreateResponse.BodyOneofCase.Error)
+                        {
+                            _log.Warning("Response from sirius.", context: response.ToJson());
+                        }
+
+                        return response.BodyCase == WhitelistItemCreateResponse.BodyOneofCase.Error;
+                    }
+                )
+                .WaitAndRetryAsync(_delay);
+
+            try
+            {
+                _log.Info("Creating whitelist item in sirius.",
+                    context: new { requestId = request.RequestId, clientId = request.Scope.UserNativeId, accountId = request.Scope.AccountId });
+
+                var result = await retryPolicy.ExecuteAsync(async () => await _siriusApiClient.WhitelistItems.CreateAsync(request));
+
+                if (result.BodyCase == WhitelistItemCreateResponse.BodyOneofCase.Error)
+                {
+                    _log.Error(message: $"Error creating whitelist item in sirius: {result.Error.ErrorMessage}", context: new { requestId = request.RequestId, clientId = request.Scope.UserNativeId, accountId = request.Scope.AccountId });
+                    return null;
+                }
+
+                _log.Info("Whitelist item created in sirius.",
+                    context: new { whitelistItemId = result.WhitelistItem.Id, requestId = request.RequestId, clientId = request.Scope.UserNativeId, accountId = request.Scope.AccountId });
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _log.Error(ex, "Error creating whitelist item in sirius." , new { requestId = request.RequestId, clientId = request.Scope.UserNativeId, accountId = request.Scope.AccountId });
+                return null;
+            }
+        }
+
+        private async Task<AccountDetailsSearchResponse> SearchAccountDetailsAsync(long accountId, long? assetId)
+        {
+            var retryPolicy = Policy
+                .Handle<Exception>(ex =>
+                {
+                    _log.Warning($"Retry on Exception: {ex.Message}.", ex, new { accountId, assetId });
+                    return true;
+                })
+                .OrResult<AccountDetailsSearchResponse>(response =>
+                    {
+                        if (response.ResultCase == AccountDetailsSearchResponse.ResultOneofCase.Error)
+                        {
+                            _log.Warning("Response from sirius.", context: response.ToJson());
+                        }
+
+                        return response.ResultCase == AccountDetailsSearchResponse.ResultOneofCase.Error;
+                    }
+                )
+                .WaitAndRetryAsync(_delay);
+
+            try
+            {
+                var request = assetId.HasValue
+                    ? new AccountDetailsSearchRequest { AccountId = accountId, AssetId = assetId }
+                    : new AccountDetailsSearchRequest { AccountId = accountId };
+
+                var result = await retryPolicy.ExecuteAsync(async () => await _siriusApiClient.Accounts.SearchDetailsAsync(request));
+
+                if (result.ResultCase != AccountDetailsSearchResponse.ResultOneofCase.Error)
+                    return result;
+
+                _log.Error($"Error getting account details from sirius: {result.Error.ErrorMessage}.", context: new { accountId, assetId });
+                return null;
+
+            }
+            catch (Exception ex)
+            {
+                _log.Error(ex, "Error getting account details from sirius.", new { accountId, assetId });
+                return null;
+            }
         }
     }
 }
