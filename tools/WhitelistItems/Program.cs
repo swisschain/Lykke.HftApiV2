@@ -27,6 +27,7 @@ namespace WhitelistItems
 
             var config = new ConfigurationBuilder()
                 .AddJsonFile("appsettings.json")
+                .AddEnvironmentVariables()
                 .Build();
 
             var settings = new AppSettings();
