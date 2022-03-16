@@ -7,7 +7,7 @@
     <ItemGroup>
       <PackageReference Include="Grpc.Core.Api" Version="2.42.0" />
       <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
-      <PackageReference Include="Swisschain.Sirius.Api.ApiClient" Version="1.0.0-beta.35" />
+      <PackageReference Include="Swisschain.Sirius.Api.ApiClient" Version="1.0.0-beta.43" />
     </ItemGroup>
 
 </Project>
