@@ -24,7 +24,7 @@
       <PackageReference Include="Lykke.Service.Operations.Contracts" Version="3.1.1" />
       <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="5.0.0" />
       <PackageReference Include="Microsoft.Extensions.Http" Version="5.0.0" />
-      <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+      <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
       <PackageReference Include="Swisschain.Sirius.Api.ApiClient" Version="1.0.0-beta.43" />
       <PackageReference Include="Polly.Contrib.WaitAndRetry" Version="1.1.1" />
     </ItemGroup>
