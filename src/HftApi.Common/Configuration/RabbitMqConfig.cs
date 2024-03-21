@@ -1,4 +1,4 @@
-namespace HftApi.Common.Configuration
+﻿namespace HftApi.Common.Configuration
 {
     public class RabbitMqConfig
     {
@@ -7,11 +7,6 @@ namespace HftApi.Common.Configuration
         public RabbitMqConnection Balances { get; set; }
         public RabbitMqConnection Orders { get; set; }
         public RabbitMqConnection PublicTrades { get; set; }
-    }
-
-    public class RabbitMqConnection
-    {
-        public string ConnectionString { get; set; }
-        public string ExchangeName { get; set; }
+        public string ClientAccountFeedConnectionString { get; set; }
     }
 }

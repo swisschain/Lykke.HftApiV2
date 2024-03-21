@@ -1,12 +1,10 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Autofac;
-using Lykke.HftApi.Domain;
 using Lykke.HftApi.Domain.Entities;
 using Lykke.HftApi.Domain.Entities.Assets;
-using Lykke.HftApi.Domain.Exceptions;
 using Lykke.HftApi.Domain.Services;
 using Lykke.HftApi.Services.AssetsClient;
 

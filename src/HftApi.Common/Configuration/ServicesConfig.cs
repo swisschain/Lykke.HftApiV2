@@ -1,4 +1,4 @@
-using Lykke.Service.Kyc.Client;
+﻿using Lykke.Service.Kyc.Client;
 
 namespace HftApi.Common.Configuration
 {

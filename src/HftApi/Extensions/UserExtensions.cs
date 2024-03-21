@@ -1,9 +1,9 @@
-using System.Linq;
+﻿using System.Linq;
 using System.Security.Claims;
 
 namespace HftApi.Extensions
 {
-    public static class UserExxtensions
+    public static class UserExtensions
     {
         public static string GetClientId(this ClaimsPrincipal user)
         {

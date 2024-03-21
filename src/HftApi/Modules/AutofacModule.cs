@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Autofac;
 using AzureStorage;
 using AzureStorage.Tables;
@@ -52,6 +52,9 @@ namespace HftApi.Modules
                 .WithParameter(TypedParameter.From(_config.Redis.OrderBooksCacheKeyPattern))
                 .SingleInstance();
 
+            builder.RegisterType<BlockedClientsService>()
+                .As<IBlockedClientsService>();
+
             var cache = new RedisCache(new RedisCacheOptions
             {
                 Configuration = _config.Redis.RedisConfiguration,
@@ -78,6 +81,12 @@ namespace HftApi.Modules
                 .AutoActivate()
                 .WithParameter("connectionString", _config.RabbitMq.HftInternal.ConnectionString)
                 .WithParameter("exchangeName", _config.RabbitMq.HftInternal.ExchangeName)
+                .SingleInstance();
+
+            builder.RegisterType<ClientSettingsUpdatesSubscriber>()
+                .As<IStartable>()
+                .AutoActivate()
+                .WithParameter("connectionString", _config.RabbitMq.ClientAccountFeedConnectionString)
                 .SingleInstance();
 
             builder.RegisterHftInternalClient(_config.Services.HftInternalServiceUrl);
@@ -187,7 +196,7 @@ namespace HftApi.Modules
             builder.RegisterOperationsClient(_config.Services.OperationsServiceUrl);
             
             builder.RegisterClientDialogsClient(_config.Services.ClientDialogsServiceUrl);
-            
+
             builder.RegisterInstance(
                 new Swisschain.Sirius.Api.ApiClient.ApiClient(_config.Services.SiriusApiServiceClient.GrpcServiceUrl, _config.Services.SiriusApiServiceClient.ApiKey)
             ).As<Swisschain.Sirius.Api.ApiClient.IApiClient>();

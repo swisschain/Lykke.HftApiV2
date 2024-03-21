@@ -1,4 +1,4 @@
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Threading.Tasks;
 using Lykke.HftApi.Domain.Services;
 using Lykke.Service.HftInternalService.Client;
@@ -10,28 +10,35 @@ namespace Lykke.HftApi.Services
     {
         private readonly IHftInternalClient _hftInternalClient;
         private readonly ILogger<TokenService> _logger;
+        private readonly IBlockedClientsService _blockedClients;
         private readonly ConcurrentDictionary<string, byte> _cache;
 
         public TokenService(
             IHftInternalClient hftInternalClient,
-            ILogger<TokenService> logger
-            )
+            ILogger<TokenService> logger,
+            IBlockedClientsService blockedClients)
         {
             _hftInternalClient = hftInternalClient;
             _logger = logger;
+            _blockedClients = blockedClients;
             _cache = new ConcurrentDictionary<string, byte>();
         }
 
         public async Task InitAsync()
         {
-            _logger.LogInformation("Getting key ids");
-            var ids = await _hftInternalClient.Keys.GetAllKeyIds();
-            _logger.LogInformation($"Caching {ids.Count} ids");
+            _logger.LogInformation("API keys cache is being initialized");
 
-            foreach (var id in ids)
+            var keys = await _hftInternalClient.Keys.GetAllKeys();
+            
+            foreach (var key in keys)
             {
-                _cache.TryAdd(id, 0);
+                if (!await _blockedClients.IsClientBlocked(key.ClientId))
+                {
+                    _cache.TryAdd(key.ApiKey, 0);
+                }
             }
+
+            _logger.LogInformation($"API keys cache has been initialized. {_cache.Count} active keys were added to the cache");
         }
 
         public bool IsValid(string id)
@@ -41,13 +48,11 @@ namespace Lykke.HftApi.Services
 
         public void Add(string id)
         {
-            _logger.LogInformation($"Adding {id} to cache");
             _cache.TryAdd(id, 0);
         }
 
         public void Remove(string id)
         {
-            _logger.LogInformation($"Removing {id} from cache");
             _cache.TryRemove(id, out _);
         }
     }

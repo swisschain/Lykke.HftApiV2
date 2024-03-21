@@ -84,6 +84,9 @@ RabbitMq:
       settings-key: RabbitSpotPricesConnString
     ExchangeName:
       settings-key: PublicTradesExchangeName
+  ClientAccountFeedConnectionString:
+    settings-key: HFT-ClientAccountFeed
+    types: [RabbitMq]
 SagasRabbitMq:
   RabbitConnectionString:
     settings-key: RabbitSagas
