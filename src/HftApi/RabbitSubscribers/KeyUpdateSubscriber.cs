@@ -1,12 +1,12 @@
-using System;
+﻿using System;
 using System.Threading.Tasks;
 using Autofac;
+using Common.Log;
 using Lykke.Common.Log;
 using Lykke.HftApi.Domain.Services;
 using Lykke.RabbitMqBroker;
 using Lykke.RabbitMqBroker.Subscriber;
 using Lykke.Service.HftInternalService.Client.Messages;
-using Microsoft.Extensions.Logging;
 
 namespace HftApi.RabbitSubscribers
 {
@@ -16,25 +16,27 @@ namespace HftApi.RabbitSubscribers
         private readonly string _exchangeName;
         private readonly ITokenService _tokenService;
         private readonly ILogFactory _logFactory;
+        private readonly ILog _log;
+        private readonly IBlockedClientsService _blockedClients;
         private RabbitMqSubscriber<KeyUpdatedEvent> _subscriber;
 
         public KeyUpdateSubscriber(
             string connectionString,
             string exchangeName,
             ITokenService tokenService,
-            ILoggerFactory loggerFactory,
-            ILogFactory logFactory)
+            ILogFactory logFactory,
+            IBlockedClientsService blockedClients)
         {
+            _log = logFactory.CreateLog(this);
             _connectionString = connectionString;
             _exchangeName = exchangeName;
             _tokenService = tokenService;
             _logFactory = logFactory;
+            _blockedClients = blockedClients;
         }
 
         public void Start()
         {
-            _tokenService.InitAsync().GetAwaiter().GetResult();
-
             var settings = RabbitMqSubscriptionSettings
                 .ForSubscriber(_connectionString, _exchangeName, $"{nameof(KeyUpdateSubscriber)}-{Environment.MachineName}");
 
@@ -42,25 +44,57 @@ namespace HftApi.RabbitSubscribers
 
             _subscriber = new RabbitMqSubscriber<KeyUpdatedEvent>(_logFactory,
                     settings,
-                    new ResilientErrorHandlingStrategy(_logFactory, settings, TimeSpan.FromSeconds(10)))
+                    new ResilientErrorHandlingStrategy(_log, settings, TimeSpan.FromSeconds(10)))
                 .SetMessageDeserializer(new JsonMessageDeserializer<KeyUpdatedEvent>())
                 .Subscribe(ProcessMessageAsync)
                 .CreateDefaultBinding()
                 .Start();
+
+            _tokenService.InitAsync().GetAwaiter().GetResult();
         }
 
-        private Task ProcessMessageAsync(KeyUpdatedEvent message)
+        private async Task ProcessMessageAsync(KeyUpdatedEvent message)
         {
-            if (message.IsDeleted)
-                _tokenService.Remove(message.Id);
-            else
+            // Race condition with ClientSettingsCashoutBlockUpdated event handling is possible, but it is decided
+            // that it's acceptable since these events are not very frequent
+
+            var isClientBlocked = await _blockedClients.IsClientBlocked(message.ClientId);
+            var apiKeyStart = message.Id.Substring(0, 4);
+
+            _log.Info($"API key deleted: {message.IsDeleted}. Client blocked: {isClientBlocked}", context: new
+            {
+                ClientId = message.ClientId,
+                WalletId = message.WalletId,
+                ApiKeyStart = apiKeyStart
+            });
+
+            if (!message.IsDeleted && !isClientBlocked)
+            {
                 _tokenService.Add(message.Id);
 
-            return Task.CompletedTask;
+                _log.Info($"API key has been cached", context: new
+                {
+                    ClientId = message.ClientId,
+                    WalletId = message.WalletId,
+                    ApiKeyStart = apiKeyStart
+                });
+            }
+            else
+            {
+                _tokenService.Remove(message.Id);
+
+                _log.Info($"API key has been evicted from the cache", context: new
+                {
+                    ClientId = message.ClientId,
+                    WalletId = message.WalletId,
+                    ApiKeyStart = apiKeyStart
+                });
+            }
         }
 
         public void Dispose()
         {
+            _subscriber?.Stop();
             _subscriber?.Dispose();
         }
     }
