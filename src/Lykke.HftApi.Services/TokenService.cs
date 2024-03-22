@@ -34,7 +34,7 @@ namespace Lykke.HftApi.Services
             {
                 if (!await _blockedClients.IsClientBlocked(key.ClientId))
                 {
-                    _cache.TryAdd(key.ApiKey, 0);
+                    _cache.TryAdd(key.Id, 0);
                 }
             }
 

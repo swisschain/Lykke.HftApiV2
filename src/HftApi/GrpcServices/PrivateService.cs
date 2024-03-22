@@ -79,7 +79,12 @@ namespace HftApi.GrpcServices
             var walletId = context.GetHttpContext().User.GetWalletId();
             var orderAction = _mapper.Map<OrderAction>(request.Side);
 
-            var result = await _validationService.ValidateLimitOrderAsync(walletId, request.AssetPairId, orderAction, Convert.ToDecimal(request.Price), Convert.ToDecimal(request.Volume));
+            var result = await _validationService.ValidateLimitOrderAsync(
+                walletId, 
+                request.AssetPairId, 
+                orderAction, 
+                Convert.ToDecimal(request.Price, CultureInfo.InvariantCulture), 
+                Convert.ToDecimal(request.Volume, CultureInfo.InvariantCulture));
 
             if (result != null)
             {
@@ -212,7 +217,7 @@ namespace HftApi.GrpcServices
         {
             var walletId = context.GetHttpContext().User.GetWalletId();
 
-            var result = await _validationService.ValidateMarketOrderAsync(request.AssetPairId, Convert.ToDecimal(request.Volume));
+            var result = await _validationService.ValidateMarketOrderAsync(request.AssetPairId, Convert.ToDecimal(request.Volume, CultureInfo.InvariantCulture));
 
             if (result != null)
             {

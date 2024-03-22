@@ -1,4 +1,5 @@
-using System;
+﻿using System;
+using System.Globalization;
 using AutoMapper;
 using HftApi.Common.Domain.MyNoSqlEntities;
 using Lykke.MatchingEngine.Connector.Models.Events;
@@ -17,8 +18,8 @@ namespace HftApi.Worker.Profiles
                 .ForMember(d => d.Expires, o => o.Ignore())
                 .ForMember(d => d.Id, o => o.MapFrom(x => x.ExternalId))
                 .ForMember(d => d.LastTradeTimestamp, o => o.MapFrom(x => x.LastMatchTime))
-                .ForMember(d => d.Volume, o => o.MapFrom(x => Math.Abs(Convert.ToDecimal(x.Volume))))
-                .ForMember(d => d.RemainingVolume, o => o.MapFrom(x => Math.Abs(Convert.ToDecimal(x.RemainingVolume))))
+                .ForMember(d => d.Volume, o => o.MapFrom(x => Math.Abs(Convert.ToDecimal(x.Volume, CultureInfo.InvariantCulture))))
+                .ForMember(d => d.RemainingVolume, o => o.MapFrom(x => Math.Abs(Convert.ToDecimal(x.RemainingVolume, CultureInfo.InvariantCulture))))
                 .ForMember(d => d.Type, o => o.MapFrom(x =>  x.OrderType.ToString()));
 
             CreateMap<Lykke.MatchingEngine.Connector.Models.Events.Trade, Trade>(MemberList.Destination)
