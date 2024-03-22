@@ -60,7 +60,7 @@ namespace HftApi.RabbitSubscribers
             {
                 foreach (var key in enabledClientApiKeys)
                 {
-                    _tokenService.Remove(key.ApiKey);
+                    _tokenService.Remove(key.Id);
 
                     var apiKeyStart = key.ApiKey.Substring(0, 4);
 
