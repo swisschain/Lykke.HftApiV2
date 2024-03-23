@@ -20,7 +20,7 @@
       <PackageReference Include="Lykke.Cqrs" Version="9.0.1" />
       <PackageReference Include="Lykke.MatchingEngineConnector" Version="8.6.0" />
       <PackageReference Include="Lykke.Service.ClientDialogs.Client" Version="1.0.1" />
-      <PackageReference Include="Lykke.Service.HftInternalService.Client" Version="2.5.0" />
+      <PackageReference Include="Lykke.Service.HftInternalService.Client" Version="2.6.1" />
       <PackageReference Include="Lykke.Service.Operations.Client" Version="3.1.0" />
       <PackageReference Include="Lykke.Service.Operations.Contracts" Version="3.1.1" />
       <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="5.0.0" />

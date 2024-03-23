@@ -54,7 +54,7 @@ namespace HftApi.RabbitSubscribers
                 ClientId = evt.ClientId
             });           
 
-            var enabledClientApiKeys = await _hftInternalClient.Keys.GetKeys(evt.ClientId);
+            var enabledClientApiKeys = await _hftInternalClient.Keys.GetKeysSensitive(evt.ClientId);
 
             if (evt.TradesBlocked)
             {
@@ -62,12 +62,10 @@ namespace HftApi.RabbitSubscribers
                 {
                     _tokenService.Remove(key.Id);
 
-                    var apiKeyStart = key.ApiKey.Substring(0, 4);
-
                     _log.Info($"API key has been cached", context: new
                     {
                         ClientId = evt.ClientId,
-                        ApiKeyStart = apiKeyStart
+                        ApiKeyId = key.Id
                     });
                 }
             }
@@ -75,14 +73,12 @@ namespace HftApi.RabbitSubscribers
             {
                 foreach (var key in enabledClientApiKeys)
                 {
-                    _tokenService.Add(key.ApiKey);
-
-                    var apiKeyStart = key.ApiKey.Substring(0, 4);
+                    _tokenService.Add(key.Id);
 
                     _log.Info($"API key has been evicted from the cache", context: new
                     {
                         ClientId = evt.ClientId,
-                        ApiKeyStart = apiKeyStart
+                        ApiKeyId = key.Id
                     });
                 }                
             }
