@@ -59,13 +59,12 @@ namespace HftApi.RabbitSubscribers
             // that it's acceptable since these events are not very frequent
 
             var isClientBlocked = await _blockedClients.IsClientBlocked(message.ClientId);
-            var apiKeyStart = message.Id.Substring(0, 4);
 
             _log.Info($"API key deleted: {message.IsDeleted}. Client blocked: {isClientBlocked}", context: new
             {
                 ClientId = message.ClientId,
                 WalletId = message.WalletId,
-                ApiKeyStart = apiKeyStart
+                ApiKeyId = message.Id
             });
 
             if (!message.IsDeleted && !isClientBlocked)
@@ -76,7 +75,7 @@ namespace HftApi.RabbitSubscribers
                 {
                     ClientId = message.ClientId,
                     WalletId = message.WalletId,
-                    ApiKeyStart = apiKeyStart
+                    ApiKeyId = message.Id
                 });
             }
             else
@@ -87,7 +86,7 @@ namespace HftApi.RabbitSubscribers
                 {
                     ClientId = message.ClientId,
                     WalletId = message.WalletId,
-                    ApiKeyStart = apiKeyStart
+                    ApiKeyId = message.Id
                 });
             }
         }
